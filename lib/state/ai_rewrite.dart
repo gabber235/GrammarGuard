@@ -2,6 +2,7 @@ import "package:diff_match_patch/diff_match_patch.dart";
 import "package:google_generative_ai/google_generative_ai.dart";
 import "package:grammar_guard/models/diff_option.dart";
 import "package:grammar_guard/models/prompt.dart";
+import "package:grammar_guard/state/ai_usage.dart";
 import "package:grammar_guard/state/api_key_state.dart";
 import "package:grammar_guard/state/grammar_state.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -9,12 +10,27 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 
 part "ai_rewrite.g.dart";
 
-enum Models {
-  gemini25ProExp0325("gemini-2.5-pro-exp-03-25"),
-  gemini20Flash("gemini-2.0-flash");
+enum Model {
+  gemini25ProExp0325("gemini-2.5-pro-exp-03-25", pricePerMillionInputTokens: 0, pricePerMillionOutputTokens: 0),
+  gemini20Flash("gemini-2.0-flash", pricePerMillionInputTokens: 0.1, pricePerMillionOutputTokens: 0.4);
 
-  const Models(this.name);
+  const Model(this.name, {required this.pricePerMillionInputTokens, required this.pricePerMillionOutputTokens});
   final String name;
+  final double pricePerMillionInputTokens;
+  final double pricePerMillionOutputTokens;
+}
+
+@riverpod
+class SelectedModel extends _$SelectedModel {
+  @override
+  Model build() {
+    return Model.gemini20Flash;
+  }
+
+  // ignore: use_setters_to_change_properties
+  void select(Model model) {
+    state = model;
+  }
 }
 
 @riverpod
@@ -27,8 +43,9 @@ class AiRewrite extends _$AiRewrite {
       yield "";
       return;
     }
+    final currentModel = ref.watch(selectedModelProvider);
     final model = GenerativeModel(
-      model: Models.gemini20Flash.name,
+      model: currentModel.name,
       apiKey: apiKey,
     );
 
@@ -39,8 +56,22 @@ class AiRewrite extends _$AiRewrite {
     );
 
     final content = [Content.text(prompt)];
+    final id = generateId();
     var text = "";
     await for (final data in model.generateContentStream(content)) {
+      final usage = data.usageMetadata;
+      if (usage != null) {
+        ref
+            .read(aiUsageProvider.notifier)
+            .recordUsage(
+              id,
+              RequestUsage(
+                promptTokenCount: usage.promptTokenCount ?? 0,
+                completionTokenCount: usage.candidatesTokenCount ?? 0,
+                model: currentModel,
+              ),
+            );
+      }
       final t = data.text;
       if (t != null) {
         text += t;
@@ -48,6 +79,10 @@ class AiRewrite extends _$AiRewrite {
       yield text;
     }
   }
+}
+
+String generateId() {
+  return DateTime.now().toIso8601String();
 }
 
 @riverpod

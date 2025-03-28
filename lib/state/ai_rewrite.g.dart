@@ -38,7 +38,24 @@ final diffStringProvider = AutoDisposeProvider<String>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DiffStringRef = AutoDisposeProviderRef<String>;
-String _$aiRewriteHash() => r'8bad5e35c3f914305df96b807fc7d98e99933c9e';
+String _$selectedModelHash() => r'd833ec951752a116ab2e54f91c764d1965428dce';
+
+/// See also [SelectedModel].
+@ProviderFor(SelectedModel)
+final selectedModelProvider =
+    AutoDisposeNotifierProvider<SelectedModel, Model>.internal(
+      SelectedModel.new,
+      name: r'selectedModelProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$selectedModelHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$SelectedModel = AutoDisposeNotifier<Model>;
+String _$aiRewriteHash() => r'83ae98a8b304f35ff07722fe707ffa11473da9f2';
 
 /// See also [AiRewrite].
 @ProviderFor(AiRewrite)
