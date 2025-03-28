@@ -258,7 +258,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
             child: Scaffold(
               body: Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.only(
+                    top: 20,
+                    left: 20,
+                    right: 20,
+                    bottom: 10,
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -271,7 +276,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
                       Expanded(
                         child: TextDisplay(scrollController: scrollController),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 10),
                       const Footer(),
                     ],
                   ),
