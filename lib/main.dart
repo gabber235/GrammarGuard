@@ -12,6 +12,7 @@ import "package:grammar_guard/state/grammar_state.dart";
 import "package:grammar_guard/widgets/always_focused.dart";
 import "package:grammar_guard/widgets/api_key_checker.dart";
 import "package:grammar_guard/widgets/footer.dart";
+import "package:grammar_guard/widgets/model_selector.dart";
 import "package:grammar_guard/widgets/options_group.dart";
 import "package:grammar_guard/widgets/text_display.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -71,7 +72,13 @@ class GrammarGuard extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       home: const HomeScreen(),
-      shortcuts: WidgetsApp.defaultShortcuts,
+      shortcuts: {
+        ...WidgetsApp.defaultShortcuts,
+        const SingleActivator(LogicalKeyboardKey.keyP, control: true):
+            const PreviousFocusIntent(),
+        const SingleActivator(LogicalKeyboardKey.keyN, control: true):
+            const NextFocusIntent(),
+      },
       debugShowCheckedModeBanner: false,
     );
   }
@@ -117,6 +124,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
   void onWindowBlur() {
     super.onWindowBlur();
     windowManager.hide();
+  }
+
+  void _showModelSelector() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => const ModelSelector(),
+    );
   }
 
   @override
@@ -168,6 +183,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
             TextScrollDirection.down,
             amount: 0.5,
           ),
+          LogicalKeySet(LogicalKeyboardKey.keyS):
+              const ShowModelSelectorIntent(),
         },
         child: Actions(
           actions: {
@@ -250,6 +267,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
                   duration: const Duration(milliseconds: 100),
                   curve: Curves.easeInOut,
                 );
+                return null;
+              },
+            ),
+            ShowModelSelectorIntent: CallbackAction<ShowModelSelectorIntent>(
+              onInvoke: (intent) {
+                if (!mounted) return;
+                _showModelSelector();
                 return null;
               },
             ),

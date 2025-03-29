@@ -1,7 +1,9 @@
 import "package:flutter/material.dart";
 import "package:grammar_guard/models/diff_option.dart";
 import "package:grammar_guard/models/rendering_mode.dart";
+import "package:grammar_guard/state/ai_rewrite.dart";
 import "package:grammar_guard/state/ai_usage.dart";
+import "package:grammar_guard/widgets/model_selector.dart";
 import "package:grammar_guard/widgets/toggle_option.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
@@ -14,6 +16,7 @@ class Footer extends ConsumerWidget {
     final renderingMode = ref.watch(renderingModeProvider);
     final totalTokens = ref.watch(totalTokenCountProvider);
     final totalPrice = ref.watch(totalPriceProvider);
+    final selectedModel = ref.watch(selectedModelProvider);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -35,6 +38,18 @@ class Footer extends ConsumerWidget {
         ),
         Row(
           children: [
+            ToggleOption(
+              icon: Icons.smart_toy,
+              label: selectedModel.displayName,
+              shortcut: "S",
+              onToggle: () {
+                showDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (context) => const ModelSelector(),
+                );
+              },
+            ),
             ToggleOption(
               icon: diffOption.icon,
               label: diffOption.label,

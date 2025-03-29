@@ -11,11 +11,27 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 part "ai_rewrite.g.dart";
 
 enum Model {
-  gemini25ProExp0325("gemini-2.5-pro-exp-03-25", pricePerMillionInputTokens: 0, pricePerMillionOutputTokens: 0),
-  gemini20Flash("gemini-2.0-flash", pricePerMillionInputTokens: 0.1, pricePerMillionOutputTokens: 0.4);
+  gemini25ProExp0325(
+    "gemini-2.5-pro-exp-03-25",
+    displayName: "Gemini 2.5 Pro",
+    pricePerMillionInputTokens: 0,
+    pricePerMillionOutputTokens: 0,
+  ),
+  gemini20Flash(
+    "gemini-2.0-flash",
+    displayName: "Gemini 2.0 Flash",
+    pricePerMillionInputTokens: 0.1,
+    pricePerMillionOutputTokens: 0.4,
+  );
 
-  const Model(this.name, {required this.pricePerMillionInputTokens, required this.pricePerMillionOutputTokens});
+  const Model(
+    this.name, {
+    required this.displayName,
+    required this.pricePerMillionInputTokens,
+    required this.pricePerMillionOutputTokens,
+  });
   final String name;
+  final String displayName;
   final double pricePerMillionInputTokens;
   final double pricePerMillionOutputTokens;
 }
@@ -44,10 +60,7 @@ class AiRewrite extends _$AiRewrite {
       return;
     }
     final currentModel = ref.watch(selectedModelProvider);
-    final model = GenerativeModel(
-      model: currentModel.name,
-      apiKey: apiKey,
-    );
+    final model = GenerativeModel(model: currentModel.name, apiKey: apiKey);
 
     final prompt = generateLlmPrompt(
       selectedText: state.inputText,

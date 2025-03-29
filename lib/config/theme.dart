@@ -103,6 +103,12 @@ class AppTheme {
       color: latteSurface0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
+    listTileTheme: ListTileThemeData(
+      textColor: latteText,
+      selectedColor: latteBlue,
+      selectedTileColor: latteSurface0,
+      tileColor: latteSurface0,
+    ),
   );
 
   // Dark theme (Catppuccin Mocha)
@@ -148,6 +154,12 @@ class AppTheme {
       elevation: 2,
       color: mochaSurface0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    listTileTheme: ListTileThemeData(
+      textColor: mochaText,
+      selectedColor: mochaBlue,
+      selectedTileColor: mochaSurface0,
+      tileColor: mochaSurface0,
     ),
   );
 }

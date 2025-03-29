@@ -41,3 +41,7 @@ class TextScrollIntent extends Intent {
   final TextScrollDirection direction;
   final double amount;
 }
+
+class ShowModelSelectorIntent extends Intent {
+  const ShowModelSelectorIntent();
+}
