@@ -70,9 +70,10 @@ capture and window management.
 1. Ensure you have Flutter installed for macOS development: [https://docs.flutter.dev/desktop#macos](https://docs.flutter.dev/desktop#macos)
 2. Clone the repository: `git clone https://github.com/gabber235/GrammarGuard.git`
 3. Navigate to the project directory: `cd GrammarGuard`
-4. Install dependencies: `flutter pub get`
-5. Enable macOS desktop support if not already: `flutter config --enable-macos-desktop`
-6. Run the application: `flutter run -d macos`
+4. Switch to the beta branch of Flutter: `flutter channel beta`
+5. Install dependencies: `flutter pub get`
+6. Enable macOS desktop support if not already: `flutter config --enable-macos-desktop`
+7. Run the application: `flutter run -d macos`
 
 ## First-Time Setup
 
