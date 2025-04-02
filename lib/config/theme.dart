@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class AppTheme {
   AppTheme._();
@@ -98,7 +98,7 @@ class AppTheme {
       filled: true,
       fillColor: latteSurface0,
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 2,
       color: latteSurface0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -150,7 +150,7 @@ class AppTheme {
       filled: true,
       fillColor: mochaSurface0,
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 2,
       color: mochaSurface0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

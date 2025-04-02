@@ -1,20 +1,19 @@
-import 'package:flutter/material.dart';
-import 'package:grammar_guard/models/rewrite_intensity.dart';
-import 'package:grammar_guard/models/styling_option.dart';
-import 'package:grammar_guard/state/grammar_state.dart';
-import 'package:grammar_guard/widgets/rewrite_intensity_option.dart';
-import 'package:grammar_guard/widgets/styling_option.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import "package:flutter/material.dart";
+import "package:grammar_guard/models/rewrite_intensity.dart";
+import "package:grammar_guard/models/styling_option.dart";
+import "package:grammar_guard/state/grammar_state.dart";
+import "package:grammar_guard/widgets/rewrite_intensity_option.dart";
+import "package:grammar_guard/widgets/styling_option.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 
 class OptionsGroup extends ConsumerWidget {
-  final Set<StylingOption> enabledStyling;
-  final RewriteIntensity selectedIntensity;
-
   const OptionsGroup({
-    super.key,
     required this.enabledStyling,
     required this.selectedIntensity,
+    super.key,
   });
+  final Set<StylingOption> enabledStyling;
+  final RewriteIntensity selectedIntensity;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,7 +30,7 @@ class OptionsGroup extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Style:',
+                "Style:",
                 style: TextStyle(fontSize: 14, color: Colors.white70),
               ),
               const SizedBox(width: 8),
@@ -62,7 +61,7 @@ class OptionsGroup extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Intensity:',
+                "Intensity:",
                 style: TextStyle(fontSize: 14, color: Colors.white70),
               ),
               const SizedBox(width: 8),

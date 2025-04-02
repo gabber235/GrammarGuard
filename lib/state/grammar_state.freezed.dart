@@ -79,7 +79,7 @@ as RewriteIntensity,
 
 
 class _GrammarStateData implements GrammarStateData {
-  const _GrammarStateData({this.inputText = '', final  Set<StylingOption> enabledStyling = const {}, this.rewriteIntensity = RewriteIntensity.polish}): _enabledStyling = enabledStyling;
+  const _GrammarStateData({this.inputText = "", final  Set<StylingOption> enabledStyling = const {}, this.rewriteIntensity = RewriteIntensity.polish}): _enabledStyling = enabledStyling;
   
 
 @override@JsonKey() final  String inputText;

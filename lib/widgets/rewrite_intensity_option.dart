@@ -1,17 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:grammar_guard/models/rewrite_intensity.dart';
+import "package:flutter/material.dart";
+import "package:grammar_guard/models/rewrite_intensity.dart";
 
 class RewriteIntensityOption extends StatelessWidget {
-  final RewriteIntensity intensity;
-  final bool isSelected;
-  final VoidCallback onSelect;
-
   const RewriteIntensityOption({
-    super.key,
     required this.intensity,
     required this.isSelected,
     required this.onSelect,
+    super.key,
   });
+  final RewriteIntensity intensity;
+  final bool isSelected;
+  final VoidCallback onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +54,7 @@ class RewriteIntensityOption extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              '(${intensity.shortcut})',
+              "(${intensity.shortcut})",
               style: TextStyle(
                 fontSize: 14,
                 color: isSelected ? Colors.white38 : Colors.white24,

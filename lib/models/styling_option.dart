@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 enum StylingOption {
-  markdown('Markdown', 'M', Icons.code),
-  latex('LaTeX', 'L', Icons.functions);
+  markdown("Markdown", "M", Icons.code),
+  latex("LaTeX", "L", Icons.functions);
+
+  const StylingOption(this.label, this.shortcut, this.icon);
 
   final String label;
   final String shortcut;
   final IconData icon;
-
-  const StylingOption(this.label, this.shortcut, this.icon);
 }

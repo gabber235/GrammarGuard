@@ -7,7 +7,6 @@ import "package:grammar_guard/models/styling_option.dart";
 /// - [intensity]: The desired level of rewriting.
 /// - [stylingOptions]: A set of desired styling formats (can be empty).
 String generateLlmPrompt({
-  required String selectedText,
   required RewriteIntensity intensity,
   required Set<StylingOption> stylingOptions,
 }) {
@@ -16,7 +15,6 @@ String generateLlmPrompt({
         ..writeln(_buildRoleSettingPrompt())
         ..writeln(_buildIntensityPrompt(intensity, stylingOptions))
         ..writeln(_buildFormattingPrompt(stylingOptions, intensity))
-        ..writeln(_buildInputTextPrompt(selectedText))
         ..writeln(_buildOutputInstructionsPrompt(stylingOptions, intensity));
 
   return promptBuffer.toString();
@@ -169,16 +167,6 @@ String _buildFormattingPrompt(
   buffer.writeln(
     "- Existing Formatting: If the original text contains formatting, maintain consistency or improve it using the specified style(s). Do not arbitrarily remove relevant existing formatting unless the rewrite makes it obsolete.",
   );
-  return buffer.toString();
-}
-
-String _buildInputTextPrompt(String selectedText) {
-  final buffer =
-      StringBuffer()
-        ..writeln("## Text to Revise:")
-        ..writeln('"""')
-        ..writeln(selectedText.trim()) // Trim whitespace
-        ..writeln('"""');
   return buffer.toString();
 }
 

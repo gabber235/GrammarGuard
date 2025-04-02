@@ -55,7 +55,7 @@ final selectedModelProvider =
     );
 
 typedef _$SelectedModel = AutoDisposeNotifier<Model>;
-String _$aiRewriteHash() => r'83ae98a8b304f35ff07722fe707ffa11473da9f2';
+String _$aiRewriteHash() => r'70ec9ca9c9e79b571e93a18e42cb7d151d9463a6';
 
 /// See also [AiRewrite].
 @ProviderFor(AiRewrite)

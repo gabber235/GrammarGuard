@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
-part 'diff_option.g.dart';
+part "diff_option.g.dart";
 
 enum DiffOptions {
   additions(

@@ -1,12 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:grammar_guard/state/api_key_state.dart';
-import 'package:grammar_guard/widgets/api_key_input.dart';
+import "package:flutter/material.dart";
+import "package:grammar_guard/state/api_key_state.dart";
+import "package:grammar_guard/widgets/api_key_input.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
 
 class ApiKeyChecker extends ConsumerWidget {
+  const ApiKeyChecker({required this.child, super.key});
   final Widget child;
-
-  const ApiKeyChecker({super.key, required this.child});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,7 +23,7 @@ class ApiKeyChecker extends ConsumerWidget {
               Scaffold(body: const Center(child: CircularProgressIndicator())),
       error:
           (error, stack) =>
-              Scaffold(body: Center(child: Text('Error: $error'))),
+              Scaffold(body: Center(child: Text("Error: $error"))),
     );
   }
 }

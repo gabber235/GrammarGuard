@@ -63,18 +63,17 @@ class AiRewrite extends _$AiRewrite {
     final model = GenerativeModel(model: currentModel.name, apiKey: apiKey);
 
     final prompt = generateLlmPrompt(
-      selectedText: state.inputText,
       intensity: state.rewriteIntensity,
       stylingOptions: state.enabledStyling,
     );
 
-    final content = [Content.text(prompt)];
+    final content = [Content.text(prompt), Content.text(state.inputText)];
     final id = generateId();
     var text = "";
     await for (final data in model.generateContentStream(content)) {
       final usage = data.usageMetadata;
       if (usage != null) {
-        ref
+        await ref
             .read(aiUsageProvider.notifier)
             .recordUsage(
               id,
@@ -89,7 +88,7 @@ class AiRewrite extends _$AiRewrite {
       if (t != null) {
         text += t;
       }
-      yield text;
+      yield text.trim();
     }
   }
 }

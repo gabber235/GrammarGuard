@@ -6,7 +6,7 @@ part of 'api_key_state.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$apiKeyStateHash() => r'6dbb610bf0f00b84fdae54bdaa4f1bcf3507f58f';
+String _$apiKeyStateHash() => r'e7686a4c96d783e36d360e08bf043cf40f761699';
 
 /// See also [ApiKeyState].
 @ProviderFor(ApiKeyState)
