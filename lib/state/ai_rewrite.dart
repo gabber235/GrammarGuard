@@ -14,8 +14,8 @@ enum Model {
   gemini25ProExp0325(
     "gemini-2.5-pro-exp-03-25",
     displayName: "Gemini 2.5 Pro",
-    pricePerMillionInputTokens: 0,
-    pricePerMillionOutputTokens: 0,
+    pricePerMillionInputTokens: 1.25,
+    pricePerMillionOutputTokens: 2.5,
   ),
   gemini20Flash(
     "gemini-2.0-flash",
