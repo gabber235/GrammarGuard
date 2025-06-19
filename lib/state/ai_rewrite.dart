@@ -1,8 +1,8 @@
 import "package:diff_match_patch/diff_match_patch.dart";
-import "package:google_generative_ai/google_generative_ai.dart";
+import "package:grammar_guard/models/ai_model.dart";
 import "package:grammar_guard/models/diff_option.dart";
+import "package:grammar_guard/models/model_registry.dart";
 import "package:grammar_guard/models/prompt.dart";
-import "package:grammar_guard/state/ai_usage.dart";
 import "package:grammar_guard/state/api_key_state.dart";
 import "package:grammar_guard/state/grammar_state.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -10,41 +10,15 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 
 part "ai_rewrite.g.dart";
 
-enum Model {
-  gemini25ProExp0325(
-    "gemini-2.5-pro-exp-03-25",
-    displayName: "Gemini 2.5 Pro",
-    pricePerMillionInputTokens: 1.25,
-    pricePerMillionOutputTokens: 2.5,
-  ),
-  gemini20Flash(
-    "gemini-2.0-flash",
-    displayName: "Gemini 2.0 Flash",
-    pricePerMillionInputTokens: 0.1,
-    pricePerMillionOutputTokens: 0.4,
-  );
-
-  const Model(
-    this.name, {
-    required this.displayName,
-    required this.pricePerMillionInputTokens,
-    required this.pricePerMillionOutputTokens,
-  });
-  final String name;
-  final String displayName;
-  final double pricePerMillionInputTokens;
-  final double pricePerMillionOutputTokens;
-}
-
 @riverpod
 class SelectedModel extends _$SelectedModel {
   @override
-  Model build() {
-    return Model.gemini20Flash;
+  AiModel build() {
+    return ModelRegistry.defaultModel;
   }
 
   // ignore: use_setters_to_change_properties
-  void select(Model model) {
+  void select(AiModel model) {
     state = model;
   }
 }
@@ -54,41 +28,32 @@ class AiRewrite extends _$AiRewrite {
   @override
   Stream<String> build() async* {
     final state = ref.watch(grammarStateProvider);
-    final apiKey = await ref.read(apiKeyStateProvider.future);
+    final currentModel = ref.watch(selectedModelProvider);
+    final apiKeys = await ref.read(apiKeyStateProvider.future);
+
+    final apiKey = apiKeys[currentModel.provider.name];
     if (apiKey == null) {
       yield "";
       return;
     }
-    final currentModel = ref.watch(selectedModelProvider);
-    final model = GenerativeModel(model: currentModel.name, apiKey: apiKey);
 
     final prompt = generateLlmPrompt(
       intensity: state.rewriteIntensity,
       stylingOptions: state.enabledStyling,
     );
 
-    final content = [Content.text(prompt), Content.text(state.inputText)];
-    final id = generateId();
-    var text = "";
-    await for (final data in model.generateContentStream(content)) {
-      final usage = data.usageMetadata;
-      if (usage != null) {
-        await ref
-            .read(aiUsageProvider.notifier)
-            .recordUsage(
-              id,
-              RequestUsage(
-                promptTokenCount: usage.promptTokenCount ?? 0,
-                completionTokenCount: usage.candidatesTokenCount ?? 0,
-                model: currentModel,
-              ),
-            );
-      }
-      final t = data.text;
-      if (t != null) {
-        text += t;
-      }
-      yield text.trim();
+    final sb = StringBuffer();
+
+    final stream = await currentModel.provider.generateContent(
+      prompt: prompt,
+      inputText: state.inputText,
+      apiKey: apiKey,
+      model: currentModel,
+    );
+
+    await for (final chunk in stream) {
+      sb.write(chunk);
+      yield sb.toString().trim();
     }
   }
 }

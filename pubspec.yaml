@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.8.0-70.0.dev
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -26,7 +26,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
 
   # Window management
-  window_manager: ^0.4.3
+  window_manager: ^0.5.0
   hotkey_manager: ^0.2.3
 
   # Models and serialization
@@ -39,17 +39,17 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: 
 
   # Code generation
-  build_runner: ^2.4.15
-  riverpod_generator: ^2.6.5
-  freezed: ^3.0.4
-  json_serializable: ^6.9.4
+  build_runner: 
+  riverpod_generator: 
+  freezed: 
+  json_serializable: 
 
   # Linting
-  custom_lint: ^0.7.5
-  riverpod_lint: ^2.6.5
+  custom_lint: 
+  riverpod_lint: 
 
 flutter:
   uses-material-design: true

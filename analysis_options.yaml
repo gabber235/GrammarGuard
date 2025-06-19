@@ -8,7 +8,7 @@ linter:
     annotate_redeclares: true
     avoid_bool_literals_in_conditional_expressions: true
     avoid_catches_without_on_clauses: true
-    avoid_classes_with_only_static_members: true
+    avoid_classes_with_only_static_members: false
     avoid_field_initializers_in_const_classes: true
     avoid_final_parameters: true
     avoid_multiple_declarations_per_line: true

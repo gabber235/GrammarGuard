@@ -37,7 +37,10 @@ void main() async {
     windowButtonVisibility: false,
   );
 
-  await windowManager.waitUntilReadyToShow(windowOptions, () async {});
+  await windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
 
   // Register global hotkey to show the app (Alt+Shift+G)
   final showHotKey = HotKey(

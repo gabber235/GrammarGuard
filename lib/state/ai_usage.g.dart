@@ -10,20 +10,19 @@ _RequestUsage _$RequestUsageFromJson(Map<String, dynamic> json) =>
     _RequestUsage(
       promptTokenCount: (json['promptTokenCount'] as num).toInt(),
       completionTokenCount: (json['completionTokenCount'] as num).toInt(),
-      model: $enumDecode(_$ModelEnumMap, json['model']),
+      modelName: json['modelName'] as String,
+      providerName: json['providerName'] as String,
+      cost: (json['cost'] as num).toDouble(),
     );
 
 Map<String, dynamic> _$RequestUsageToJson(_RequestUsage instance) =>
     <String, dynamic>{
       'promptTokenCount': instance.promptTokenCount,
       'completionTokenCount': instance.completionTokenCount,
-      'model': _$ModelEnumMap[instance.model]!,
+      'modelName': instance.modelName,
+      'providerName': instance.providerName,
+      'cost': instance.cost,
     };
-
-const _$ModelEnumMap = {
-  Model.gemini25ProExp0325: 'gemini25ProExp0325',
-  Model.gemini20Flash: 'gemini20Flash',
-};
 
 // **************************************************************************
 // RiverpodGenerator
@@ -36,10 +35,9 @@ String _$totalTokenCountHash() => r'a6cb796c7ed700ecda54cef71e8617338e493b46';
 final totalTokenCountProvider = AutoDisposeProvider<int>.internal(
   totalTokenCount,
   name: r'totalTokenCountProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$totalTokenCountHash,
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$totalTokenCountHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
@@ -47,7 +45,7 @@ final totalTokenCountProvider = AutoDisposeProvider<int>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TotalTokenCountRef = AutoDisposeProviderRef<int>;
-String _$totalPriceHash() => r'f1429f0f35c78bcb5725b06a7c7e4cfdb8b80fed';
+String _$totalPriceHash() => r'db14ff751a4ecb54219f5ec95d052607563a68b2';
 
 /// See also [totalPrice].
 @ProviderFor(totalPrice)
@@ -63,14 +61,12 @@ final totalPriceProvider = AutoDisposeProvider<double>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TotalPriceRef = AutoDisposeProviderRef<double>;
-String _$aiUsageHash() => r'35a66eaaf5ff7f4679fd660b8e7557703ae368c1';
+String _$aiUsageHash() => r'a41152e3ff6d70f34900c65fdd30aaa1dc96c2bd';
 
 /// See also [AiUsage].
 @ProviderFor(AiUsage)
-final aiUsageProvider = AutoDisposeAsyncNotifierProvider<
-  AiUsage,
-  Map<String, RequestUsage>
->.internal(
+final aiUsageProvider = AutoDisposeAsyncNotifierProvider<AiUsage,
+    Map<String, RequestUsage>>.internal(
   AiUsage.new,
   name: r'aiUsageProvider',
   debugGetCreateSourceHash:

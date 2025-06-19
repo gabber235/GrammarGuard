@@ -24,7 +24,7 @@ class _ApiKeyInputState extends ConsumerState<ApiKeyInput> {
     if (_formKey.currentState?.validate() ?? false) {
       await ref
           .read(apiKeyStateProvider.notifier)
-          .setApiKey(_apiKeyController.text);
+          .setApiKey("gemini", _apiKeyController.text);
     }
   }
 

@@ -1,8 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:grammar_guard/actions/grammar_intents.dart";
-import "package:grammar_guard/hooks/focus_change.dart";
+import "package:grammar_guard/models/ai_model.dart";
+import "package:grammar_guard/models/model_registry.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
@@ -11,62 +10,45 @@ class ModelListTile extends HookConsumerWidget {
     required this.model,
     required this.focusNode,
     required this.onTap,
+    required this.isSelected,
+    required this.isFocused,
     super.key,
   });
 
-  final Model model;
+  final AiModel model;
+  final bool isSelected;
+  final bool isFocused;
   final FocusNode focusNode;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isSelected = model == ref.watch(selectedModelProvider);
 
-    final isFocused = useState(focusNode.hasFocus);
-
-    useFocusedChange(
-      focusNode,
-      ({required hasFocus}) => isFocused.value = hasFocus,
-    );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: ListTile(
-        title: Text(
-          model.displayName,
-          style: TextStyle(
-            color:
-                isFocused.value
-                    ? theme.cardColor
-                    : isSelected
-                    ? ListTileTheme.of(context).selectedColor
-                    : ListTileTheme.of(context).textColor,
-          ),
+    return ListTile(
+      title: Text(
+        model.displayName,
+        style: TextStyle(
+          color: isFocused ? theme.colorScheme.onPrimary : null,
         ),
-        subtitle: Text(
-          "Input: \$${model.pricePerMillionInputTokens}/1M tokens, "
-          "Output: \$${model.pricePerMillionOutputTokens}/1M tokens",
-          style: TextStyle(
-            color:
-                isFocused.value
-                    ? theme.cardColor
-                    : isSelected
-                    ? ListTileTheme.of(context).selectedColor
-                    : ListTileTheme.of(context).textColor,
-          ),
-        ),
-        // selected: isSelected,
-        focusNode: focusNode,
-        tileColor:
-            isFocused.value
-                ? theme.colorScheme.primary.withValues(alpha: 1)
-                : isSelected
-                ? ListTileTheme.of(context).selectedTileColor
-                : ListTileTheme.of(context).tileColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        onTap: onTap,
       ),
+      subtitle: Text(
+        "Input: \$${model.pricePerMillionInputTokens}/1M tokens, "
+        "Output: \$${model.pricePerMillionOutputTokens}/1M tokens",
+        style: TextStyle(
+          color: isFocused
+              ? theme.colorScheme.onPrimary.withValues(alpha: 0.7)
+              : null,
+        ),
+      ),
+      selected: isSelected,
+      focusNode: focusNode,
+      tileColor:
+          isFocused ? theme.colorScheme.primary.withValues(alpha: 0.3) : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      onTap: onTap,
     );
   }
 }
@@ -80,7 +62,7 @@ class ModelSelector extends ConsumerStatefulWidget {
 
 class _ModelSelectorState extends ConsumerState<ModelSelector> {
   final _searchController = TextEditingController();
-  final _focusNode = FocusNode(debugLabel: "ModelSelector");
+  final _focusNode = FocusNode();
   final List<FocusNode> _tileFocusNodes = [];
   String _searchQuery = "";
 
@@ -100,12 +82,12 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
     super.dispose();
   }
 
-  List<Model> get _filteredModels {
-    if (_searchQuery.isEmpty) return Model.values;
-    return Model.values.where((model) {
+  List<AiModel> get _filteredModels {
+    if (_searchQuery.isEmpty) return ModelRegistry.models;
+    return ModelRegistry.models.where((model) {
       return model.displayName.toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          ) ||
+                _searchQuery.toLowerCase(),
+              ) ||
           model.name.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
   }
@@ -240,8 +222,8 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
                         setState(() {
                           _searchQuery = value;
                           // Clean up excess focus nodes
-                          while (_tileFocusNodes.length >
-                              _filteredModels.length) {
+                          while (
+                              _tileFocusNodes.length > _filteredModels.length) {
                             _tileFocusNodes.removeLast().dispose();
                           }
                         });
@@ -252,8 +234,9 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
                       },
                     ),
                   ),
+                  const Divider(),
                   Flexible(
-                    child: ListView.builder(
+                    child: ListView.separated(
                       shrinkWrap: true,
                       itemCount: _filteredModels.length,
                       itemBuilder: (context, index) {
@@ -261,16 +244,25 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
                           _tileFocusNodes.add(FocusNode());
                         }
                         final model = _filteredModels[index];
+                        final isSelected =
+                            model == ref.watch(selectedModelProvider);
+                        final isFocused = _tileFocusNodes[index].hasFocus;
                         return ModelListTile(
                           model: model,
+                          isSelected: isSelected,
+                          isFocused: isFocused,
                           focusNode: _tileFocusNodes[index],
                           onTap: () {
                             ref
                                 .read(selectedModelProvider.notifier)
                                 .select(model);
                             Navigator.of(context).pop();
+                            _focusNode.requestFocus();
                           },
                         );
+                      },
+                      separatorBuilder: (context, index) {
+                        return const SizedBox(height: 8);
                       },
                     ),
                   ),

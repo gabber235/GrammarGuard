@@ -12,18 +12,16 @@ class ApiKeyChecker extends ConsumerWidget {
     final apiKeyAsync = ref.watch(apiKeyStateProvider);
 
     return apiKeyAsync.when(
-      data: (apiKey) {
-        if (apiKey == null) {
+      data: (apiKeys) {
+        if (apiKeys.isEmpty) {
           return const ApiKeyInput();
         }
         return child;
       },
-      loading:
-          () =>
-              Scaffold(body: const Center(child: CircularProgressIndicator())),
-      error:
-          (error, stack) =>
-              Scaffold(body: Center(child: Text("Error: $error"))),
+      loading: () =>
+          Scaffold(body: const Center(child: CircularProgressIndicator())),
+      error: (error, stack) =>
+          Scaffold(body: Center(child: Text("Error: $error"))),
     );
   }
 }

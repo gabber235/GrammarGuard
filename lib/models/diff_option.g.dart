@@ -12,15 +12,13 @@ String _$diffOptionHash() => r'e945954d3e2f01b5bb5305b117c393bcac6812ef';
 @ProviderFor(DiffOption)
 final diffOptionProvider =
     AutoDisposeNotifierProvider<DiffOption, DiffOptions>.internal(
-      DiffOption.new,
-      name: r'diffOptionProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$diffOptionHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  DiffOption.new,
+  name: r'diffOptionProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$diffOptionHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$DiffOption = AutoDisposeNotifier<DiffOptions>;
 // ignore_for_file: type=lint

@@ -38,38 +38,35 @@ final diffStringProvider = AutoDisposeProvider<String>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DiffStringRef = AutoDisposeProviderRef<String>;
-String _$selectedModelHash() => r'd833ec951752a116ab2e54f91c764d1965428dce';
+String _$selectedModelHash() => r'bd84ab2d689f6c9c9cf8df23a0e99befa3a71fa2';
 
 /// See also [SelectedModel].
 @ProviderFor(SelectedModel)
 final selectedModelProvider =
-    AutoDisposeNotifierProvider<SelectedModel, Model>.internal(
-      SelectedModel.new,
-      name: r'selectedModelProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$selectedModelHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+    AutoDisposeNotifierProvider<SelectedModel, AiModel>.internal(
+  SelectedModel.new,
+  name: r'selectedModelProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$selectedModelHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
-typedef _$SelectedModel = AutoDisposeNotifier<Model>;
-String _$aiRewriteHash() => r'70ec9ca9c9e79b571e93a18e42cb7d151d9463a6';
+typedef _$SelectedModel = AutoDisposeNotifier<AiModel>;
+String _$aiRewriteHash() => r'6f2ac87e6d5df3c617601c5989a7422e9f5a06d2';
 
 /// See also [AiRewrite].
 @ProviderFor(AiRewrite)
 final aiRewriteProvider =
     AutoDisposeStreamNotifierProvider<AiRewrite, String>.internal(
-      AiRewrite.new,
-      name: r'aiRewriteProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$aiRewriteHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  AiRewrite.new,
+  name: r'aiRewriteProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$aiRewriteHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$AiRewrite = AutoDisposeStreamNotifier<String>;
 // ignore_for_file: type=lint

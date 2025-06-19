@@ -1,7 +1,7 @@
 import "dart:convert";
 
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:grammar_guard/state/ai_rewrite.dart";
+import "package:grammar_guard/models/model_registry.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:shared_preferences/shared_preferences.dart";
@@ -14,14 +14,16 @@ abstract class RequestUsage with _$RequestUsage {
   const factory RequestUsage({
     required int promptTokenCount,
     required int completionTokenCount,
-    required Model model,
+    required String modelName,
+    required String providerName,
+    required double cost,
   }) = _RequestUsage;
 
   factory RequestUsage.fromJson(Map<String, dynamic> json) =>
       _$RequestUsageFromJson(json);
 }
 
-const _usageKey = "ai_usage_data";
+const _usageKey = "ai_usage_data_new";
 
 @riverpod
 class AiUsage extends _$AiUsage {
@@ -42,7 +44,29 @@ class AiUsage extends _$AiUsage {
     }
   }
 
-  Future<void> recordUsage(String id, RequestUsage usage) async {
+  Future<void> recordUsage(
+    String id,
+    String modelName,
+    int promptTokenCount,
+    int completionTokenCount,
+    String providerName,
+  ) async {
+    final model = ModelRegistry.getModel(modelName);
+    var cost = 0.0;
+
+    if (model != null) {
+      cost = (promptTokenCount / 1000000 * model.pricePerMillionInputTokens) +
+          (completionTokenCount / 1000000 * model.pricePerMillionOutputTokens);
+    }
+
+    final usage = RequestUsage(
+      promptTokenCount: promptTokenCount,
+      completionTokenCount: completionTokenCount,
+      modelName: modelName,
+      providerName: providerName,
+      cost: cost,
+    );
+
     final prefs = await SharedPreferences.getInstance();
     final current = state.valueOrNull ?? {};
     final updated = {...current, id: usage};
@@ -68,14 +92,7 @@ int totalTokenCount(Ref ref) {
 @riverpod
 double totalPrice(Ref ref) {
   final usage = ref.watch(aiUsageProvider);
-  return usage.valueOrNull?.values.fold<double>(0, (prev, usage) {
-        return prev +
-            usage.promptTokenCount /
-                1_000_000 *
-                usage.model.pricePerMillionInputTokens +
-            usage.completionTokenCount /
-                1_000_000 *
-                usage.model.pricePerMillionOutputTokens;
-      }) ??
+  return usage.valueOrNull?.values
+          .fold<double>(0, (prev, usage) => prev + usage.cost) ??
       0;
 }

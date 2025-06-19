@@ -12,15 +12,13 @@ String _$grammarStateHash() => r'2739869768a5e5d8e8d41f8e6bed0174fb2f2113';
 @ProviderFor(GrammarState)
 final grammarStateProvider =
     AutoDisposeNotifierProvider<GrammarState, GrammarStateData>.internal(
-      GrammarState.new,
-      name: r'grammarStateProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$grammarStateHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  GrammarState.new,
+  name: r'grammarStateProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$grammarStateHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$GrammarState = AutoDisposeNotifier<GrammarStateData>;
 // ignore_for_file: type=lint

@@ -12,15 +12,14 @@ String _$renderingModeHash() => r'ab997e630ba0d0484d9fb37eb2a928b5cafb849e';
 @ProviderFor(RenderingMode)
 final renderingModeProvider =
     AutoDisposeNotifierProvider<RenderingMode, RenderingModeOption>.internal(
-      RenderingMode.new,
-      name: r'renderingModeProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$renderingModeHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+  RenderingMode.new,
+  name: r'renderingModeProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$renderingModeHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
 
 typedef _$RenderingMode = AutoDisposeNotifier<RenderingModeOption>;
 // ignore_for_file: type=lint
