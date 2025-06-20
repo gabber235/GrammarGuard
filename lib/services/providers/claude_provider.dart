@@ -2,7 +2,6 @@ import "package:flutter/material.dart";
 import "package:grammar_guard/models/ai_model.dart";
 import "package:grammar_guard/services/ai_provider.dart";
 import "package:grammar_guard/services/generation_event.dart";
-import "package:grammar_guard/state/ai_usage.dart";
 import "package:grammar_guard/state/api_key_state.dart";
 import "package:grammar_guard/widgets/api_key_configuration.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";

@@ -107,7 +107,8 @@ class OpenAiProvider extends AiProvider {
           yield TextDeltaEvent(delta: delta);
         case llm.CompletionEvent(response: final response):
           debugPrint(
-              "OpenAI response: ${response.text}, usage: ${response.usage}");
+            "OpenAI response: ${response.text}, usage: ${response.usage}",
+          );
           if (response.usage != null) {
             final usage = response.usage!;
             final promptTokenCount = usage.promptTokens ?? 0;

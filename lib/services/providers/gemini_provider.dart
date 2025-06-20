@@ -101,7 +101,8 @@ class GeminiProvider extends AiProvider {
           yield TextDeltaEvent(delta: delta);
         case llm.CompletionEvent(response: final response):
           debugPrint(
-              "Gemini response: ${response.text}, usage: ${response.usage}");
+            "Gemini response: ${response.text}, usage: ${response.usage}",
+          );
           if (response.usage != null) {
             final usage = response.usage!;
             final promptTokenCount = usage.promptTokens ?? 0;
