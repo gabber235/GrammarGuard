@@ -1,0 +1,40 @@
+name: Release GrammarGuard
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'beta'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build macOS app
+        run: |
+          VERSION_TAG=${{ github.ref_name }}
+          flutter build macos --release --build-name=${VERSION_TAG#v} --build-number=${{ github.run_id }}
+
+      - name: Package Application
+        id: package_app
+        run: |
+          APP_NAME=$(grep 'name:' pubspec.yaml | cut -d ' ' -f 2)
+          APP_PATH="build/macos/Build/Products/Release/$APP_NAME.app"
+          ZIP_PATH="build/macos/Build/Products/Release/$APP_NAME-${{ github.ref_name }}.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_PATH"
+          echo "zip_path=$ZIP_PATH" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.package_app.outputs.zip_path }} 
