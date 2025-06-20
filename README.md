@@ -16,7 +16,7 @@ shortcut, and instantly get suggestions for:
 * Rewriting text with adjustable intensity – from subtle polishing to significant rephrasing
 * Adding Markdown or LaTeX formatting
 
-GrammarGuard appears in a convenient floating window, allowing for quick refinements without disrupting your focus.
+GrammarGuard supports multiple AI providers, including **OpenAI (GPT models)**, **Google AI (Gemini)**, and **Anthropic (Claude)**, allowing you to choose the best model for your needs. It appears in a convenient floating window, allowing for quick refinements without disrupting your focus.
 
 **Note:** Currently available exclusively for **macOS** due to the reliance on OS-specific features for text
 capture and window management.
@@ -26,6 +26,8 @@ capture and window management.
 ## Features
 
 * **System-Wide Text Capture:** Grabs text from your clipboard when triggered
+* **Multi-Provider Support:** Choose between OpenAI, Google (Gemini), and Anthropic (Claude) models.
+* **Model Selector:** Easily switch between different AI models and see their token pricing.
 * **Background Operation:** Runs unobtrusively until needed
 * **Floating Window UI:** Appears on top of other windows for easy access upon activation
 * **Global Shortcut Activation:** Trigger GrammarGuard with `Alt+Shift+G`
@@ -38,14 +40,14 @@ capture and window management.
 * **Diff View:** Toggle between original and rewritten text to see changes
 * **Keyboard Shortcuts:** Quick access to all features
 * **Beautiful UI:** Light and dark themes with Catppuccin color scheme
-* **Secure API Key Storage:** Safely stores your Google AI (Gemini) API key
+* **Secure API Key Storage:** Safely stores your API keys for different providers.
 
 ## How It Works
 
 1. **Background Listener:** GrammarGuard runs in the background, listening for the global keyboard shortcut (`Alt+Shift+G`)
 2. **Text Capture:** When the shortcut is pressed, GrammarGuard retrieves text from your clipboard
 3. **Floating Window:** A floating window appears instantly on top of your current application, displaying the captured text
-4. **Processing:** The text is sent to Google's Gemini AI for processing based on your selected intensity and formatting options
+4. **Processing:** The text is sent to your chosen AI provider and model for processing based on your selected intensity and formatting options
 5. **Refinement & Display:** GrammarGuard shows the original text and the AI-generated suggestions
 6. **Output:** Review the suggestions and press `Enter` to copy the desired version to your clipboard
 7. **Dismissal:** The floating window can be dismissed by pressing `Esc` or clicking outside
@@ -54,6 +56,8 @@ capture and window management.
 
 * `Alt+Shift+G`: Show/hide GrammarGuard
 * `1-4`: Set rewrite intensity (1=fix only, 2=polish, 3=enhance, 4=rewrite)
+* `S`: Show model selector
+* `C`: Show provider configuration
 * `M`: Toggle Markdown formatting
 * `L`: Toggle LaTeX formatting
 * `H`: Toggle diff view
@@ -76,11 +80,12 @@ capture and window management.
 
 ## First-Time Setup
 
-1. Launch GrammarGuard
-2. You'll be prompted to enter your Google AI (Gemini) API key
-3. Get your API key from: https://makersuite.google.com/app/apikey
-4. Enter your API key in the setup screen
-5. The app will securely store your API key and be ready to use
+1. Launch GrammarGuard.
+2. The first time you open the app, or if no providers are configured, you'll be taken to the provider configuration screen.
+3. Press `C` at any time to open the configuration screen.
+4. Select a provider (e.g., OpenAI, Gemini) and enter your API key.
+5. You can configure multiple providers. The app will securely store your API keys.
+6. Once at least one provider is configured, you're ready to go!
 
 ## Usage
 
@@ -89,6 +94,7 @@ capture and window management.
 3. Press `Alt+Shift+G`
 4. The GrammarGuard floating window appears with your text
 5. Use keyboard shortcuts to:
+    * Press `S` to select your desired AI model.
     * Adjust rewriting intensity (1-4)
     * Toggle Markdown/LaTeX formatting (M/L)
     * Toggle diff view (H)
