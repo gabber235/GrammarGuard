@@ -3,6 +3,7 @@ import "package:flutter/services.dart";
 import "package:grammar_guard/models/ai_model.dart";
 import "package:grammar_guard/models/model_registry.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
+import "package:grammar_guard/widgets/provider_configuration.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 class ModelListTile extends HookConsumerWidget {
@@ -83,8 +84,9 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
   }
 
   List<AiModel> get _filteredModels {
-    if (_searchQuery.isEmpty) return ModelRegistry.models;
-    return ModelRegistry.models.where((model) {
+    final models = ref.watch(modelRegistryProvider).value ?? [];
+    if (_searchQuery.isEmpty) return models;
+    return models.where((model) {
       return model.displayName.toLowerCase().contains(
                 _searchQuery.toLowerCase(),
               ) ||
@@ -150,14 +152,63 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
     }
   }
 
+  void _openConfiguration() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => const ProviderConfiguration(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final models = ref.watch(modelRegistryProvider).value ?? [];
+
+    if (models.isEmpty) {
+      return Material(
+        color: Colors.black54,
+        child: Center(
+          child: Container(
+            width: 400,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.warning, size: 48, color: Colors.orange),
+                const SizedBox(height: 16),
+                const Text(
+                  "No AI Providers Configured",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "You need to configure at least one AI provider to use models.",
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _openConfiguration,
+                  child: const Text("Configure Providers"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Shortcuts(
       shortcuts: {
         const SingleActivator(LogicalKeyboardKey.keyN, control: true):
             NextFocusIntent(),
         const SingleActivator(LogicalKeyboardKey.keyP, control: true):
             PreviousFocusIntent(),
+        const SingleActivator(LogicalKeyboardKey.keyC, control: true):
+            ConfigureIntent(),
       },
       child: Actions(
         actions: {
@@ -195,6 +246,12 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
               return null;
             },
           ),
+          ConfigureIntent: CallbackAction<ConfigureIntent>(
+            onInvoke: (_) {
+              _openConfiguration();
+              return null;
+            },
+          ),
         },
         child: Material(
           color: Colors.black54,
@@ -202,7 +259,6 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
             child: Container(
               width: 400,
               decoration: BoxDecoration(
-                // color: theme.cardColor,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -210,28 +266,39 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _focusNode,
-                      autofocus: true,
-                      decoration: const InputDecoration(
-                        hintText: "Search models...",
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                          // Clean up excess focus nodes
-                          while (
-                              _tileFocusNodes.length > _filteredModels.length) {
-                            _tileFocusNodes.removeLast().dispose();
-                          }
-                        });
-                      },
-                      onSubmitted: (value) {
-                        _searchQuery = value;
-                        _handleActivate();
-                      },
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            focusNode: _focusNode,
+                            autofocus: true,
+                            decoration: const InputDecoration(
+                              hintText: "Search models...",
+                              prefixIcon: Icon(Icons.search),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value;
+                                while (_tileFocusNodes.length >
+                                    _filteredModels.length) {
+                                  _tileFocusNodes.removeLast().dispose();
+                                }
+                              });
+                            },
+                            onSubmitted: (value) {
+                              _searchQuery = value;
+                              _handleActivate();
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: _openConfiguration,
+                          icon: const Icon(Icons.settings),
+                          tooltip: "Configure Providers (Ctrl+C)",
+                        ),
+                      ],
                     ),
                   ),
                   const Divider(),
@@ -245,7 +312,7 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
                         }
                         final model = _filteredModels[index];
                         final isSelected =
-                            model == ref.watch(selectedModelProvider);
+                            model == ref.watch(selectedModelProvider).value;
                         final isFocused = _tileFocusNodes[index].hasFocus;
                         return ModelListTile(
                           model: model,
@@ -274,4 +341,8 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
       ),
     );
   }
+}
+
+class ConfigureIntent extends Intent {
+  const ConfigureIntent();
 }

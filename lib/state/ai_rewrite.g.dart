@@ -6,68 +6,181 @@ part of 'ai_rewrite.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$diffsHash() => r'5561574e5ebaf8448f42cb3d6953fa03007a6596';
+@ProviderFor(SelectedModel)
+const selectedModelProvider = SelectedModelProvider._();
 
-/// See also [diffs].
+final class SelectedModelProvider
+    extends $AsyncNotifierProvider<SelectedModel, AiModel?> {
+  const SelectedModelProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'selectedModelProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$selectedModelHash();
+
+  @$internal
+  @override
+  SelectedModel create() => SelectedModel();
+
+  @$internal
+  @override
+  $AsyncNotifierProviderElement<SelectedModel, AiModel?> $createElement(
+          $ProviderPointer pointer) =>
+      $AsyncNotifierProviderElement(pointer);
+}
+
+String _$selectedModelHash() => r'c3b5ece6fd3e947b23e9be1055af95fef24a2986';
+
+abstract class _$SelectedModel extends $AsyncNotifier<AiModel?> {
+  FutureOr<AiModel?> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<AsyncValue<AiModel?>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<AiModel?>>,
+        AsyncValue<AiModel?>,
+        Object?,
+        Object?>;
+    element.handleValue(ref, created);
+  }
+}
+
+@ProviderFor(AiRewrite)
+const aiRewriteProvider = AiRewriteProvider._();
+
+final class AiRewriteProvider
+    extends $StreamNotifierProvider<AiRewrite, AiRewriteResult> {
+  const AiRewriteProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'aiRewriteProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$aiRewriteHash();
+
+  @$internal
+  @override
+  AiRewrite create() => AiRewrite();
+
+  @$internal
+  @override
+  $StreamNotifierProviderElement<AiRewrite, AiRewriteResult> $createElement(
+          $ProviderPointer pointer) =>
+      $StreamNotifierProviderElement(pointer);
+}
+
+String _$aiRewriteHash() => r'16acf055e9e02f816bd5982c49ad3fb515c43e94';
+
+abstract class _$AiRewrite extends $StreamNotifier<AiRewriteResult> {
+  Stream<AiRewriteResult> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<AsyncValue<AiRewriteResult>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<AiRewriteResult>>,
+        AsyncValue<AiRewriteResult>,
+        Object?,
+        Object?>;
+    element.handleValue(ref, created);
+  }
+}
+
 @ProviderFor(diffs)
-final diffsProvider = AutoDisposeProvider<List<Diff>>.internal(
-  diffs,
-  name: r'diffsProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$diffsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+const diffsProvider = DiffsProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DiffsRef = AutoDisposeProviderRef<List<Diff>>;
+final class DiffsProvider extends $FunctionalProvider<List<Diff>, List<Diff>>
+    with $Provider<List<Diff>> {
+  const DiffsProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'diffsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$diffsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<Diff>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<Diff> create(Ref ref) {
+    return diffs(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<Diff> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $ValueProvider<List<Diff>>(value),
+    );
+  }
+}
+
+String _$diffsHash() => r'616348107892e74f8228db5cf0325903ab1f6c12';
+
+@ProviderFor(diffString)
+const diffStringProvider = DiffStringProvider._();
+
+final class DiffStringProvider extends $FunctionalProvider<String, String>
+    with $Provider<String> {
+  const DiffStringProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'diffStringProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$diffStringHash();
+
+  @$internal
+  @override
+  $ProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String create(Ref ref) {
+    return diffString(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $ValueProvider<String>(value),
+    );
+  }
+}
+
 String _$diffStringHash() => r'dfaa5c3266fcac0b6f97772b749c24ac76457acd';
 
-/// See also [diffString].
-@ProviderFor(diffString)
-final diffStringProvider = AutoDisposeProvider<String>.internal(
-  diffString,
-  name: r'diffStringProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$diffStringHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DiffStringRef = AutoDisposeProviderRef<String>;
-String _$selectedModelHash() => r'bd84ab2d689f6c9c9cf8df23a0e99befa3a71fa2';
-
-/// See also [SelectedModel].
-@ProviderFor(SelectedModel)
-final selectedModelProvider =
-    AutoDisposeNotifierProvider<SelectedModel, AiModel>.internal(
-  SelectedModel.new,
-  name: r'selectedModelProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$selectedModelHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$SelectedModel = AutoDisposeNotifier<AiModel>;
-String _$aiRewriteHash() => r'6f2ac87e6d5df3c617601c5989a7422e9f5a06d2';
-
-/// See also [AiRewrite].
-@ProviderFor(AiRewrite)
-final aiRewriteProvider =
-    AutoDisposeStreamNotifierProvider<AiRewrite, String>.internal(
-  AiRewrite.new,
-  name: r'aiRewriteProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$aiRewriteHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$AiRewrite = AutoDisposeStreamNotifier<String>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

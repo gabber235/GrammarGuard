@@ -14,7 +14,7 @@ part of 'grammar_state.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$GrammarStateData {
+mixin _$GrammarStateData implements DiagnosticableTreeMixin {
   String get inputText;
   Set<StylingOption> get enabledStyling;
   RewriteIntensity get rewriteIntensity;
@@ -26,6 +26,15 @@ mixin _$GrammarStateData {
   $GrammarStateDataCopyWith<GrammarStateData> get copyWith =>
       _$GrammarStateDataCopyWithImpl<GrammarStateData>(
           this as GrammarStateData, _$identity);
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+      ..add(DiagnosticsProperty('type', 'GrammarStateData'))
+      ..add(DiagnosticsProperty('inputText', inputText))
+      ..add(DiagnosticsProperty('enabledStyling', enabledStyling))
+      ..add(DiagnosticsProperty('rewriteIntensity', rewriteIntensity));
+  }
 
   @override
   bool operator ==(Object other) {
@@ -45,7 +54,7 @@ mixin _$GrammarStateData {
       const DeepCollectionEquality().hash(enabledStyling), rewriteIntensity);
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'GrammarStateData(inputText: $inputText, enabledStyling: $enabledStyling, rewriteIntensity: $rewriteIntensity)';
   }
 }
@@ -98,7 +107,9 @@ class _$GrammarStateDataCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _GrammarStateData implements GrammarStateData {
+class _GrammarStateData
+    with DiagnosticableTreeMixin
+    implements GrammarStateData {
   const _GrammarStateData(
       {this.inputText = "",
       final Set<StylingOption> enabledStyling = const {},
@@ -130,6 +141,15 @@ class _GrammarStateData implements GrammarStateData {
       __$GrammarStateDataCopyWithImpl<_GrammarStateData>(this, _$identity);
 
   @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    properties
+      ..add(DiagnosticsProperty('type', 'GrammarStateData'))
+      ..add(DiagnosticsProperty('inputText', inputText))
+      ..add(DiagnosticsProperty('enabledStyling', enabledStyling))
+      ..add(DiagnosticsProperty('rewriteIntensity', rewriteIntensity));
+  }
+
+  @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
@@ -147,7 +167,7 @@ class _GrammarStateData implements GrammarStateData {
       const DeepCollectionEquality().hash(_enabledStyling), rewriteIntensity);
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'GrammarStateData(inputText: $inputText, enabledStyling: $enabledStyling, rewriteIntensity: $rewriteIntensity)';
   }
 }

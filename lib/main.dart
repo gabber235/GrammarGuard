@@ -8,12 +8,14 @@ import "package:grammar_guard/models/rendering_mode.dart";
 import "package:grammar_guard/models/rewrite_intensity.dart";
 import "package:grammar_guard/models/styling_option.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
+import "package:grammar_guard/state/ai_rewrite_result.dart";
 import "package:grammar_guard/state/grammar_state.dart";
 import "package:grammar_guard/widgets/always_focused.dart";
 import "package:grammar_guard/widgets/api_key_checker.dart";
 import "package:grammar_guard/widgets/footer.dart";
 import "package:grammar_guard/widgets/model_selector.dart";
 import "package:grammar_guard/widgets/options_group.dart";
+import "package:grammar_guard/widgets/provider_configuration.dart";
 import "package:grammar_guard/widgets/text_display.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
@@ -108,6 +110,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
       ref
           .read(grammarStateProvider.notifier)
           .setInputText(clipboardData!.text!);
+      ref.invalidate(aiRewriteProvider);
     }
   }
 
@@ -137,12 +140,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
     );
   }
 
+  void _showProviderConfiguration() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ProviderConfiguration(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(grammarStateProvider);
     final scrollController = useScrollController();
 
-    return ApiKeyChecker(
+    return ConfigurationChecker(
       child: Shortcuts(
         shortcuts: {
           LogicalKeySet(LogicalKeyboardKey.keyM): ToggleStylingIntent(
@@ -188,6 +199,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
           ),
           LogicalKeySet(LogicalKeyboardKey.keyS):
               const ShowModelSelectorIntent(),
+          LogicalKeySet(LogicalKeyboardKey.keyC):
+              const ShowProviderConfigurationIntent(),
         },
         child: Actions(
           actions: {
@@ -224,8 +237,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
                 Future.delayed(const Duration(milliseconds: 150), () async {
                   if (!mounted) return;
                   await windowManager.hide();
-                  final outputText = ref.read(aiRewriteProvider).value ?? "";
-                  await Clipboard.setData(ClipboardData(text: outputText));
+                  final result = ref.read(aiRewriteProvider).value;
+                  final outputText = switch (result) {
+                    TextResult(text: final text) => text,
+                    ThinkingTextResult(text: final text) => text,
+                    _ => "",
+                  };
+                  if (outputText.isNotEmpty) {
+                    await Clipboard.setData(ClipboardData(text: outputText));
+                  }
                 });
                 return null;
               },
@@ -280,6 +300,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
                 return null;
               },
             ),
+            ShowProviderConfigurationIntent:
+                CallbackAction<ShowProviderConfigurationIntent>(
+              onInvoke: (intent) {
+                if (!mounted) return;
+                _showProviderConfiguration();
+                return null;
+              },
+            ),
           },
           child: AlwaysFocused(
             child: Scaffold(
@@ -315,4 +343,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
       ),
     );
   }
+}
+
+Map<String, dynamic> stringMap(dynamic value) {
+  if (value is Map<String, dynamic>) {
+    return value;
+  }
+  if (value is Map) {
+    return value.map((key, value) => MapEntry(key.toString(), value));
+  }
+  return {};
 }

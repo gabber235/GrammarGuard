@@ -1,3 +1,4 @@
+import "package:flutter/foundation.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:grammar_guard/models/rewrite_intensity.dart";
 import "package:grammar_guard/models/styling_option.dart";

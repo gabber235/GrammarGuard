@@ -4,6 +4,7 @@ import "package:gpt_markdown/custom_widgets/markdown_config.dart";
 import "package:gpt_markdown/gpt_markdown.dart";
 import "package:grammar_guard/models/rendering_mode.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
+import "package:grammar_guard/state/ai_rewrite_result.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 class TextDisplay extends HookConsumerWidget {
@@ -13,20 +14,156 @@ class TextDisplay extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rewrite = ref.watch(aiRewriteProvider);
+    final rewriteAsync = ref.watch(aiRewriteProvider);
 
-    return rewrite.when(
-      data: (_) => TextDisplayWidget(scrollController: scrollController),
-      loading:
-          () => Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.black26,
-              borderRadius: BorderRadius.circular(8),
+    return rewriteAsync.when(
+      data: (result) {
+        switch (result) {
+          case LoadingResult(message: final message):
+            return LoadingDisplay(message: message);
+          case ErrorResult(message: final message):
+            return ErrorDisplay(error: message);
+          case TextResult():
+            return TextDisplayWidget(scrollController: scrollController);
+          case ThinkingTextResult(thinking: final thinking, text: final text):
+            if (text.isEmpty) {
+              return ThinkingDisplay(thinking: thinking);
+            }
+            return Column(
+              children: [
+                ThinkingDisplay(thinking: thinking),
+                Expanded(
+                  child: TextDisplayWidget(scrollController: scrollController),
+                ),
+              ],
+            );
+        }
+      },
+      loading: () => const LoadingDisplay(message: "Initializing Rewrite..."),
+      error: (error, stackTrace) {
+        debugPrint(error.toString());
+        debugPrint(stackTrace.toString());
+        return ErrorDisplay(error: error.toString());
+      },
+    );
+  }
+}
+
+class LoadingDisplay extends StatelessWidget {
+  const LoadingDisplay({this.message, super.key});
+
+  final String? message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            if (message != null) ...[
+              const SizedBox(height: 16),
+              Text(message!),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ErrorDisplay extends StatelessWidget {
+  const ErrorDisplay({required this.error, super.key});
+
+  final String error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: Theme.of(context).colorScheme.error,
+              size: 36,
             ),
-            child: const Center(child: CircularProgressIndicator()),
+            const SizedBox(height: 12),
+            Text(
+              "An Error Occurred",
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(color: Theme.of(context).colorScheme.error),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ThinkingDisplay extends StatelessWidget {
+  const ThinkingDisplay({required this.thinking, super.key});
+
+  final String thinking;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.black12,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.psychology_alt_outlined,
+            size: 16,
+            color: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.color
+                ?.withValues(alpha: 0.7),
           ),
-      error: (error, stackTrace) => Text("Error: $error"),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              thinking,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: Colors.white70),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -47,10 +184,9 @@ class TextDisplayWidget extends HookConsumerWidget {
       ),
       child: SingleChildScrollView(
         controller: scrollController,
-        child:
-            renderingMode == RenderingModeOption.markdown
-                ? const MarkdownDisplay()
-                : const RawDisplay(),
+        child: renderingMode == RenderingModeOption.markdown
+            ? const MarkdownDisplay()
+            : const RawDisplay(),
       ),
     );
   }
@@ -102,9 +238,8 @@ class RawDisplay extends HookConsumerWidget {
               text: diff.text,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.error,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.error.withValues(alpha: 0.3),
+                backgroundColor:
+                    Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
                 decoration: TextDecoration.lineThrough,
                 decorationColor: Theme.of(context).colorScheme.error,
                 decorationStyle: TextDecorationStyle.solid,
@@ -116,7 +251,7 @@ class RawDisplay extends HookConsumerWidget {
       }
     }
 
-    return Text.rich(TextSpan(children: spans));
+    return SelectableText.rich(TextSpan(children: spans));
   }
 }
 
@@ -132,7 +267,11 @@ abstract class DiffMd extends InlineMd {
   TextStyle style(BuildContext context);
 
   @override
-  InlineSpan span(BuildContext context, String text, GptMarkdownConfig config) {
+  InlineSpan span(
+    BuildContext context,
+    String text,
+    GptMarkdownConfig config,
+  ) {
     final childText = exp.firstMatch(text)?.group(1) ?? "";
     final children = MarkdownComponent.generate(
       context,
@@ -140,7 +279,7 @@ abstract class DiffMd extends InlineMd {
       config,
       true,
     );
-    final inheritStyle = config.style ?? TextStyle();
+    final inheritStyle = config.style ?? const TextStyle();
     return TextSpan(
       children: children,
       style: inheritStyle.merge(style(context)),
@@ -154,11 +293,10 @@ class InsertMd extends DiffMd {
 
   @override
   TextStyle style(BuildContext context) => TextStyle(
-    color: Theme.of(context).colorScheme.tertiary,
-    backgroundColor: Theme.of(
-      context,
-    ).colorScheme.tertiary.withValues(alpha: 0.3),
-  );
+        color: Theme.of(context).colorScheme.tertiary,
+        backgroundColor:
+            Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.3),
+      );
 }
 
 class DeleteMd extends DiffMd {
@@ -167,10 +305,11 @@ class DeleteMd extends DiffMd {
 
   @override
   TextStyle style(BuildContext context) => TextStyle(
-    color: Theme.of(context).colorScheme.error,
-    backgroundColor: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
-    decoration: TextDecoration.lineThrough,
-    decorationColor: Theme.of(context).colorScheme.error,
-    decorationStyle: TextDecorationStyle.solid,
-  );
+        color: Theme.of(context).colorScheme.error,
+        backgroundColor:
+            Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+        decoration: TextDecoration.lineThrough,
+        decorationColor: Theme.of(context).colorScheme.error,
+        decorationStyle: TextDecorationStyle.solid,
+      );
 }

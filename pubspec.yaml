@@ -12,13 +12,13 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # State management
-  hooks_riverpod: ^2.6.1
+  hooks_riverpod: ^3.0.0-dev.15
   flutter_hooks: ^0.21.2
-  riverpod_annotation: ^2.6.1
+  riverpod_annotation: ^3.0.0-dev.15
 
   # Networking
   dio: ^5.8.0+1
-  url_launcher: ^6.2.5
+  url_launcher: ^6.3.1
 
   # Storage
   shared_preferences: ^2.5.3
@@ -29,12 +29,15 @@ dependencies:
   window_manager: ^0.5.0
   hotkey_manager: ^0.2.3
 
-  # Models and serialization
+  # Serialization
   freezed_annotation: ^3.0.0
   json_annotation: ^4.9.0
-  google_generative_ai: ^0.4.6
   diff_match_patch: ^0.4.1
   gpt_markdown: ^1.0.16
+
+  # AI
+  llm_dart: ^0.7.2
+  collection: ^1.19.1
 
 dev_dependencies:
   flutter_test:

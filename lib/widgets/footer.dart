@@ -4,6 +4,7 @@ import "package:grammar_guard/models/rendering_mode.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
 import "package:grammar_guard/state/ai_usage.dart";
 import "package:grammar_guard/widgets/model_selector.dart";
+import "package:grammar_guard/widgets/provider_configuration.dart";
 import "package:grammar_guard/widgets/toggle_option.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
@@ -39,8 +40,22 @@ class Footer extends ConsumerWidget {
         Row(
           children: [
             ToggleOption(
+              icon: Icons.settings,
+              label: "Settings",
+              shortcut: "C",
+              onToggle: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ProviderConfiguration(),
+                ),
+              ),
+            ),
+            ToggleOption(
               icon: Icons.smart_toy,
-              label: selectedModel.displayName,
+              label: selectedModel.when(
+                data: (model) => model?.displayName ?? "Select Model",
+                error: (error, stack) => "Error",
+                loading: () => "Loading...",
+              ),
               shortcut: "S",
               onToggle: () {
                 showDialog(

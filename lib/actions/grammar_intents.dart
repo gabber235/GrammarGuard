@@ -45,3 +45,7 @@ class TextScrollIntent extends Intent {
 class ShowModelSelectorIntent extends Intent {
   const ShowModelSelectorIntent();
 }
+
+class ShowProviderConfigurationIntent extends Intent {
+  const ShowProviderConfigurationIntent();
+}

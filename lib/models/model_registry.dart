@@ -1,48 +1,46 @@
+import "package:collection/collection.dart";
 import "package:grammar_guard/models/ai_model.dart";
-import "package:grammar_guard/services/providers/gemini_provider.dart";
+import "package:grammar_guard/services/provider_registry.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
 
-class ModelRegistry {
-  static final List<AiModel> _models = [
-    AiModel(
-      name: "gemini-2.5-pro-exp-03-25",
-      displayName: "Gemini 2.5 Pro",
-      provider: GeminiProvider(),
-      pricePerMillionInputTokens: 1.25,
-      pricePerMillionOutputTokens: 2.5,
-    ),
-    AiModel(
-      name: "gemini-2.0-flash",
-      displayName: "Gemini 2.0 Flash",
-      provider: GeminiProvider(),
-      pricePerMillionInputTokens: 0.1,
-      pricePerMillionOutputTokens: 0.4,
-    ),
-    AiModel(
-      name: "gemini-2.5-flash-preview-04-17",
-      displayName: "Gemini 2.5 Flash",
-      provider: GeminiProvider(),
-      pricePerMillionInputTokens: 0.15,
-      pricePerMillionOutputTokens: 0.6,
-    ),
-  ];
+part "model_registry.g.dart";
 
-  static List<AiModel> get models => _models;
-
-  static AiModel? getModel(String name) {
-    try {
-      return _models.firstWhere((model) => model.name == name);
-    } on Exception catch (_) {
-      return null;
-    }
+@Riverpod(keepAlive: true)
+class ModelRegistry extends _$ModelRegistry {
+  @override
+  Future<List<AiModel>> build() async {
+    final providers = ref.watch(providerRegistryProvider);
+    final models = await Future.wait(
+      providers.map((provider) => provider.fetchAvailableModels(ref)),
+    );
+    return models.expand((m) => m).toList();
   }
+}
 
-  static AiModel get defaultModel => _models.firstWhere(
-        (model) => model.name == "gemini-2.0-flash",
-      );
+@Riverpod(keepAlive: true)
+AiModel? defaultModel(Ref ref) {
+  return ref.watch(modelRegistryProvider).value?.firstOrNull;
+}
 
-  static List<AiModel> getModelsForProvider(String providerName) {
-    return _models
-        .where((model) => model.provider.name == providerName)
-        .toList();
-  }
+@riverpod
+Future<List<AiModel>> configuredModels(
+  Ref ref,
+  Set<String> configuredProviders,
+) async {
+  final models = await ref.watch(modelRegistryProvider.future);
+  return models.where((model) {
+    return configuredProviders.contains(model.provider.name);
+  }).toList();
+}
+
+@riverpod
+Future<AiModel?> model(Ref ref, String name) async {
+  final models = await ref.watch(modelRegistryProvider.future);
+  return models.firstWhereOrNull((model) => model.name == name);
+}
+
+@riverpod
+Future<List<AiModel>> modelsForProvider(Ref ref, String providerName) async {
+  final models = await ref.watch(modelRegistryProvider.future);
+  return models.where((model) => model.provider.name == providerName).toList();
 }

@@ -1,20 +1,27 @@
+import "package:collection/collection.dart";
 import "package:grammar_guard/services/ai_provider.dart";
+import "package:grammar_guard/services/providers/claude_provider.dart";
 import "package:grammar_guard/services/providers/gemini_provider.dart";
+import "package:grammar_guard/services/providers/openai_provider.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
 
-class ProviderRegistry {
-  static const List<AiProvider> _providers = [
-    GeminiProvider(),
-  ];
+part "provider_registry.g.dart";
 
-  static List<AiProvider> get providers => _providers;
-
-  static AiProvider? getProvider(String name) {
-    try {
-      return _providers.firstWhere((provider) => provider.name == name);
-    } on StateError catch (_) {
-      return null;
-    }
+@Riverpod(keepAlive: true)
+class ProviderRegistry extends _$ProviderRegistry {
+  @override
+  List<AiProvider> build() {
+    return [
+      GeminiProvider(),
+      OpenAiProvider(),
+      ClaudeProvider(),
+      // OllamaProvider(),
+    ];
   }
+}
 
-  static AiProvider get defaultProvider => _providers.first;
+@Riverpod(keepAlive: true)
+AiProvider? provider(Ref ref, String name) {
+  final providers = ref.watch(providerRegistryProvider);
+  return providers.firstWhereOrNull((provider) => provider.name == name);
 }
