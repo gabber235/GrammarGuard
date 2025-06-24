@@ -142,6 +142,7 @@ List<Diff> diffs(Ref ref) {
   final diffs = dmp.diff(originalText.trim(), rewrittenText.trim());
   dmp.diffCleanupSemantic(diffs);
 
+
   return diffs.where((diff) {
     return switch (diff.operation) {
       DIFF_INSERT => diffOption.showAdditions,

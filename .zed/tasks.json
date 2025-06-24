@@ -1,0 +1,14 @@
+// Project tasks configuration. See https://zed.dev/docs/tasks for documentation.
+[
+  {
+    "label": "flutter run macos",
+    "command": "flutter run -d macos",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "reveal_target": "dock",
+    "hide": "always",
+    "shell": "system",
+    "tags": ["flutter"]
+  }
+]

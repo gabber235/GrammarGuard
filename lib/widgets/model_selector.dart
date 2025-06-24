@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:grammar_guard/models/ai_model.dart";
 import "package:grammar_guard/models/model_registry.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
@@ -54,105 +55,77 @@ class ModelListTile extends HookConsumerWidget {
   }
 }
 
-class ModelSelector extends ConsumerStatefulWidget {
+class ModelSelector extends HookConsumerWidget {
   const ModelSelector({super.key});
 
-  @override
-  ConsumerState<ModelSelector> createState() => _ModelSelectorState();
-}
-
-class _ModelSelectorState extends ConsumerState<ModelSelector> {
-  final _searchController = TextEditingController();
-  final _focusNode = FocusNode();
-  final List<FocusNode> _tileFocusNodes = [];
-  String _searchQuery = "";
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode.requestFocus();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _focusNode.dispose();
-    for (final node in _tileFocusNodes) {
-      node.dispose();
-    }
-    super.dispose();
-  }
-
-  List<AiModel> get _filteredModels {
-    final models = ref.watch(modelRegistryProvider).value ?? [];
-    if (_searchQuery.isEmpty) return models;
-    return models.where((model) {
-      return model.displayName.toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              ) ||
-          model.name.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
-  }
-
-  void _handleNextFocus() {
-    if (_focusNode.hasFocus) {
-      if (_tileFocusNodes.isNotEmpty) {
-        _tileFocusNodes[0].requestFocus();
+  void _handleNextFocus(FocusNode focusNode, List<FocusNode> tileFocusNodes) {
+    if (focusNode.hasFocus) {
+      if (tileFocusNodes.isNotEmpty) {
+        tileFocusNodes.first.requestFocus();
       }
     } else {
-      final focusedIndex = _tileFocusNodes.indexWhere((node) => node.hasFocus);
+      final focusedIndex = tileFocusNodes.indexWhere((node) => node.hasFocus);
       if (focusedIndex != -1) {
-        if (focusedIndex < _tileFocusNodes.length - 1) {
-          _tileFocusNodes[focusedIndex + 1].requestFocus();
+        if (focusedIndex < tileFocusNodes.length - 1) {
+          tileFocusNodes[focusedIndex + 1].requestFocus();
         } else {
-          _focusNode.requestFocus();
+          focusNode.requestFocus();
         }
       }
     }
   }
 
-  void _handlePreviousFocus() {
-    if (_focusNode.hasFocus) {
-      if (_tileFocusNodes.isNotEmpty) {
-        _tileFocusNodes.last.requestFocus();
+  void _handlePreviousFocus(
+    FocusNode focusNode,
+    List<FocusNode> tileFocusNodes,
+  ) {
+    if (focusNode.hasFocus) {
+      if (tileFocusNodes.isNotEmpty) {
+        tileFocusNodes.last.requestFocus();
       }
     } else {
-      final focusedIndex = _tileFocusNodes.indexWhere((node) => node.hasFocus);
+      final focusedIndex = tileFocusNodes.indexWhere((node) => node.hasFocus);
       if (focusedIndex != -1) {
         if (focusedIndex > 0) {
-          _tileFocusNodes[focusedIndex - 1].requestFocus();
+          tileFocusNodes[focusedIndex - 1].requestFocus();
         } else {
-          _focusNode.requestFocus();
+          focusNode.requestFocus();
         }
       }
     }
   }
 
-  void _handleActivate() {
-    if (_focusNode.hasFocus) {
-      if (_tileFocusNodes.isNotEmpty) {
-        _tileFocusNodes[0].requestFocus();
+  void _handleActivate(
+    BuildContext context,
+    WidgetRef ref,
+    FocusNode focusNode,
+    List<FocusNode> tileFocusNodes,
+    List<AiModel> filteredModels,
+  ) {
+    if (focusNode.hasFocus) {
+      if (tileFocusNodes.isNotEmpty) {
+        tileFocusNodes.first.requestFocus();
       }
     } else {
-      final focusedIndex = _tileFocusNodes.indexWhere((node) => node.hasFocus);
+      final focusedIndex = tileFocusNodes.indexWhere((node) => node.hasFocus);
       if (focusedIndex != -1) {
-        final model = _filteredModels[focusedIndex];
+        final model = filteredModels[focusedIndex];
         ref.read(selectedModelProvider.notifier).select(model);
         Navigator.of(context).pop();
-        _focusNode.requestFocus();
+        focusNode.requestFocus();
       }
     }
   }
 
-  void _handleDismiss() {
-    if (_focusNode.hasFocus) {
+  void _handleDismiss(BuildContext context, FocusNode focusNode) {
+    if (focusNode.hasFocus) {
       Navigator.of(context).pop();
     } else {
-      _focusNode.requestFocus();
+      focusNode.requestFocus();
     }
   }
 
-  void _openConfiguration() {
+  void _openConfiguration(BuildContext context) {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (context) => const ProviderConfiguration(),
@@ -161,43 +134,62 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final searchController = useTextEditingController();
+    final focusNode = useFocusNode();
+    final tileFocusNodes = useRef<List<FocusNode>>([]).value;
+    final searchQuery = useState("");
+    final scrollController = useScrollController();
+
+    useEffect(
+      () {
+        focusNode.requestFocus();
+        return null;
+      },
+      const [],
+    );
+
+    useEffect(
+      () {
+        return () {
+          for (final node in tileFocusNodes) {
+            node.dispose();
+          }
+        };
+      },
+      const [],
+    );
+
     final models = ref.watch(modelRegistryProvider).value ?? [];
 
+    final filteredModels = useMemoized(
+      () {
+        if (searchQuery.value.isEmpty) return models;
+        return models.where((model) {
+          return model.displayName
+                  .toLowerCase()
+                  .contains(searchQuery.value.toLowerCase()) ||
+              model.name
+                  .toLowerCase()
+                  .contains(searchQuery.value.toLowerCase());
+        }).toList();
+      },
+      [models, searchQuery.value],
+    );
+
+    useEffect(
+      () {
+        while (tileFocusNodes.length > filteredModels.length) {
+          tileFocusNodes.removeLast().dispose();
+        }
+        return null;
+      },
+      [filteredModels],
+    );
+
     if (models.isEmpty) {
-      return Material(
-        color: Colors.black54,
-        child: Center(
-          child: Container(
-            width: 400,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.warning, size: 48, color: Colors.orange),
-                const SizedBox(height: 16),
-                const Text(
-                  "No AI Providers Configured",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  "You need to configure at least one AI provider to use models.",
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _openConfiguration,
-                  child: const Text("Configure Providers"),
-                ),
-              ],
-            ),
-          ),
-        ),
+      return _NoProvidersConfigured(
+        onConfigure: () => _openConfiguration(context),
       );
     }
 
@@ -214,41 +206,47 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
         actions: {
           NextFocusIntent: CallbackAction<NextFocusIntent>(
             onInvoke: (_) {
-              _handleNextFocus();
+              _handleNextFocus(focusNode, tileFocusNodes);
               return null;
             },
           ),
           PreviousFocusIntent: CallbackAction<PreviousFocusIntent>(
             onInvoke: (_) {
-              _handlePreviousFocus();
+              _handlePreviousFocus(focusNode, tileFocusNodes);
               return null;
             },
           ),
           DirectionalFocusIntent: CallbackAction<DirectionalFocusIntent>(
             onInvoke: (intent) {
               if (intent.direction == TraversalDirection.up) {
-                _handlePreviousFocus();
+                _handlePreviousFocus(focusNode, tileFocusNodes);
               } else if (intent.direction == TraversalDirection.down) {
-                _handleNextFocus();
+                _handleNextFocus(focusNode, tileFocusNodes);
               }
               return null;
             },
           ),
           ActivateIntent: CallbackAction<ActivateIntent>(
             onInvoke: (_) {
-              _handleActivate();
+              _handleActivate(
+                context,
+                ref,
+                focusNode,
+                tileFocusNodes,
+                filteredModels,
+              );
               return null;
             },
           ),
           DismissIntent: CallbackAction<DismissIntent>(
             onInvoke: (_) {
-              _handleDismiss();
+              _handleDismiss(context, focusNode);
               return null;
             },
           ),
           ConfigureIntent: CallbackAction<ConfigureIntent>(
             onInvoke: (_) {
-              _openConfiguration();
+              _openConfiguration(context);
               return null;
             },
           ),
@@ -264,67 +262,61 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            focusNode: _focusNode,
-                            autofocus: true,
-                            decoration: const InputDecoration(
-                              hintText: "Search models...",
-                              prefixIcon: Icon(Icons.search),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _searchQuery = value;
-                                while (_tileFocusNodes.length >
-                                    _filteredModels.length) {
-                                  _tileFocusNodes.removeLast().dispose();
-                                }
-                              });
-                            },
-                            onSubmitted: (value) {
-                              _searchQuery = value;
-                              _handleActivate();
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: _openConfiguration,
-                          icon: const Icon(Icons.settings),
-                          tooltip: "Configure Providers (Ctrl+C)",
-                        ),
-                      ],
-                    ),
+                  _ModelSearchField(
+                    searchController: searchController,
+                    focusNode: focusNode,
+                    onChanged: (value) {
+                      searchQuery.value = value;
+                    },
+                    onSubmitted: (value) {
+                      searchQuery.value = value;
+                      _handleActivate(
+                        context,
+                        ref,
+                        focusNode,
+                        tileFocusNodes,
+                        filteredModels,
+                      );
+                    },
+                    onConfigure: () => _openConfiguration(context),
                   ),
                   const Divider(),
                   Flexible(
                     child: ListView.separated(
+                      controller: scrollController,
                       shrinkWrap: true,
-                      itemCount: _filteredModels.length,
+                      itemCount: filteredModels.length,
                       itemBuilder: (context, index) {
-                        while (_tileFocusNodes.length <= index) {
-                          _tileFocusNodes.add(FocusNode());
+                        while (tileFocusNodes.length <= index) {
+                          final node = FocusNode();
+                          node.addListener(() {
+                            if (!node.hasFocus || node.context == null) {
+                              return;
+                            }
+                            Scrollable.ensureVisible(
+                              node.context!,
+                              alignment: 0.5,
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOut,
+                            );
+                          });
+                          tileFocusNodes.add(node);
                         }
-                        final model = _filteredModels[index];
+                        final model = filteredModels[index];
                         final isSelected =
                             model == ref.watch(selectedModelProvider).value;
-                        final isFocused = _tileFocusNodes[index].hasFocus;
+                        final isFocused = tileFocusNodes[index].hasFocus;
                         return ModelListTile(
                           model: model,
                           isSelected: isSelected,
                           isFocused: isFocused,
-                          focusNode: _tileFocusNodes[index],
+                          focusNode: tileFocusNodes[index],
                           onTap: () {
                             ref
                                 .read(selectedModelProvider.notifier)
                                 .select(model);
                             Navigator.of(context).pop();
-                            _focusNode.requestFocus();
+                            focusNode.requestFocus();
                           },
                         );
                       },
@@ -338,6 +330,96 @@ class _ModelSelectorState extends ConsumerState<ModelSelector> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _NoProvidersConfigured extends StatelessWidget {
+  const _NoProvidersConfigured({required this.onConfigure});
+
+  final VoidCallback onConfigure;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black54,
+      child: Center(
+        child: Container(
+          width: 400,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.warning, size: 48, color: Colors.orange),
+              const SizedBox(height: 16),
+              const Text(
+                "No AI Providers Configured",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "You need to configure at least one AI provider to use models.",
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onConfigure,
+                child: const Text("Configure Providers"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ModelSearchField extends StatelessWidget {
+  const _ModelSearchField({
+    required this.searchController,
+    required this.focusNode,
+    required this.onChanged,
+    required this.onSubmitted,
+    required this.onConfigure,
+  });
+
+  final TextEditingController searchController;
+  final FocusNode focusNode;
+  final ValueChanged<String> onChanged;
+  final ValueChanged<String> onSubmitted;
+  final VoidCallback onConfigure;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: searchController,
+              focusNode: focusNode,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: "Search models...",
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: onChanged,
+              onSubmitted: onSubmitted,
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: onConfigure,
+            icon: const Icon(Icons.settings),
+            tooltip: "Configure Providers (Ctrl+C)",
+          ),
+        ],
       ),
     );
   }
