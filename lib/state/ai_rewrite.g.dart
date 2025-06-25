@@ -17,7 +17,7 @@ final class SelectedModelProvider
           argument: null,
           retry: null,
           name: r'selectedModelProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -36,7 +36,7 @@ final class SelectedModelProvider
       $AsyncNotifierProviderElement(pointer);
 }
 
-String _$selectedModelHash() => r'c3b5ece6fd3e947b23e9be1055af95fef24a2986';
+String _$selectedModelHash() => r'4cb27e08f2d4bef5ec4051e372223cdc407cba8b';
 
 abstract class _$SelectedModel extends $AsyncNotifier<AiModel?> {
   FutureOr<AiModel?> build();

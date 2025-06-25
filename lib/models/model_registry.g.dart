@@ -17,7 +17,7 @@ final class ModelRegistryProvider
           argument: null,
           retry: null,
           name: r'modelRegistryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -36,7 +36,7 @@ final class ModelRegistryProvider
       $AsyncNotifierProviderElement(pointer);
 }
 
-String _$modelRegistryHash() => r'b82ebb1470835f8cf2af9841ec72c8b721976e0e';
+String _$modelRegistryHash() => r'b047c1171e489ffcbd2f25fd571d94e3c9689f15';
 
 abstract class _$ModelRegistry extends $AsyncNotifier<List<AiModel>> {
   FutureOr<List<AiModel>> build();
@@ -65,7 +65,7 @@ final class DefaultModelProvider extends $FunctionalProvider<AiModel?, AiModel?>
           argument: null,
           retry: null,
           name: r'defaultModelProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -92,7 +92,7 @@ final class DefaultModelProvider extends $FunctionalProvider<AiModel?, AiModel?>
   }
 }
 
-String _$defaultModelHash() => r'07ceaa7d37a8e2bc22f4bcd93748a8d0b88ecbc7';
+String _$defaultModelHash() => r'f8b969dfb48d8ddee123d68e864a0e12b4ea4703';
 
 @ProviderFor(configuredModels)
 const configuredModelsProvider = ConfiguredModelsFamily._();

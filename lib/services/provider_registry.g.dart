@@ -17,7 +17,7 @@ final class ProviderRegistryProvider
           argument: null,
           retry: null,
           name: r'providerRegistryProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -44,7 +44,7 @@ final class ProviderRegistryProvider
   }
 }
 
-String _$providerRegistryHash() => r'df642d03f027eab30cdb69a6448bfc6d29e51c4e';
+String _$providerRegistryHash() => r'2b9169338cdac4975448f379fe1313549dc014af';
 
 abstract class _$ProviderRegistry extends $Notifier<List<AiProvider>> {
   List<AiProvider> build();
@@ -70,7 +70,7 @@ final class ProviderProvider
       : super(
           retry: null,
           name: r'providerProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -118,7 +118,7 @@ final class ProviderProvider
   }
 }
 
-String _$providerHash() => r'5cf3b356ca14cbd792106be8ad5b683cdde5a549';
+String _$providerHash() => r'20767636b3d33082487fba17540598dc11192118';
 
 final class ProviderFamily extends $Family
     with $FunctionalFamilyOverride<AiProvider?, String> {
@@ -128,7 +128,7 @@ final class ProviderFamily extends $Family
           name: r'providerProvider',
           dependencies: null,
           $allTransitiveDependencies: null,
-          isAutoDispose: true,
+          isAutoDispose: false,
         );
 
   ProviderProvider call(

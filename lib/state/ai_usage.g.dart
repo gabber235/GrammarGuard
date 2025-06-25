@@ -58,7 +58,7 @@ final class AiUsageProvider
           $AsyncNotifierProviderElement(pointer);
 }
 
-String _$aiUsageHash() => r'89f5e0903f51f6a557ebee4e04e45eb9d9cee8b4';
+String _$aiUsageHash() => r'49984fa7697a2eec46d4db2bf9e4152310540e39';
 
 abstract class _$AiUsage extends $AsyncNotifier<Map<String, RequestUsage>> {
   FutureOr<Map<String, RequestUsage>> build();

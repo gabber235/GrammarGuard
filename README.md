@@ -16,7 +16,7 @@ shortcut, and instantly get suggestions for:
 * Rewriting text with adjustable intensity – from subtle polishing to significant rephrasing
 * Adding Markdown or LaTeX formatting
 
-GrammarGuard supports multiple AI providers, including **OpenAI (GPT models)**, **Google AI (Gemini)**, and **Anthropic (Claude)**, allowing you to choose the best model for your needs. It appears in a convenient floating window, allowing for quick refinements without disrupting your focus.
+GrammarGuard supports multiple AI providers, including **OpenAI (GPT models)**, **Google AI (Gemini)**, **Anthropic (Claude)**, and **Ollama (local models)**, allowing you to choose the best model for your needs. It appears in a convenient floating window, allowing for quick refinements without disrupting your focus.
 
 **Note:** Currently available exclusively for **macOS** due to the reliance on OS-specific features for text
 capture and window management.
@@ -26,7 +26,7 @@ capture and window management.
 ## Features
 
 * **System-Wide Text Capture:** Grabs text from your clipboard when triggered
-* **Multi-Provider Support:** Choose between OpenAI, Google (Gemini), and Anthropic (Claude) models.
+* **Multi-Provider Support:** Choose between OpenAI, Google (Gemini), Anthropic (Claude), and Ollama (local) models.
 * **Model Selector:** Easily switch between different AI models and see their token pricing.
 * **Background Operation:** Runs unobtrusively until needed
 * **Floating Window UI:** Appears on top of other windows for easy access upon activation
@@ -40,7 +40,7 @@ capture and window management.
 * **Diff View:** Toggle between original and rewritten text to see changes
 * **Keyboard Shortcuts:** Quick access to all features
 * **Beautiful UI:** Light and dark themes with Catppuccin color scheme
-* **Secure API Key Storage:** Safely stores your API keys for different providers.
+* **Secure API Key Storage:** Safely stores your API keys for cloud providers (OpenAI, Gemini, Claude). Ollama runs locally and requires no API keys.
 
 ## How It Works
 
@@ -83,9 +83,37 @@ capture and window management.
 1. Launch GrammarGuard.
 2. The first time you open the app, or if no providers are configured, you'll be taken to the provider configuration screen.
 3. Press `C` at any time to open the configuration screen.
-4. Select a provider (e.g., OpenAI, Gemini) and enter your API key.
-5. You can configure multiple providers. The app will securely store your API keys.
+4. Select a provider (e.g., OpenAI, Gemini, Claude, or Ollama) and enter your API key or configure your local server.
+5. You can configure multiple providers. The app will securely store your API keys. For Ollama, configure your local server URL (default: http://localhost:11434).
 6. Once at least one provider is configured, you're ready to go!
+
+## Ollama Setup (Local AI Models)
+
+Ollama allows you to run AI models locally on your machine, providing privacy and eliminating the need for API keys.
+
+### Installing Ollama
+
+1. Download and install Ollama from [https://ollama.com](https://ollama.com)
+2. Start Ollama by running `ollama serve` in your terminal (or it may start automatically)
+3. Download a model, for example: `ollama pull llama3.2` or `ollama pull mistral`
+
+### Configuring Ollama in GrammarGuard
+
+1. In GrammarGuard, press `C` to open the configuration screen
+2. Select "Ollama" from the provider list
+3. Configure your server URL (default: `http://localhost:11434`)
+4. Click "Test Connection" to verify Ollama is running
+5. Click "Refresh Models" to load available models from your Ollama installation
+6. Save your configuration
+
+### Ollama Benefits
+
+* **Privacy:** All processing happens locally on your machine
+* **No API costs:** No per-token charges or usage limits
+* **Offline capability:** Works without internet connection
+* **Model flexibility:** Choose from various open-source models
+
+**Note:** Local models may be slower than cloud providers depending on your hardware, but offer complete privacy and control.
 
 ## Usage
 
