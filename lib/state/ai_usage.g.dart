@@ -50,12 +50,6 @@ final class AiUsageProvider
   @$internal
   @override
   AiUsage create() => AiUsage();
-
-  @$internal
-  @override
-  $AsyncNotifierProviderElement<AiUsage, Map<String, RequestUsage>>
-      $createElement($ProviderPointer pointer) =>
-          $AsyncNotifierProviderElement(pointer);
 }
 
 String _$aiUsageHash() => r'49984fa7697a2eec46d4db2bf9e4152310540e39';
@@ -66,9 +60,11 @@ abstract class _$AiUsage extends $AsyncNotifier<Map<String, RequestUsage>> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<Map<String, RequestUsage>>>;
+    final ref = this.ref as $Ref<AsyncValue<Map<String, RequestUsage>>,
+        Map<String, RequestUsage>>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<Map<String, RequestUsage>>>,
+        AnyNotifier<AsyncValue<Map<String, RequestUsage>>,
+            Map<String, RequestUsage>>,
         AsyncValue<Map<String, RequestUsage>>,
         Object?,
         Object?>;
@@ -79,7 +75,7 @@ abstract class _$AiUsage extends $AsyncNotifier<Map<String, RequestUsage>> {
 @ProviderFor(totalTokenCount)
 const totalTokenCountProvider = TotalTokenCountProvider._();
 
-final class TotalTokenCountProvider extends $FunctionalProvider<int, int>
+final class TotalTokenCountProvider extends $FunctionalProvider<int, int, int>
     with $Provider<int> {
   const TotalTokenCountProvider._()
       : super(
@@ -109,7 +105,7 @@ final class TotalTokenCountProvider extends $FunctionalProvider<int, int>
   Override overrideWithValue(int value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<int>(value),
+      providerOverride: $SyncValueProvider<int>(value),
     );
   }
 }
@@ -119,8 +115,8 @@ String _$totalTokenCountHash() => r'961093240deb860224daee6bb453765fea1d8e35';
 @ProviderFor(totalPrice)
 const totalPriceProvider = TotalPriceProvider._();
 
-final class TotalPriceProvider extends $FunctionalProvider<double, double>
-    with $Provider<double> {
+final class TotalPriceProvider
+    extends $FunctionalProvider<double, double, double> with $Provider<double> {
   const TotalPriceProvider._()
       : super(
           from: null,
@@ -149,7 +145,7 @@ final class TotalPriceProvider extends $FunctionalProvider<double, double>
   Override overrideWithValue(double value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<double>(value),
+      providerOverride: $SyncValueProvider<double>(value),
     );
   }
 }

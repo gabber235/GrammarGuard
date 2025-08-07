@@ -29,17 +29,11 @@ final class GrammarStateProvider
   @override
   GrammarState create() => GrammarState();
 
-  @$internal
-  @override
-  $NotifierProviderElement<GrammarState, GrammarStateData> $createElement(
-          $ProviderPointer pointer) =>
-      $NotifierProviderElement(pointer);
-
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(GrammarStateData value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<GrammarStateData>(value),
+      providerOverride: $SyncValueProvider<GrammarStateData>(value),
     );
   }
 }
@@ -52,9 +46,12 @@ abstract class _$GrammarState extends $Notifier<GrammarStateData> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<GrammarStateData>;
+    final ref = this.ref as $Ref<GrammarStateData, GrammarStateData>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<GrammarStateData>, GrammarStateData, Object?, Object?>;
+        AnyNotifier<GrammarStateData, GrammarStateData>,
+        GrammarStateData,
+        Object?,
+        Object?>;
     element.handleValue(ref, created);
   }
 }

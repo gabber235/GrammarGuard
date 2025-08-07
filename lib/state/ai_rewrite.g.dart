@@ -28,12 +28,6 @@ final class SelectedModelProvider
   @$internal
   @override
   SelectedModel create() => SelectedModel();
-
-  @$internal
-  @override
-  $AsyncNotifierProviderElement<SelectedModel, AiModel?> $createElement(
-          $ProviderPointer pointer) =>
-      $AsyncNotifierProviderElement(pointer);
 }
 
 String _$selectedModelHash() => r'4cb27e08f2d4bef5ec4051e372223cdc407cba8b';
@@ -44,9 +38,9 @@ abstract class _$SelectedModel extends $AsyncNotifier<AiModel?> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<AiModel?>>;
+    final ref = this.ref as $Ref<AsyncValue<AiModel?>, AiModel?>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<AiModel?>>,
+        AnyNotifier<AsyncValue<AiModel?>, AiModel?>,
         AsyncValue<AiModel?>,
         Object?,
         Object?>;
@@ -76,12 +70,6 @@ final class AiRewriteProvider
   @$internal
   @override
   AiRewrite create() => AiRewrite();
-
-  @$internal
-  @override
-  $StreamNotifierProviderElement<AiRewrite, AiRewriteResult> $createElement(
-          $ProviderPointer pointer) =>
-      $StreamNotifierProviderElement(pointer);
 }
 
 String _$aiRewriteHash() => r'16acf055e9e02f816bd5982c49ad3fb515c43e94';
@@ -92,9 +80,9 @@ abstract class _$AiRewrite extends $StreamNotifier<AiRewriteResult> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<AiRewriteResult>>;
+    final ref = this.ref as $Ref<AsyncValue<AiRewriteResult>, AiRewriteResult>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<AiRewriteResult>>,
+        AnyNotifier<AsyncValue<AiRewriteResult>, AiRewriteResult>,
         AsyncValue<AiRewriteResult>,
         Object?,
         Object?>;
@@ -105,7 +93,8 @@ abstract class _$AiRewrite extends $StreamNotifier<AiRewriteResult> {
 @ProviderFor(diffs)
 const diffsProvider = DiffsProvider._();
 
-final class DiffsProvider extends $FunctionalProvider<List<Diff>, List<Diff>>
+final class DiffsProvider
+    extends $FunctionalProvider<List<Diff>, List<Diff>, List<Diff>>
     with $Provider<List<Diff>> {
   const DiffsProvider._()
       : super(
@@ -135,7 +124,7 @@ final class DiffsProvider extends $FunctionalProvider<List<Diff>, List<Diff>>
   Override overrideWithValue(List<Diff> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<List<Diff>>(value),
+      providerOverride: $SyncValueProvider<List<Diff>>(value),
     );
   }
 }
@@ -145,8 +134,8 @@ String _$diffsHash() => r'616348107892e74f8228db5cf0325903ab1f6c12';
 @ProviderFor(diffString)
 const diffStringProvider = DiffStringProvider._();
 
-final class DiffStringProvider extends $FunctionalProvider<String, String>
-    with $Provider<String> {
+final class DiffStringProvider
+    extends $FunctionalProvider<String, String, String> with $Provider<String> {
   const DiffStringProvider._()
       : super(
           from: null,
@@ -175,7 +164,7 @@ final class DiffStringProvider extends $FunctionalProvider<String, String>
   Override overrideWithValue(String value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<String>(value),
+      providerOverride: $SyncValueProvider<String>(value),
     );
   }
 }

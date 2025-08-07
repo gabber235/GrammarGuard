@@ -29,17 +29,11 @@ final class ProviderRegistryProvider
   @override
   ProviderRegistry create() => ProviderRegistry();
 
-  @$internal
-  @override
-  $NotifierProviderElement<ProviderRegistry, List<AiProvider>> $createElement(
-          $ProviderPointer pointer) =>
-      $NotifierProviderElement(pointer);
-
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<AiProvider> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<List<AiProvider>>(value),
+      providerOverride: $SyncValueProvider<List<AiProvider>>(value),
     );
   }
 }
@@ -52,9 +46,12 @@ abstract class _$ProviderRegistry extends $Notifier<List<AiProvider>> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<List<AiProvider>>;
+    final ref = this.ref as $Ref<List<AiProvider>, List<AiProvider>>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<List<AiProvider>>, List<AiProvider>, Object?, Object?>;
+        AnyNotifier<List<AiProvider>, List<AiProvider>>,
+        List<AiProvider>,
+        Object?,
+        Object?>;
     element.handleValue(ref, created);
   }
 }
@@ -63,7 +60,7 @@ abstract class _$ProviderRegistry extends $Notifier<List<AiProvider>> {
 const providerProvider = ProviderFamily._();
 
 final class ProviderProvider
-    extends $FunctionalProvider<AiProvider?, AiProvider?>
+    extends $FunctionalProvider<AiProvider?, AiProvider?, AiProvider?>
     with $Provider<AiProvider?> {
   const ProviderProvider._(
       {required ProviderFamily super.from, required String super.argument})
@@ -103,7 +100,7 @@ final class ProviderProvider
   Override overrideWithValue(AiProvider? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<AiProvider?>(value),
+      providerOverride: $SyncValueProvider<AiProvider?>(value),
     );
   }
 

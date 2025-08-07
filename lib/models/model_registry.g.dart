@@ -28,12 +28,6 @@ final class ModelRegistryProvider
   @$internal
   @override
   ModelRegistry create() => ModelRegistry();
-
-  @$internal
-  @override
-  $AsyncNotifierProviderElement<ModelRegistry, List<AiModel>> $createElement(
-          $ProviderPointer pointer) =>
-      $AsyncNotifierProviderElement(pointer);
 }
 
 String _$modelRegistryHash() => r'b047c1171e489ffcbd2f25fd571d94e3c9689f15';
@@ -44,9 +38,9 @@ abstract class _$ModelRegistry extends $AsyncNotifier<List<AiModel>> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<List<AiModel>>>;
+    final ref = this.ref as $Ref<AsyncValue<List<AiModel>>, List<AiModel>>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<List<AiModel>>>,
+        AnyNotifier<AsyncValue<List<AiModel>>, List<AiModel>>,
         AsyncValue<List<AiModel>>,
         Object?,
         Object?>;
@@ -57,7 +51,8 @@ abstract class _$ModelRegistry extends $AsyncNotifier<List<AiModel>> {
 @ProviderFor(defaultModel)
 const defaultModelProvider = DefaultModelProvider._();
 
-final class DefaultModelProvider extends $FunctionalProvider<AiModel?, AiModel?>
+final class DefaultModelProvider
+    extends $FunctionalProvider<AiModel?, AiModel?, AiModel?>
     with $Provider<AiModel?> {
   const DefaultModelProvider._()
       : super(
@@ -87,7 +82,7 @@ final class DefaultModelProvider extends $FunctionalProvider<AiModel?, AiModel?>
   Override overrideWithValue(AiModel? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<AiModel?>(value),
+      providerOverride: $SyncValueProvider<AiModel?>(value),
     );
   }
 }
@@ -98,7 +93,7 @@ String _$defaultModelHash() => r'f8b969dfb48d8ddee123d68e864a0e12b4ea4703';
 const configuredModelsProvider = ConfiguredModelsFamily._();
 
 final class ConfiguredModelsProvider extends $FunctionalProvider<
-        AsyncValue<List<AiModel>>, FutureOr<List<AiModel>>>
+        AsyncValue<List<AiModel>>, List<AiModel>, FutureOr<List<AiModel>>>
     with $FutureModifier<List<AiModel>>, $FutureProvider<List<AiModel>> {
   const ConfiguredModelsProvider._(
       {required ConfiguredModelsFamily super.from,
@@ -172,8 +167,8 @@ final class ConfiguredModelsFamily extends $Family
 @ProviderFor(model)
 const modelProvider = ModelFamily._();
 
-final class ModelProvider
-    extends $FunctionalProvider<AsyncValue<AiModel?>, FutureOr<AiModel?>>
+final class ModelProvider extends $FunctionalProvider<AsyncValue<AiModel?>,
+        AiModel?, FutureOr<AiModel?>>
     with $FutureModifier<AiModel?>, $FutureProvider<AiModel?> {
   const ModelProvider._(
       {required ModelFamily super.from, required String super.argument})
@@ -246,7 +241,7 @@ final class ModelFamily extends $Family
 const modelsForProviderProvider = ModelsForProviderFamily._();
 
 final class ModelsForProviderProvider extends $FunctionalProvider<
-        AsyncValue<List<AiModel>>, FutureOr<List<AiModel>>>
+        AsyncValue<List<AiModel>>, List<AiModel>, FutureOr<List<AiModel>>>
     with $FutureModifier<List<AiModel>>, $FutureProvider<List<AiModel>> {
   const ModelsForProviderProvider._(
       {required ModelsForProviderFamily super.from,

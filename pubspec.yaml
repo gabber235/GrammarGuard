@@ -36,7 +36,8 @@ dependencies:
   gpt_markdown: ^1.0.16
 
   # AI
-  llm_dart: ^0.7.2
+  llm_dart: 
+    git: https://github.com/gabber235/llm_dart.git
   collection: ^1.19.1
 
 dev_dependencies:
@@ -56,7 +57,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/env/
-    - assets/images/
-    - assets/fonts/

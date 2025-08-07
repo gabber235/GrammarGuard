@@ -29,17 +29,11 @@ final class DiffOptionProvider
   @override
   DiffOption create() => DiffOption();
 
-  @$internal
-  @override
-  $NotifierProviderElement<DiffOption, DiffOptions> $createElement(
-          $ProviderPointer pointer) =>
-      $NotifierProviderElement(pointer);
-
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(DiffOptions value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<DiffOptions>(value),
+      providerOverride: $SyncValueProvider<DiffOptions>(value),
     );
   }
 }
@@ -52,9 +46,9 @@ abstract class _$DiffOption extends $Notifier<DiffOptions> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<DiffOptions>;
+    final ref = this.ref as $Ref<DiffOptions, DiffOptions>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<DiffOptions>, DiffOptions, Object?, Object?>;
+        AnyNotifier<DiffOptions, DiffOptions>, DiffOptions, Object?, Object?>;
     element.handleValue(ref, created);
   }
 }

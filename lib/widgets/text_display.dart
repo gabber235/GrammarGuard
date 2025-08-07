@@ -1,5 +1,6 @@
 import "package:diff_match_patch/diff_match_patch.dart";
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gpt_markdown/custom_widgets/markdown_config.dart";
 import "package:gpt_markdown/gpt_markdown.dart";
 import "package:grammar_guard/models/rendering_mode.dart";
@@ -26,16 +27,10 @@ class TextDisplay extends HookConsumerWidget {
           case TextResult():
             return TextDisplayWidget(scrollController: scrollController);
           case ThinkingTextResult(thinking: final thinking, text: final text):
-            if (text.isEmpty) {
-              return ThinkingDisplay(thinking: thinking);
-            }
-            return Column(
-              children: [
-                ThinkingDisplay(thinking: thinking),
-                Expanded(
-                  child: TextDisplayWidget(scrollController: scrollController),
-                ),
-              ],
+            return ThinkingTextDisplay(
+              showText: text.isNotEmpty,
+              thinking: thinking,
+              scrollController: scrollController,
             );
         }
       },
@@ -45,6 +40,71 @@ class TextDisplay extends HookConsumerWidget {
         debugPrint(stackTrace.toString());
         return ErrorDisplay(error: error.toString());
       },
+    );
+  }
+}
+
+class ThinkingTextDisplay extends HookWidget {
+  const ThinkingTextDisplay({
+    required this.thinking,
+    required this.scrollController,
+    required this.showText,
+    super.key,
+  });
+
+  final String thinking;
+  final ScrollController scrollController;
+  final bool showText;
+
+  static const _unFocusedHeight = 60.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final isHoveringThinking = useState(false);
+    final highlightThinking = isHoveringThinking.value || !showText;
+    return SizedBox(
+      width: double.infinity,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxHeight = constraints.maxHeight;
+
+          final thinkingHeight = showText
+              ? isHoveringThinking.value
+                  ? maxHeight - _unFocusedHeight
+                  : _unFocusedHeight
+              : maxHeight;
+
+          final textHeight = showText ? maxHeight - thinkingHeight : 0.0;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 1000),
+                curve: ElasticOutCurve(0.8),
+                height: thinkingHeight,
+                child: MouseRegion(
+                  onEnter: (event) => isHoveringThinking.value = true,
+                  onExit: (event) => isHoveringThinking.value = false,
+                  child: ThinkingDisplay(
+                    thinking: thinking,
+                    scrollController:
+                        highlightThinking ? scrollController : null,
+                  ),
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 1000),
+                curve: ElasticOutCurve(0.8),
+                height: textHeight,
+                child: TextDisplayWidget(
+                  scrollController: highlightThinking ? null : scrollController,
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -125,44 +185,80 @@ class ErrorDisplay extends StatelessWidget {
 }
 
 class ThinkingDisplay extends StatelessWidget {
-  const ThinkingDisplay({required this.thinking, super.key});
+  const ThinkingDisplay({
+    required this.thinking,
+    this.scrollController,
+    super.key,
+  });
 
   final String thinking;
+  final ScrollController? scrollController;
 
   @override
   Widget build(BuildContext context) {
+    final text = Text(
+      thinking.trim(),
+      style: Theme.of(context)
+          .textTheme
+          .bodySmall
+          ?.copyWith(color: Colors.white70),
+      maxLines: scrollController != null ? null : 1,
+      overflow: scrollController != null ? null : TextOverflow.ellipsis,
+    );
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.black12,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.psychology_alt_outlined,
-            size: 16,
-            color: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.color
-                ?.withValues(alpha: 0.7),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              thinking,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Colors.white70),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+      child: ClipRect(
+        child: AnimatedPadding(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeInOut,
+          padding: EdgeInsets.all(scrollController != null ? 16 : 8),
+          child: OverflowBox(
+            maxHeight: double.infinity,
+            alignment: Alignment.topLeft,
+            child: Column(
+              spacing: 4,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  spacing: 8,
+                  children: [
+                    Icon(
+                      Icons.psychology_alt_outlined,
+                      size: 16,
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.color
+                          ?.withValues(alpha: 0.7),
+                    ),
+                    Text(
+                      "Reasoning",
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelSmall
+                          ?.copyWith(color: Colors.white70),
+                    ),
+                  ],
+                ),
+                if (scrollController != null)
+                  Flexible(
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      child: text,
+                    ),
+                  )
+                else
+                  text,
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -170,11 +266,15 @@ class ThinkingDisplay extends StatelessWidget {
 
 class TextDisplayWidget extends HookConsumerWidget {
   const TextDisplayWidget({required this.scrollController, super.key});
-  final ScrollController scrollController;
+  final ScrollController? scrollController;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final renderingMode = ref.watch(renderingModeProvider);
+
+    final display = renderingMode == RenderingModeOption.markdown
+        ? const MarkdownDisplay()
+        : const RawDisplay();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -182,12 +282,15 @@ class TextDisplayWidget extends HookConsumerWidget {
         color: Colors.black26,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: SingleChildScrollView(
-        controller: scrollController,
-        child: renderingMode == RenderingModeOption.markdown
-            ? const MarkdownDisplay()
-            : const RawDisplay(),
-      ),
+      child: scrollController != null
+          ? SingleChildScrollView(
+              controller: scrollController,
+              child: display,
+            )
+          : SizedBox(
+              height: 50,
+              child: display,
+            ),
     );
   }
 }
@@ -200,7 +303,11 @@ class MarkdownDisplay extends HookConsumerWidget {
     final diffString = ref.watch(diffStringProvider);
     return GptMarkdown(
       diffString,
-      components: [...MarkdownComponent.components, InsertMd(), DeleteMd()],
+      components: [
+        ...MarkdownComponent.globalComponents,
+        InsertMd(),
+        DeleteMd(),
+      ],
       inlineComponents: [
         ...MarkdownComponent.inlineComponents,
         InsertMd(),

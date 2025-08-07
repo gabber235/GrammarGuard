@@ -28,16 +28,10 @@ final class OllamaConfigurationProvider
   @$internal
   @override
   OllamaConfiguration create() => OllamaConfiguration();
-
-  @$internal
-  @override
-  $AsyncNotifierProviderElement<OllamaConfiguration, OllamaConfig>
-      $createElement($ProviderPointer pointer) =>
-          $AsyncNotifierProviderElement(pointer);
 }
 
 String _$ollamaConfigurationHash() =>
-    r'914f5dbf0a08e8d123f4c4d12e3da61439e0fb33';
+    r'4fdd3365deeb69d0fb6240e8eefa54b285d2a5b1';
 
 abstract class _$OllamaConfiguration extends $AsyncNotifier<OllamaConfig> {
   FutureOr<OllamaConfig> build();
@@ -45,9 +39,9 @@ abstract class _$OllamaConfiguration extends $AsyncNotifier<OllamaConfig> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<OllamaConfig>>;
+    final ref = this.ref as $Ref<AsyncValue<OllamaConfig>, OllamaConfig>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<OllamaConfig>>,
+        AnyNotifier<AsyncValue<OllamaConfig>, OllamaConfig>,
         AsyncValue<OllamaConfig>,
         Object?,
         Object?>;

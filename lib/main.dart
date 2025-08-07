@@ -21,6 +21,8 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
 import "package:window_manager/window_manager.dart";
 
+const bool _hideWindow = true;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -54,7 +56,7 @@ void main() async {
   await hotKeyManager.register(
     showHotKey,
     keyDownHandler: (_) async {
-      if (await windowManager.isVisible()) {
+      if (await windowManager.isVisible() && _hideWindow) {
         await windowManager.hide();
       } else {
         await windowManager.show();
@@ -129,7 +131,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
   @override
   void onWindowBlur() {
     super.onWindowBlur();
-    windowManager.hide();
+    if (_hideWindow) {
+      windowManager.hide();
+    }
   }
 
   void _showModelSelector() {
@@ -226,7 +230,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
               onInvoke: (intent) {
                 Future.delayed(const Duration(milliseconds: 150), () {
                   if (!mounted) return;
-                  windowManager.hide();
+                  if (_hideWindow) {
+                    windowManager.hide();
+                  }
                 });
                 return null;
               },
@@ -236,7 +242,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
                 if (!mounted) return;
                 Future.delayed(const Duration(milliseconds: 150), () async {
                   if (!mounted) return;
-                  await windowManager.hide();
+                  if (_hideWindow) {
+                    await windowManager.hide();
+                  }
                   final result = ref.read(aiRewriteProvider).value;
                   final outputText = switch (result) {
                     TextResult(text: final text) => text,

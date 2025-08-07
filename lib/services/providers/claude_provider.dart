@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:grammar_guard/models/ai_model.dart";
 import "package:grammar_guard/services/ai_provider.dart";
 import "package:grammar_guard/services/generation_event.dart";
+import "package:grammar_guard/state/ai_usage.dart";
 import "package:grammar_guard/state/api_key_state.dart";
 import "package:grammar_guard/widgets/api_key_configuration.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -104,31 +105,30 @@ class ClaudeProvider extends AiProvider {
           yield ThinkingDeltaEvent(delta: delta);
         case llm.TextDeltaEvent(delta: final delta):
           yield TextDeltaEvent(delta: delta);
-        // TODO: Wait for fix in llm_dart that fixes usage parsing
-        // case llm.CompletionEvent(response: final response):
-        // debugPrint("Claude usage: ${response.usage}");
-        // if (response.usage != null) {
-        //   final usage = response.usage!;
-        //   final promptTokenCount = usage.promptTokens ?? 0;
-        //   final completionTokenCount = usage.completionTokens ?? 0;
+        case llm.CompletionEvent(response: final response):
+          debugPrint("Claude usage: ${response.usage}");
+          if (response.usage != null) {
+            final usage = response.usage!;
+            final promptTokenCount = usage.promptTokens ?? 0;
+            final completionTokenCount = usage.completionTokens ?? 0;
 
-        //   final cost = (promptTokenCount /
-        //           1000000 *
-        //           model.pricePerMillionInputTokens) +
-        //       (completionTokenCount /
-        //           1000000 *
-        //           model.pricePerMillionOutputTokens);
+            final cost = (promptTokenCount /
+                    1000000 *
+                    model.pricePerMillionInputTokens) +
+                (completionTokenCount /
+                    1000000 *
+                    model.pricePerMillionOutputTokens);
 
-        //   yield UsageEvent(
-        //     usage: RequestUsage(
-        //       promptTokenCount: promptTokenCount,
-        //       completionTokenCount: completionTokenCount,
-        //       modelName: model.name,
-        //       providerName: model.provider.name,
-        //       cost: cost,
-        //     ),
-        //   );
-        // }
+            yield UsageEvent(
+              usage: RequestUsage(
+                promptTokenCount: promptTokenCount,
+                completionTokenCount: completionTokenCount,
+                modelName: model.name,
+                providerName: model.provider.name,
+                cost: cost,
+              ),
+            );
+          }
         case llm.ErrorEvent(error: final error):
           yield ErrorEvent(error: error.message);
         default:

@@ -28,12 +28,6 @@ final class ApiKeyStateProvider
   @$internal
   @override
   ApiKeyState create() => ApiKeyState();
-
-  @$internal
-  @override
-  $AsyncNotifierProviderElement<ApiKeyState, Map<String, String>>
-      $createElement($ProviderPointer pointer) =>
-          $AsyncNotifierProviderElement(pointer);
 }
 
 String _$apiKeyStateHash() => r'3801047f9ce96a48dd9e4148f0ded3e4c9f1cfd9';
@@ -44,9 +38,10 @@ abstract class _$ApiKeyState extends $AsyncNotifier<Map<String, String>> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<Map<String, String>>>;
+    final ref =
+        this.ref as $Ref<AsyncValue<Map<String, String>>, Map<String, String>>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<Map<String, String>>>,
+        AnyNotifier<AsyncValue<Map<String, String>>, Map<String, String>>,
         AsyncValue<Map<String, String>>,
         Object?,
         Object?>;
@@ -58,7 +53,7 @@ abstract class _$ApiKeyState extends $AsyncNotifier<Map<String, String>> {
 const apiKeyProvider = ApiKeyFamily._();
 
 final class ApiKeyProvider
-    extends $FunctionalProvider<AsyncValue<String?>, FutureOr<String?>>
+    extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
     with $FutureModifier<String?>, $FutureProvider<String?> {
   const ApiKeyProvider._(
       {required ApiKeyFamily super.from, required String super.argument})

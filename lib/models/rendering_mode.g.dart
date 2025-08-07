@@ -29,17 +29,11 @@ final class RenderingModeProvider
   @override
   RenderingMode create() => RenderingMode();
 
-  @$internal
-  @override
-  $NotifierProviderElement<RenderingMode, RenderingModeOption> $createElement(
-          $ProviderPointer pointer) =>
-      $NotifierProviderElement(pointer);
-
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(RenderingModeOption value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $ValueProvider<RenderingModeOption>(value),
+      providerOverride: $SyncValueProvider<RenderingModeOption>(value),
     );
   }
 }
@@ -52,9 +46,9 @@ abstract class _$RenderingMode extends $Notifier<RenderingModeOption> {
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<RenderingModeOption>;
+    final ref = this.ref as $Ref<RenderingModeOption, RenderingModeOption>;
     final element = ref.element as $ClassProviderElement<
-        AnyNotifier<RenderingModeOption>,
+        AnyNotifier<RenderingModeOption, RenderingModeOption>,
         RenderingModeOption,
         Object?,
         Object?>;

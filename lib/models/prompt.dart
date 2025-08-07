@@ -10,12 +10,11 @@ String generateLlmPrompt({
   required RewriteIntensity intensity,
   required Set<StylingOption> stylingOptions,
 }) {
-  final promptBuffer =
-      StringBuffer()
-        ..writeln(_buildRoleSettingPrompt())
-        ..writeln(_buildIntensityPrompt(intensity, stylingOptions))
-        ..writeln(_buildFormattingPrompt(stylingOptions, intensity))
-        ..writeln(_buildOutputInstructionsPrompt(stylingOptions, intensity));
+  final promptBuffer = StringBuffer()
+    ..writeln(_buildRoleSettingPrompt())
+    ..writeln(_buildIntensityPrompt(intensity, stylingOptions))
+    ..writeln(_buildFormattingPrompt(stylingOptions, intensity))
+    ..writeln(_buildOutputInstructionsPrompt(stylingOptions, intensity));
 
   return promptBuffer.toString();
 }
@@ -25,6 +24,11 @@ String generateLlmPrompt({
 String _buildRoleSettingPrompt() {
   return """
 You are an expert writing assistant. Your task is to revise the following text according to the specified intensity and formatting instructions.
+
+IMPORTANT: Write in a natural, human-like style. Avoid overly formal or artificial language elements that humans rarely use in modern writing:
+- Never use em-dashes (—) for sentence continuation. Use a period or a comma instead.
+- Avoid archaic or overly formal punctuation and phrasing
+- Write as a modern human would naturally express themselves
 """;
 }
 
@@ -37,7 +41,7 @@ String _buildIntensityPrompt(
     case RewriteIntensity.fixOnly:
       buffer.writeln("- Goal: Correct only spelling and grammatical errors.");
       buffer.writeln(
-        "- Constraints: Do NOT change phrasing, sentence structure, or meaning unless necessary for correctness. Maintain original style/tone.",
+        "- Constraints: Do NOT change phrasing, sentence structure, or meaning unless necessary for correctness. Maintain original style/tone and natural human language.",
       );
       buffer.writeln(
         "- Styling: Strictly preserve all original formatting. Do NOT add any Markdown or LaTeX, regardless of other instructions.",
@@ -47,7 +51,7 @@ String _buildIntensityPrompt(
         "- Goal: Correct errors, make minor improvements for clarity, flow, word choice.",
       );
       buffer.writeln(
-        "- Constraints: Subtle changes, preserve sentence structure, core meaning, tone.",
+        "- Constraints: Subtle changes, preserve sentence structure, core meaning, tone. Keep language natural and human-like.",
       );
       if (stylingOptions.isNotEmpty) {
         buffer.writeln(
@@ -63,7 +67,7 @@ String _buildIntensityPrompt(
         "- Goal: Correct errors, significantly improve clarity, conciseness, engagement.",
       );
       buffer.writeln(
-        "- Constraints: Refine words/structure, ensure professional tone, preserve core meaning.",
+        "- Constraints: Refine words/structure, ensure professional yet natural tone, preserve core meaning. Write as a modern human would.",
       );
       if (stylingOptions.isNotEmpty) {
         buffer.writeln(
@@ -79,7 +83,7 @@ String _buildIntensityPrompt(
         "- Goal: Correct errors, substantially rewrite for maximum clarity, impact, fluency.",
       );
       buffer.writeln(
-        "- Constraints: Restructure/rephrase freely while preserving core meaning accurately.",
+        "- Constraints: Restructure/rephrase freely while preserving core meaning accurately. Maintain natural, human-like expression throughout.",
       );
       if (stylingOptions.isNotEmpty) {
         buffer.writeln(
@@ -174,15 +178,14 @@ String _buildOutputInstructionsPrompt(
   Set<StylingOption> stylingOptions,
   RewriteIntensity intensity,
 ) {
-  final buffer =
-      StringBuffer()
-        ..writeln("## Output Requirements:")
-        ..writeln(
-          "- Provide ONLY the revised text. Do not include explanations, apologies, preambles, or any conversational text.",
-        )
-        ..writeln(
-          "- Ensure the output adheres strictly to the intensity and formatting instructions provided above.",
-        );
+  final buffer = StringBuffer()
+    ..writeln("## Output Requirements:")
+    ..writeln(
+      "- Provide ONLY the revised text. Do not include explanations, apologies, preambles, or any conversational text.",
+    )
+    ..writeln(
+      "- Ensure the output adheres strictly to the intensity and formatting instructions provided above.",
+    );
 
   // Reiterate formatting expectation based on final decision
   if (intensity == RewriteIntensity.fixOnly || stylingOptions.isEmpty) {

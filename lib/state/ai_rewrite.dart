@@ -113,9 +113,7 @@ String generateId() {
 
 @riverpod
 List<Diff> diffs(Ref ref) {
-  final originalText = ref.watch(
-    grammarStateProvider.select((s) => s.inputText),
-  );
+  final originalText = ref.watch(grammarStateProvider).inputText;
 
   final rewriteResult = ref.watch(aiRewriteProvider).value;
   if (rewriteResult == null) {
@@ -141,7 +139,6 @@ List<Diff> diffs(Ref ref) {
   final dmp = DiffMatchPatch()..diffTimeout = 3.0;
   final diffs = dmp.diff(originalText.trim(), rewrittenText.trim());
   dmp.diffCleanupSemantic(diffs);
-
 
   return diffs.where((diff) {
     return switch (diff.operation) {
