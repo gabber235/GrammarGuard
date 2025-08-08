@@ -31,25 +31,25 @@ class OpenAiProvider extends AiProvider {
 
     return [
       AiModel(
-        name: "gpt-4.1",
-        displayName: "GPT-4.1",
+        name: "gpt-5-nano",
+        displayName: "GPT-5 Nano",
         provider: this,
-        pricePerMillionInputTokens: 2,
-        pricePerMillionOutputTokens: 8,
+        pricePerMillionInputTokens: 0.05,
+        pricePerMillionOutputTokens: 0.4,
       ),
       AiModel(
-        name: "gpt-4.1-mini",
-        displayName: "GPT-4.1 Mini",
+        name: "gpt-5-mini",
+        displayName: "GPT-5 Mini",
         provider: this,
-        pricePerMillionInputTokens: 0.4,
-        pricePerMillionOutputTokens: 1.6,
+        pricePerMillionInputTokens: 0.25,
+        pricePerMillionOutputTokens: 2,
       ),
       AiModel(
-        name: "gpt-o4-mini",
-        displayName: "GPT-O4 Mini",
+        name: "gpt-5",
+        displayName: "GPT-5",
         provider: this,
-        pricePerMillionInputTokens: 1.1,
-        pricePerMillionOutputTokens: 4.4,
+        pricePerMillionInputTokens: 1.25,
+        pricePerMillionOutputTokens: 10,
       ),
     ];
   }
