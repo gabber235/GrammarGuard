@@ -4,7 +4,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gpt_markdown/custom_widgets/markdown_config.dart";
 import "package:gpt_markdown/gpt_markdown.dart";
 import "package:grammar_guard/hooks/delayed_execution.dart";
-import "package:grammar_guard/hooks/text_size.dart";
+import "package:grammar_guard/models/diff_option.dart";
 import "package:grammar_guard/models/rendering_mode.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
 import "package:grammar_guard/state/ai_rewrite_result.dart";
@@ -293,7 +293,12 @@ class TextDisplayWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final diffOption = ref.watch(diffOptionProvider);
     final renderingMode = ref.watch(renderingModeProvider);
+
+    if (diffOption == DiffOptions.sideBySide) {
+      return SideBySideDisplay(scrollController: scrollController);
+    }
 
     final display = renderingMode == RenderingModeOption.markdown
         ? const MarkdownDisplay()
@@ -316,6 +321,201 @@ class TextDisplayWidget extends HookConsumerWidget {
             ),
     );
   }
+}
+
+class SideBySideDisplay extends HookConsumerWidget {
+  const SideBySideDisplay({required this.scrollController, super.key});
+
+  final ScrollController? scrollController;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final leftScrollController = useScrollController();
+    final rightScrollController = useScrollController();
+    final isSyncing = useRef(false);
+
+    useEffect(
+      () {
+        void syncScroll(ScrollController source, ScrollController target) {
+          if (isSyncing.value) return;
+          if (!target.hasClients || !source.hasClients) return;
+
+          isSyncing.value = true;
+          final sourceMax = source.position.maxScrollExtent;
+          final targetMax = target.position.maxScrollExtent;
+
+          if (sourceMax > 0 && targetMax > 0) {
+            final ratio = source.offset / sourceMax;
+            target.jumpTo(ratio * targetMax);
+          } else {
+            target.jumpTo(source.offset.clamp(0, targetMax));
+          }
+          isSyncing.value = false;
+        }
+
+        void onLeftScroll() =>
+            syncScroll(leftScrollController, rightScrollController);
+        void onRightScroll() =>
+            syncScroll(rightScrollController, leftScrollController);
+
+        leftScrollController.addListener(onLeftScroll);
+        rightScrollController.addListener(onRightScroll);
+
+        return () {
+          leftScrollController.removeListener(onLeftScroll);
+          rightScrollController.removeListener(onRightScroll);
+        };
+      },
+      [leftScrollController, rightScrollController],
+    );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: DiffPanel(
+              label: "Original",
+              scrollController: leftScrollController,
+              diffs: ref.watch(leftPanelDiffsProvider),
+              diffString: ref.watch(leftPanelDiffStringProvider),
+            ),
+          ),
+          const VerticalDivider(width: 1, thickness: 1, color: Colors.white24),
+          Expanded(
+            child: DiffPanel(
+              label: "Rewritten",
+              scrollController: rightScrollController,
+              diffs: ref.watch(rightPanelDiffsProvider),
+              diffString: ref.watch(rightPanelDiffStringProvider),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DiffPanel extends ConsumerWidget {
+  const DiffPanel({
+    required this.label,
+    required this.scrollController,
+    required this.diffs,
+    required this.diffString,
+    super.key,
+  });
+
+  final String label;
+  final ScrollController scrollController;
+  final List<Diff> diffs;
+  final String diffString;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final renderingMode = ref.watch(renderingModeProvider);
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: scrollController,
+              child: renderingMode == RenderingModeOption.markdown
+                  ? PanelMarkdownDisplay(diffString: diffString)
+                  : PanelRawDisplay(diffs: diffs),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PanelMarkdownDisplay extends StatelessWidget {
+  const PanelMarkdownDisplay({required this.diffString, super.key});
+
+  final String diffString;
+
+  @override
+  Widget build(BuildContext context) {
+    return GptMarkdown(
+      diffString,
+      components: [
+        ...MarkdownComponent.globalComponents,
+        InsertMd(),
+        DeleteMd(),
+      ],
+      inlineComponents: [
+        ...MarkdownComponent.inlineComponents,
+        InsertMd(),
+        DeleteMd(),
+      ],
+    );
+  }
+}
+
+class PanelRawDisplay extends StatelessWidget {
+  const PanelRawDisplay({required this.diffs, super.key});
+
+  final List<Diff> diffs;
+
+  @override
+  Widget build(BuildContext context) {
+    return SelectableText.rich(
+      TextSpan(children: buildDiffSpans(context, diffs)),
+    );
+  }
+}
+
+List<TextSpan> buildDiffSpans(BuildContext context, List<Diff> diffs) {
+  final spans = <TextSpan>[];
+  for (final diff in diffs) {
+    switch (diff.operation) {
+      case DIFF_INSERT:
+        spans.add(
+          TextSpan(
+            text: diff.text,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.tertiary,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.tertiary.withValues(alpha: 0.3),
+            ),
+          ),
+        );
+      case DIFF_DELETE:
+        spans.add(
+          TextSpan(
+            text: diff.text,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              backgroundColor:
+                  Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+              decoration: TextDecoration.lineThrough,
+              decorationColor: Theme.of(context).colorScheme.error,
+              decorationStyle: TextDecorationStyle.solid,
+            ),
+          ),
+        );
+      case DIFF_EQUAL:
+        spans.add(TextSpan(text: diff.text));
+    }
+  }
+  return spans;
 }
 
 class MarkdownDisplay extends HookConsumerWidget {
@@ -346,42 +546,9 @@ class RawDisplay extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final diffs = ref.watch(diffsProvider);
-
-    final spans = <TextSpan>[];
-    for (final diff in diffs) {
-      switch (diff.operation) {
-        case DIFF_INSERT:
-          spans.add(
-            TextSpan(
-              text: diff.text,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.tertiary,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.tertiary.withValues(alpha: 0.3),
-              ),
-            ),
-          );
-        case DIFF_DELETE:
-          spans.add(
-            TextSpan(
-              text: diff.text,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-                backgroundColor:
-                    Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
-                decoration: TextDecoration.lineThrough,
-                decorationColor: Theme.of(context).colorScheme.error,
-                decorationStyle: TextDecorationStyle.solid,
-              ),
-            ),
-          );
-        case DIFF_EQUAL:
-          spans.add(TextSpan(text: diff.text));
-      }
-    }
-
-    return SelectableText.rich(TextSpan(children: spans));
+    return SelectableText.rich(
+      TextSpan(children: buildDiffSpans(context, diffs)),
+    );
   }
 }
 

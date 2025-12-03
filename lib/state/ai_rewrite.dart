@@ -111,8 +111,7 @@ String generateId() {
   return DateTime.now().toIso8601String();
 }
 
-@riverpod
-List<Diff> diffs(Ref ref) {
+List<Diff> _computeRawDiffs(Ref ref) {
   final originalText = ref.watch(grammarStateProvider).inputText;
 
   final rewriteResult = ref.watch(aiRewriteProvider).value;
@@ -131,14 +130,34 @@ List<Diff> diffs(Ref ref) {
     return [Diff(0, originalText)];
   }
 
-  final diffOption = ref.watch(diffOptionProvider);
-  if (diffOption == DiffOptions.none) {
-    return [Diff(0, rewrittenText)];
-  }
-
   final dmp = DiffMatchPatch()..diffTimeout = 3.0;
   final diffs = dmp.diff(originalText.trim(), rewrittenText.trim());
   dmp.diffCleanupSemantic(diffs);
+
+  return diffs;
+}
+
+@riverpod
+List<Diff> diffs(Ref ref) {
+  final diffOption = ref.watch(diffOptionProvider);
+
+  if (diffOption == DiffOptions.none) {
+    final rewriteResult = ref.watch(aiRewriteProvider).value;
+    final rewrittenText = switch (rewriteResult) {
+      null => "",
+      LoadingResult() => "",
+      ErrorResult() => "",
+      TextResult(text: final text) => text,
+      ThinkingTextResult(text: final text) => text,
+    };
+    return [Diff(0, rewrittenText)];
+  }
+
+  if (diffOption == DiffOptions.sideBySide) {
+    return _computeRawDiffs(ref);
+  }
+
+  final diffs = _computeRawDiffs(ref);
 
   return diffs.where((diff) {
     return switch (diff.operation) {
@@ -146,6 +165,24 @@ List<Diff> diffs(Ref ref) {
       DIFF_DELETE => diffOption.showDeletions,
       _ => true,
     };
+  }).toList();
+}
+
+@riverpod
+List<Diff> leftPanelDiffs(Ref ref) {
+  final diffs = _computeRawDiffs(ref);
+
+  return diffs.where((diff) {
+    return diff.operation != DIFF_INSERT;
+  }).toList();
+}
+
+@riverpod
+List<Diff> rightPanelDiffs(Ref ref) {
+  final diffs = _computeRawDiffs(ref);
+
+  return diffs.where((diff) {
+    return diff.operation != DIFF_DELETE;
   }).toList();
 }
 
@@ -162,6 +199,44 @@ String diffString(Ref ref) {
         sb.write("<delete>${diff.text}</delete>");
       case DIFF_EQUAL:
         sb.write(diff.text);
+    }
+  }
+
+  return sb.toString();
+}
+
+@riverpod
+String leftPanelDiffString(Ref ref) {
+  final diffs = ref.watch(leftPanelDiffsProvider);
+
+  final sb = StringBuffer();
+  for (final diff in diffs) {
+    switch (diff.operation) {
+      case DIFF_DELETE:
+        sb.write("<delete>${diff.text}</delete>");
+      case DIFF_EQUAL:
+        sb.write(diff.text);
+      case DIFF_INSERT:
+        break;
+    }
+  }
+
+  return sb.toString();
+}
+
+@riverpod
+String rightPanelDiffString(Ref ref) {
+  final diffs = ref.watch(rightPanelDiffsProvider);
+
+  final sb = StringBuffer();
+  for (final diff in diffs) {
+    switch (diff.operation) {
+      case DIFF_INSERT:
+        sb.write("<insert>${diff.text}</insert>");
+      case DIFF_EQUAL:
+        sb.write(diff.text);
+      case DIFF_DELETE:
+        break;
     }
   }
 

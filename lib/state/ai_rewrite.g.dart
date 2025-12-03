@@ -129,7 +129,89 @@ final class DiffsProvider
   }
 }
 
-String _$diffsHash() => r'616348107892e74f8228db5cf0325903ab1f6c12';
+String _$diffsHash() => r'730d4ce5b3b2b61a515cc40be6850bdf15073b6b';
+
+@ProviderFor(leftPanelDiffs)
+const leftPanelDiffsProvider = LeftPanelDiffsProvider._();
+
+final class LeftPanelDiffsProvider
+    extends $FunctionalProvider<List<Diff>, List<Diff>, List<Diff>>
+    with $Provider<List<Diff>> {
+  const LeftPanelDiffsProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'leftPanelDiffsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$leftPanelDiffsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<Diff>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<Diff> create(Ref ref) {
+    return leftPanelDiffs(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<Diff> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<Diff>>(value),
+    );
+  }
+}
+
+String _$leftPanelDiffsHash() => r'107c15806ba1ca529dd1762b0b3e1922de212b85';
+
+@ProviderFor(rightPanelDiffs)
+const rightPanelDiffsProvider = RightPanelDiffsProvider._();
+
+final class RightPanelDiffsProvider
+    extends $FunctionalProvider<List<Diff>, List<Diff>, List<Diff>>
+    with $Provider<List<Diff>> {
+  const RightPanelDiffsProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'rightPanelDiffsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$rightPanelDiffsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<Diff>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<Diff> create(Ref ref) {
+    return rightPanelDiffs(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<Diff> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<Diff>>(value),
+    );
+  }
+}
+
+String _$rightPanelDiffsHash() => r'6372c31b0770bb2c6d54abbbae7a6d98cafef634';
 
 @ProviderFor(diffString)
 const diffStringProvider = DiffStringProvider._();
@@ -170,6 +252,88 @@ final class DiffStringProvider
 }
 
 String _$diffStringHash() => r'dfaa5c3266fcac0b6f97772b749c24ac76457acd';
+
+@ProviderFor(leftPanelDiffString)
+const leftPanelDiffStringProvider = LeftPanelDiffStringProvider._();
+
+final class LeftPanelDiffStringProvider
+    extends $FunctionalProvider<String, String, String> with $Provider<String> {
+  const LeftPanelDiffStringProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'leftPanelDiffStringProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$leftPanelDiffStringHash();
+
+  @$internal
+  @override
+  $ProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String create(Ref ref) {
+    return leftPanelDiffString(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String>(value),
+    );
+  }
+}
+
+String _$leftPanelDiffStringHash() =>
+    r'd281603c28a7007d6fb1a0e6a62714fc2bb1a7ce';
+
+@ProviderFor(rightPanelDiffString)
+const rightPanelDiffStringProvider = RightPanelDiffStringProvider._();
+
+final class RightPanelDiffStringProvider
+    extends $FunctionalProvider<String, String, String> with $Provider<String> {
+  const RightPanelDiffStringProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'rightPanelDiffStringProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$rightPanelDiffStringHash();
+
+  @$internal
+  @override
+  $ProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String create(Ref ref) {
+    return rightPanelDiffString(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String>(value),
+    );
+  }
+}
+
+String _$rightPanelDiffStringHash() =>
+    r'3af1f67aec04f1239d94cb74806e2b3b02aa6fb1';
 
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -18,6 +18,13 @@ enum DiffOptions {
     shortcut: "H",
     icon: Icons.compare_arrows,
   ),
+  sideBySide(
+    showAdditions: true,
+    showDeletions: true,
+    label: "Side by Side",
+    shortcut: "H",
+    icon: Icons.view_column,
+  ),
   none(
     showAdditions: false,
     showDeletions: false,
@@ -45,6 +52,8 @@ enum DiffOptions {
       case additions:
         return both;
       case both:
+        return sideBySide;
+      case sideBySide:
         return none;
       case none:
         return additions;
