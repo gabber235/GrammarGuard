@@ -62,8 +62,8 @@ class ThinkingTextDisplay extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isHoveringThinking = useState(false);
-    final highlightThinking = isHoveringThinking.value || !showText;
+    final focusThinking = useState(false);
+    final highlightThinking = focusThinking.value || !showText;
     return SizedBox(
       width: double.infinity,
       child: LayoutBuilder(
@@ -71,7 +71,7 @@ class ThinkingTextDisplay extends HookWidget {
           final maxHeight = constraints.maxHeight;
 
           final thinkingHeight = showText
-              ? isHoveringThinking.value
+              ? focusThinking.value
                   ? maxHeight - _unFocusedHeight
                   : _unFocusedHeight
               : maxHeight;
@@ -85,9 +85,8 @@ class ThinkingTextDisplay extends HookWidget {
                 duration: const Duration(milliseconds: 1000),
                 curve: ElasticOutCurve(0.9),
                 height: thinkingHeight,
-                child: MouseRegion(
-                  onEnter: (event) => isHoveringThinking.value = true,
-                  onExit: (event) => isHoveringThinking.value = false,
+                child: GestureDetector(
+                  onTap: () => focusThinking.value = !focusThinking.value,
                   child: ThinkingDisplay(
                     thinking: thinking,
                     maxHeight: thinkingHeight,
