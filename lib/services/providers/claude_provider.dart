@@ -38,6 +38,13 @@ class ClaudeProvider extends AiProvider {
         pricePerMillionOutputTokens: 4,
       ),
       AiModel(
+        name: "claude-haiku-4-5",
+        displayName: "Claude 4.5 Haiku",
+        provider: this,
+        pricePerMillionInputTokens: 1,
+        pricePerMillionOutputTokens: 5,
+      ),
+      AiModel(
         name: "claude-sonnet-4-20250514",
         displayName: "Claude 4 Sonnet",
         provider: this,
