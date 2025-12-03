@@ -3,6 +3,8 @@ import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gpt_markdown/custom_widgets/markdown_config.dart";
 import "package:gpt_markdown/gpt_markdown.dart";
+import "package:grammar_guard/hooks/delayed_execution.dart";
+import "package:grammar_guard/hooks/text_size.dart";
 import "package:grammar_guard/models/rendering_mode.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
 import "package:grammar_guard/state/ai_rewrite_result.dart";
@@ -81,21 +83,22 @@ class ThinkingTextDisplay extends HookWidget {
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 1000),
-                curve: ElasticOutCurve(0.8),
+                curve: ElasticOutCurve(0.9),
                 height: thinkingHeight,
                 child: MouseRegion(
                   onEnter: (event) => isHoveringThinking.value = true,
                   onExit: (event) => isHoveringThinking.value = false,
                   child: ThinkingDisplay(
                     thinking: thinking,
-                    scrollController:
-                        highlightThinking ? scrollController : null,
+                    maxHeight: thinkingHeight,
+                    maxWidth: constraints.maxWidth,
+                    expand: highlightThinking,
                   ),
                 ),
               ),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 1000),
-                curve: ElasticOutCurve(0.8),
+                curve: ElasticOutCurve(0.9),
                 height: textHeight,
                 child: TextDisplayWidget(
                   scrollController: highlightThinking ? null : scrollController,
@@ -184,26 +187,44 @@ class ErrorDisplay extends StatelessWidget {
   }
 }
 
-class ThinkingDisplay extends StatelessWidget {
+class ThinkingDisplay extends HookWidget {
   const ThinkingDisplay({
     required this.thinking,
-    this.scrollController,
+    required this.maxWidth,
+    required this.maxHeight,
+    this.expand = false,
     super.key,
   });
 
   final String thinking;
-  final ScrollController? scrollController;
+  final double maxWidth;
+  final double maxHeight;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
+    final scrollController = useScrollController();
+
     final text = Text(
       thinking.trim(),
       style: Theme.of(context)
           .textTheme
           .bodySmall
           ?.copyWith(color: Colors.white70),
-      maxLines: scrollController != null ? null : 1,
-      overflow: scrollController != null ? null : TextOverflow.ellipsis,
+      maxLines: expand ? null : 1,
+      overflow: expand ? null : TextOverflow.ellipsis,
+    );
+
+    useDelayedExecution(
+      () {
+        if (!scrollController.hasClients) return;
+
+        scrollController.jumpTo(
+          scrollController.position.maxScrollExtent,
+        );
+        return;
+      },
+      [thinking, scrollController, expand],
     );
 
     return Container(
@@ -216,46 +237,49 @@ class ThinkingDisplay extends StatelessWidget {
         child: AnimatedPadding(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeInOut,
-          padding: EdgeInsets.all(scrollController != null ? 16 : 8),
+          padding: EdgeInsets.all(expand ? 16 : 8),
           child: OverflowBox(
             maxHeight: double.infinity,
             alignment: Alignment.topLeft,
-            child: Column(
-              spacing: 4,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  spacing: 8,
-                  children: [
-                    Icon(
-                      Icons.psychology_alt_outlined,
-                      size: 16,
-                      color: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.color
-                          ?.withValues(alpha: 0.7),
-                    ),
-                    Text(
-                      "Reasoning",
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelSmall
-                          ?.copyWith(color: Colors.white70),
-                    ),
-                  ],
-                ),
-                if (scrollController != null)
-                  Flexible(
-                    child: SingleChildScrollView(
-                      controller: scrollController,
-                      child: text,
-                    ),
-                  )
-                else
-                  text,
-              ],
+            child: SizedBox(
+              height: expand ? maxHeight - 32 : null,
+              child: Column(
+                spacing: 4,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    spacing: 8,
+                    children: [
+                      Icon(
+                        Icons.psychology_alt_outlined,
+                        size: 16,
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.color
+                            ?.withValues(alpha: 0.7),
+                      ),
+                      Text(
+                        "Reasoning",
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall
+                            ?.copyWith(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                  if (expand)
+                    Flexible(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        child: text,
+                      ),
+                    )
+                  else
+                    text,
+                ],
+              ),
             ),
           ),
         ),
