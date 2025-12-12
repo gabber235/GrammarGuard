@@ -49,3 +49,7 @@ class ShowModelSelectorIntent extends Intent {
 class ShowProviderConfigurationIntent extends Intent {
   const ShowProviderConfigurationIntent();
 }
+
+class OpenSelectionEditorIntent extends Intent {
+  const OpenSelectionEditorIntent();
+}

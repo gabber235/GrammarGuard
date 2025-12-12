@@ -28,6 +28,9 @@ Map<String, dynamic> _$RequestUsageToJson(_RequestUsage instance) =>
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
 @ProviderFor(AiUsage)
 const aiUsageProvider = AiUsageProvider._();
 
@@ -151,6 +154,3 @@ final class TotalPriceProvider
 }
 
 String _$totalPriceHash() => r'0c6f74ac5d08657528db409c79f32ffa93b23523';
-
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

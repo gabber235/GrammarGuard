@@ -6,6 +6,9 @@ part of 'provider_registry.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
 @ProviderFor(ProviderRegistry)
 const providerRegistryProvider = ProviderRegistryProvider._();
 
@@ -38,7 +41,7 @@ final class ProviderRegistryProvider
   }
 }
 
-String _$providerRegistryHash() => r'2b9169338cdac4975448f379fe1313549dc014af';
+String _$providerRegistryHash() => r'8da3952ab606ba2c9108798ca4ef7964ed1c6677';
 
 abstract class _$ProviderRegistry extends $Notifier<List<AiProvider>> {
   List<AiProvider> build();
@@ -136,5 +139,3 @@ final class ProviderFamily extends $Family
   @override
   String toString() => r'providerProvider';
 }
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -4,6 +4,7 @@ import "package:grammar_guard/services/providers/claude_provider.dart";
 import "package:grammar_guard/services/providers/gemini_provider.dart";
 import "package:grammar_guard/services/providers/ollama_provider.dart";
 import "package:grammar_guard/services/providers/openai_provider.dart";
+import "package:grammar_guard/services/providers/openrouter_provider.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 part "provider_registry.g.dart";
@@ -16,6 +17,7 @@ class ProviderRegistry extends _$ProviderRegistry {
       GeminiProvider(),
       OpenAiProvider(),
       ClaudeProvider(),
+      OpenRouterProvider(),
       OllamaProvider(),
     ];
   }

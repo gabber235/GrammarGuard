@@ -7,6 +7,7 @@ import "package:grammar_guard/models/diff_option.dart";
 import "package:grammar_guard/models/rendering_mode.dart";
 import "package:grammar_guard/models/rewrite_intensity.dart";
 import "package:grammar_guard/models/styling_option.dart";
+import "package:grammar_guard/pages/selection_editor_page.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
 import "package:grammar_guard/state/ai_rewrite_result.dart";
 import "package:grammar_guard/state/grammar_state.dart";
@@ -205,6 +206,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
               const ShowModelSelectorIntent(),
           LogicalKeySet(LogicalKeyboardKey.keyC):
               const ShowProviderConfigurationIntent(),
+          LogicalKeySet(LogicalKeyboardKey.tab):
+              const OpenSelectionEditorIntent(),
         },
         child: Actions(
           actions: {
@@ -313,6 +316,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
               onInvoke: (intent) {
                 if (!mounted) return;
                 _showProviderConfiguration();
+                return null;
+              },
+            ),
+            OpenSelectionEditorIntent:
+                CallbackAction<OpenSelectionEditorIntent>(
+              onInvoke: (intent) {
+                if (!mounted) return;
+                final diffs = ref.read(diffsProvider);
+                if (diffs.isEmpty) return null;
+                SelectionEditorPage.show(context, diffs);
                 return null;
               },
             ),

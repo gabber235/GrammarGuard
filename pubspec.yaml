@@ -1,10 +1,10 @@
 name: grammar_guard
 description: "Enhance, rewrite, and format selected text from anywhere"
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -36,24 +36,24 @@ dependencies:
   gpt_markdown: ^1.0.16
 
   # AI
-  llm_dart: 
+  llm_dart:
     git: https://github.com/gabber235/llm_dart.git
   collection: ^1.19.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: 
+  flutter_lints:
 
   # Code generation
-  build_runner: 
-  riverpod_generator: 
-  freezed: 
-  json_serializable: 
+  build_runner:
+  riverpod_generator:
+  freezed:
+  json_serializable:
 
   # Linting
-  custom_lint: 
-  riverpod_lint: 
+  custom_lint:
+  riverpod_lint:
 
 flutter:
   uses-material-design: true
