@@ -10,11 +10,11 @@ part of 'ollama_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(OllamaConfiguration)
-const ollamaConfigurationProvider = OllamaConfigurationProvider._();
+final ollamaConfigurationProvider = OllamaConfigurationProvider._();
 
 final class OllamaConfigurationProvider
     extends $AsyncNotifierProvider<OllamaConfiguration, OllamaConfig> {
-  const OllamaConfigurationProvider._()
+  OllamaConfigurationProvider._()
       : super(
           from: null,
           argument: null,
@@ -41,13 +41,12 @@ abstract class _$OllamaConfiguration extends $AsyncNotifier<OllamaConfig> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AsyncValue<OllamaConfig>, OllamaConfig>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<AsyncValue<OllamaConfig>, OllamaConfig>,
         AsyncValue<OllamaConfig>,
         Object?,
         Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

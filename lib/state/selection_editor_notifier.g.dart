@@ -10,11 +10,11 @@ part of 'selection_editor_notifier.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(SelectionEditorNotifier)
-const selectionEditorProvider = SelectionEditorNotifierProvider._();
+final selectionEditorProvider = SelectionEditorNotifierProvider._();
 
 final class SelectionEditorNotifierProvider
     extends $NotifierProvider<SelectionEditorNotifier, SelectionEditorState?> {
-  const SelectionEditorNotifierProvider._()
+  SelectionEditorNotifierProvider._()
       : super(
           from: null,
           argument: null,
@@ -42,7 +42,7 @@ final class SelectionEditorNotifierProvider
 }
 
 String _$selectionEditorNotifierHash() =>
-    r'68309e3bd65a0ab2db3a5b0edeb089923f287029';
+    r'dfbf75c7b79d71eccc14358cda1aef83796f0aba';
 
 abstract class _$SelectionEditorNotifier
     extends $Notifier<SelectionEditorState?> {
@@ -50,13 +50,12 @@ abstract class _$SelectionEditorNotifier
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<SelectionEditorState?, SelectionEditorState?>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<SelectionEditorState?, SelectionEditorState?>,
         SelectionEditorState?,
         Object?,
         Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

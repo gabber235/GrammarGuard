@@ -10,11 +10,11 @@ part of 'model_registry.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(ModelRegistry)
-const modelRegistryProvider = ModelRegistryProvider._();
+final modelRegistryProvider = ModelRegistryProvider._();
 
 final class ModelRegistryProvider
     extends $AsyncNotifierProvider<ModelRegistry, List<AiModel>> {
-  const ModelRegistryProvider._()
+  ModelRegistryProvider._()
       : super(
           from: null,
           argument: null,
@@ -40,24 +40,23 @@ abstract class _$ModelRegistry extends $AsyncNotifier<List<AiModel>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AsyncValue<List<AiModel>>, List<AiModel>>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<AsyncValue<List<AiModel>>, List<AiModel>>,
         AsyncValue<List<AiModel>>,
         Object?,
         Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(defaultModel)
-const defaultModelProvider = DefaultModelProvider._();
+final defaultModelProvider = DefaultModelProvider._();
 
 final class DefaultModelProvider
     extends $FunctionalProvider<AiModel?, AiModel?, AiModel?>
     with $Provider<AiModel?> {
-  const DefaultModelProvider._()
+  DefaultModelProvider._()
       : super(
           from: null,
           argument: null,
@@ -93,12 +92,12 @@ final class DefaultModelProvider
 String _$defaultModelHash() => r'f8b969dfb48d8ddee123d68e864a0e12b4ea4703';
 
 @ProviderFor(configuredModels)
-const configuredModelsProvider = ConfiguredModelsFamily._();
+final configuredModelsProvider = ConfiguredModelsFamily._();
 
 final class ConfiguredModelsProvider extends $FunctionalProvider<
         AsyncValue<List<AiModel>>, List<AiModel>, FutureOr<List<AiModel>>>
     with $FutureModifier<List<AiModel>>, $FutureProvider<List<AiModel>> {
-  const ConfiguredModelsProvider._(
+  ConfiguredModelsProvider._(
       {required ConfiguredModelsFamily super.from,
       required Set<String> super.argument})
       : super(
@@ -149,7 +148,7 @@ String _$configuredModelsHash() => r'6a0dd972a286f3123b62a5991e33117e83317bb3';
 
 final class ConfiguredModelsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<AiModel>>, Set<String>> {
-  const ConfiguredModelsFamily._()
+  ConfiguredModelsFamily._()
       : super(
           retry: null,
           name: r'configuredModelsProvider',
@@ -168,12 +167,12 @@ final class ConfiguredModelsFamily extends $Family
 }
 
 @ProviderFor(model)
-const modelProvider = ModelFamily._();
+final modelProvider = ModelFamily._();
 
 final class ModelProvider extends $FunctionalProvider<AsyncValue<AiModel?>,
         AiModel?, FutureOr<AiModel?>>
     with $FutureModifier<AiModel?>, $FutureProvider<AiModel?> {
-  const ModelProvider._(
+  ModelProvider._(
       {required ModelFamily super.from, required String super.argument})
       : super(
           retry: null,
@@ -222,7 +221,7 @@ String _$modelHash() => r'69438b31262459709811e579c97d233b8eaa6850';
 
 final class ModelFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<AiModel?>, String> {
-  const ModelFamily._()
+  ModelFamily._()
       : super(
           retry: null,
           name: r'modelProvider',
@@ -241,12 +240,12 @@ final class ModelFamily extends $Family
 }
 
 @ProviderFor(modelsForProvider)
-const modelsForProviderProvider = ModelsForProviderFamily._();
+final modelsForProviderProvider = ModelsForProviderFamily._();
 
 final class ModelsForProviderProvider extends $FunctionalProvider<
         AsyncValue<List<AiModel>>, List<AiModel>, FutureOr<List<AiModel>>>
     with $FutureModifier<List<AiModel>>, $FutureProvider<List<AiModel>> {
-  const ModelsForProviderProvider._(
+  ModelsForProviderProvider._(
       {required ModelsForProviderFamily super.from,
       required String super.argument})
       : super(
@@ -297,7 +296,7 @@ String _$modelsForProviderHash() => r'f53251ad3a7d37488b9b558b2da4885eee828443';
 
 final class ModelsForProviderFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<AiModel>>, String> {
-  const ModelsForProviderFamily._()
+  ModelsForProviderFamily._()
       : super(
           retry: null,
           name: r'modelsForProviderProvider',

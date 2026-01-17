@@ -32,11 +32,11 @@ Map<String, dynamic> _$RequestUsageToJson(_RequestUsage instance) =>
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(AiUsage)
-const aiUsageProvider = AiUsageProvider._();
+final aiUsageProvider = AiUsageProvider._();
 
 final class AiUsageProvider
     extends $AsyncNotifierProvider<AiUsage, Map<String, RequestUsage>> {
-  const AiUsageProvider._()
+  AiUsageProvider._()
       : super(
           from: null,
           argument: null,
@@ -62,7 +62,6 @@ abstract class _$AiUsage extends $AsyncNotifier<Map<String, RequestUsage>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AsyncValue<Map<String, RequestUsage>>,
         Map<String, RequestUsage>>;
     final element = ref.element as $ClassProviderElement<
@@ -71,16 +70,16 @@ abstract class _$AiUsage extends $AsyncNotifier<Map<String, RequestUsage>> {
         AsyncValue<Map<String, RequestUsage>>,
         Object?,
         Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(totalTokenCount)
-const totalTokenCountProvider = TotalTokenCountProvider._();
+final totalTokenCountProvider = TotalTokenCountProvider._();
 
 final class TotalTokenCountProvider extends $FunctionalProvider<int, int, int>
     with $Provider<int> {
-  const TotalTokenCountProvider._()
+  TotalTokenCountProvider._()
       : super(
           from: null,
           argument: null,
@@ -116,11 +115,11 @@ final class TotalTokenCountProvider extends $FunctionalProvider<int, int, int>
 String _$totalTokenCountHash() => r'961093240deb860224daee6bb453765fea1d8e35';
 
 @ProviderFor(totalPrice)
-const totalPriceProvider = TotalPriceProvider._();
+final totalPriceProvider = TotalPriceProvider._();
 
 final class TotalPriceProvider
     extends $FunctionalProvider<double, double, double> with $Provider<double> {
-  const TotalPriceProvider._()
+  TotalPriceProvider._()
       : super(
           from: null,
           argument: null,

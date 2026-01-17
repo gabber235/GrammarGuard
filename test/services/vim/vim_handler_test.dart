@@ -126,7 +126,7 @@ void main() {
         expect(result.cursorPosition, equals(6));
       });
 
-      test("\$ moves to line end", () {
+      test(r"$ moves to line end", () {
         const text = "Hello\nWorld";
         final state = VimState(cursorPosition: 6);
         final result = VimHandler.handleKey(

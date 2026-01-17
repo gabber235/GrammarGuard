@@ -8,7 +8,7 @@ import "package:grammar_guard/widgets/editor/selection_editor.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 Widget createTestWidget(Widget child,
-    {double width = 1200, double height = 800}) {
+    {double width = 1200, double height = 800,}) {
   return ProviderScope(
     child: MaterialApp(
       home: SizedBox(
@@ -109,7 +109,7 @@ void main() {
       final newState = state.acceptCurrentChange();
 
       expect(newState.vimState.cursorPosition,
-          greaterThan(state.vimState.cursorPosition));
+          greaterThan(state.vimState.cursorPosition),);
     });
 
     test("reject change moves cursor to next pending change", () {
@@ -126,7 +126,7 @@ void main() {
       final newState = state.rejectCurrentChange();
 
       expect(newState.vimState.cursorPosition,
-          greaterThan(state.vimState.cursorPosition));
+          greaterThan(state.vimState.cursorPosition),);
     });
 
     test("acceptAll accepts all changes", () {

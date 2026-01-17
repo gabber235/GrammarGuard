@@ -160,7 +160,7 @@ void main() {
 
         expect(doc.pendingChanges.first.isPending, isTrue);
         expect(
-            newDoc.pendingChanges.first.status, equals(ChangeStatus.accepted));
+            newDoc.pendingChanges.first.status, equals(ChangeStatus.accepted),);
       });
     });
 
@@ -192,7 +192,7 @@ void main() {
 
         expect(
             doc.pendingChanges.every((c) => c.status == ChangeStatus.accepted),
-            isTrue);
+            isTrue,);
         expect(doc.getResultText(), equals("Hello beautiful world"));
       });
     });
@@ -211,7 +211,7 @@ void main() {
 
         expect(
             doc.pendingChanges.every((c) => c.status == ChangeStatus.rejected),
-            isTrue);
+            isTrue,);
         expect(doc.getResultText(), equals("Hi world"));
       });
     });

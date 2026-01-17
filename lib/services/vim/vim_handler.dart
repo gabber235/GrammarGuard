@@ -3,28 +3,6 @@ import "package:grammar_guard/services/vim/vim_motions.dart";
 import "package:grammar_guard/services/vim/vim_state.dart";
 
 class VimHandlerResult {
-  final VimMode mode;
-  final int cursorPosition;
-  final int? visualStart;
-  final String? pendingOperator;
-  final String countBuffer;
-
-  final String? textToInsert;
-  final bool deleteAtCursor;
-  final bool deleteBeforeCursor;
-  final int? deleteToPosition;
-  final bool deleteLine;
-  final bool deleteSelection;
-  final int? changeToPosition;
-  final bool changeLine;
-  final bool yankLine;
-  final bool yankSelection;
-  final bool pasteAfter;
-  final bool pasteBefore;
-  final bool undo;
-  final bool redo;
-  final bool insertNewLineBelow;
-  final bool insertNewLineAbove;
 
   const VimHandlerResult({
     required this.mode,
@@ -59,6 +37,28 @@ class VimHandlerResult {
       countBuffer: state.countBuffer,
     );
   }
+  final VimMode mode;
+  final int cursorPosition;
+  final int? visualStart;
+  final String? pendingOperator;
+  final String countBuffer;
+
+  final String? textToInsert;
+  final bool deleteAtCursor;
+  final bool deleteBeforeCursor;
+  final int? deleteToPosition;
+  final bool deleteLine;
+  final bool deleteSelection;
+  final int? changeToPosition;
+  final bool changeLine;
+  final bool yankLine;
+  final bool yankSelection;
+  final bool pasteAfter;
+  final bool pasteBefore;
+  final bool undo;
+  final bool redo;
+  final bool insertNewLineBelow;
+  final bool insertNewLineAbove;
 
   VimHandlerResult copyWith({
     VimMode? mode,
@@ -152,7 +152,7 @@ class VimHandler {
     required bool shift,
     required bool ctrl,
   }) {
-    var result = VimHandlerResult.fromState(state);
+    final result = VimHandlerResult.fromState(state);
     final count = state.getCount();
 
     if (key == LogicalKeyboardKey.escape) {
@@ -438,7 +438,7 @@ class VimHandler {
     required bool shift,
     required bool ctrl,
   }) {
-    var result = VimHandlerResult.fromState(state);
+    final result = VimHandlerResult.fromState(state);
 
     if (key == LogicalKeyboardKey.escape) {
       return result.copyWith(
@@ -525,7 +525,7 @@ class VimHandler {
     required bool shift,
     required bool ctrl,
   }) {
-    var result = VimHandlerResult.fromState(state);
+    final result = VimHandlerResult.fromState(state);
 
     if (key == LogicalKeyboardKey.escape) {
       final newPos = (state.cursorPosition - 1).clamp(0, text.length - 1);
@@ -613,7 +613,7 @@ class VimHandler {
     final keyLabel = key.keyLabel;
     if (keyLabel.length == 1) {
       final char = keyLabel.toLowerCase();
-      if (RegExp(r"[a-z0-9]").hasMatch(char)) {
+      if (RegExp("[a-z0-9]").hasMatch(char)) {
         return shift ? char.toUpperCase() : char;
       }
     }

@@ -4,7 +4,7 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ^3.8.0
 
 dependencies:
   flutter:
@@ -14,7 +14,7 @@ dependencies:
   # State management
   hooks_riverpod: ^3.0.0-dev.15
   flutter_hooks: ^0.21.2
-  riverpod_annotation: ^3.0.0-dev.15
+  riverpod_annotation: ^4.0.0
 
   # Networking
   dio: ^5.8.0+1
@@ -23,7 +23,7 @@ dependencies:
   # Storage
   shared_preferences: ^2.5.3
   path_provider: ^2.1.5
-  flutter_secure_storage: ^9.2.4
+  flutter_secure_storage: ^10.0.0
 
   # Window management
   window_manager: ^0.5.0

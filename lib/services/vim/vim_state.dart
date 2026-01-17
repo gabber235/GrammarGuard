@@ -16,11 +16,6 @@ enum VimMode {
 }
 
 class VimState {
-  final VimMode mode;
-  final int cursorPosition;
-  final int? visualStart;
-  final String? pendingOperator;
-  final String countBuffer;
 
   VimState({
     this.mode = VimMode.normal,
@@ -29,6 +24,11 @@ class VimState {
     this.pendingOperator,
     this.countBuffer = "",
   });
+  final VimMode mode;
+  final int cursorPosition;
+  final int? visualStart;
+  final String? pendingOperator;
+  final String countBuffer;
 
   bool get isNormalMode => mode == VimMode.normal;
   bool get isInsertMode => mode == VimMode.insert;

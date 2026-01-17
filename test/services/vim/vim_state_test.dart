@@ -10,7 +10,7 @@ void main() {
             VimMode.normal,
             VimMode.insert,
             VimMode.visual,
-          ]));
+          ]),);
     });
 
     test("displayName returns correct strings", () {

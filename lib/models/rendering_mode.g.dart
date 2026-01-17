@@ -10,11 +10,11 @@ part of 'rendering_mode.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(RenderingMode)
-const renderingModeProvider = RenderingModeProvider._();
+final renderingModeProvider = RenderingModeProvider._();
 
 final class RenderingModeProvider
     extends $NotifierProvider<RenderingMode, RenderingModeOption> {
-  const RenderingModeProvider._()
+  RenderingModeProvider._()
       : super(
           from: null,
           argument: null,
@@ -48,13 +48,12 @@ abstract class _$RenderingMode extends $Notifier<RenderingModeOption> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<RenderingModeOption, RenderingModeOption>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<RenderingModeOption, RenderingModeOption>,
         RenderingModeOption,
         Object?,
         Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

@@ -5,10 +5,6 @@ enum ChangeStatus {
 }
 
 class PendingChange {
-  final String originalText;
-  final String newText;
-  final int position;
-  final ChangeStatus status;
 
   const PendingChange({
     required this.originalText,
@@ -50,6 +46,10 @@ class PendingChange {
       position: position,
     );
   }
+  final String originalText;
+  final String newText;
+  final int position;
+  final ChangeStatus status;
 
   bool get isInsertion => originalText.isEmpty && newText.isNotEmpty;
   bool get isDeletion => originalText.isNotEmpty && newText.isEmpty;

@@ -29,7 +29,7 @@ class SelectionEditor extends HookConsumerWidget {
     useEffect(() {
       focusNode.requestFocus();
       return null;
-    }, []);
+    }, [],);
 
     if (editorState == null) {
       return const Center(child: Text("No document loaded"));
@@ -98,7 +98,7 @@ class SelectionEditor extends HookConsumerWidget {
 
         return KeyEventResult.handled;
       },
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
@@ -201,7 +201,7 @@ class _EditorContent extends StatelessWidget {
           segment.text,
           position,
           vimState,
-        ));
+        ),);
         position += segment.text.length;
       } else if (segment.isChange) {
         final change = document.pendingChanges[segment.changeIndex!];
@@ -210,7 +210,7 @@ class _EditorContent extends StatelessWidget {
           change,
           position,
           vimState,
-        ));
+        ),);
         position += change.totalDisplayLength;
       }
     }
@@ -250,7 +250,7 @@ class _EditorContent extends StatelessWidget {
             backgroundColor:
                 Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
           ),
-        ));
+        ),);
       } else {
         spans.add(TextSpan(text: char));
       }
@@ -278,7 +278,7 @@ class _EditorContent extends StatelessWidget {
             vimState,
             char,
             isDeleted: true,
-          ));
+          ),);
         } else {
           spans.add(TextSpan(
             text: char,
@@ -287,7 +287,7 @@ class _EditorContent extends StatelessWidget {
               decoration: TextDecoration.lineThrough,
               decorationColor: Theme.of(context).colorScheme.error,
             ),
-          ));
+          ),);
         }
       }
 
@@ -301,7 +301,7 @@ class _EditorContent extends StatelessWidget {
             vimState,
             char,
             isInserted: true,
-          ));
+          ),);
         } else {
           spans.add(TextSpan(
             text: char,
@@ -309,7 +309,7 @@ class _EditorContent extends StatelessWidget {
               color: Colors.green.shade700,
               backgroundColor: Colors.green.withValues(alpha: 0.1),
             ),
-          ));
+          ),);
         }
       }
     } else {
@@ -339,8 +339,8 @@ class _EditorContent extends StatelessWidget {
     final isBlock = vimState.mode != VimMode.insert;
 
     if (isBlock) {
-      Color bgColor = Theme.of(context).colorScheme.primary;
-      Color fgColor = Theme.of(context).colorScheme.onPrimary;
+      var bgColor = Theme.of(context).colorScheme.primary;
+      var fgColor = Theme.of(context).colorScheme.onPrimary;
 
       if (isDeleted) {
         bgColor = Theme.of(context).colorScheme.error;
@@ -360,7 +360,7 @@ class _EditorContent extends StatelessWidget {
       );
     } else {
       return WidgetSpan(
-        child: Container(
+        child: DecoratedBox(
           decoration: BoxDecoration(
             border: Border(
               left: BorderSide(

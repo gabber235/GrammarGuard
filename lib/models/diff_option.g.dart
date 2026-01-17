@@ -10,11 +10,11 @@ part of 'diff_option.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(DiffOption)
-const diffOptionProvider = DiffOptionProvider._();
+final diffOptionProvider = DiffOptionProvider._();
 
 final class DiffOptionProvider
     extends $NotifierProvider<DiffOption, DiffOptions> {
-  const DiffOptionProvider._()
+  DiffOptionProvider._()
       : super(
           from: null,
           argument: null,
@@ -48,10 +48,9 @@ abstract class _$DiffOption extends $Notifier<DiffOptions> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<DiffOptions, DiffOptions>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<DiffOptions, DiffOptions>, DiffOptions, Object?, Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

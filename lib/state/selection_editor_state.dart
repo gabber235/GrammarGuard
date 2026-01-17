@@ -2,11 +2,6 @@ import "package:grammar_guard/models/editor_document.dart";
 import "package:grammar_guard/services/vim/vim_state.dart";
 
 class SelectionEditorState {
-  final EditorDocument document;
-  final VimState vimState;
-  final List<SelectionEditorState> _undoStack;
-  final List<SelectionEditorState> _redoStack;
-  final bool hasUnsavedChanges;
 
   SelectionEditorState._({
     required this.document,
@@ -28,6 +23,11 @@ class SelectionEditorState {
       vimState: VimState(cursorPosition: cursorPosition),
     );
   }
+  final EditorDocument document;
+  final VimState vimState;
+  final List<SelectionEditorState> _undoStack;
+  final List<SelectionEditorState> _redoStack;
+  final bool hasUnsavedChanges;
 
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
@@ -260,7 +260,7 @@ class SelectionEditorState {
   }
 
   EditorDocument _rebuildDocumentFromText(
-      EditorDocument original, String newText) {
+      EditorDocument original, String newText,) {
     final segments = <DocumentSegment>[];
     segments.add(DocumentSegment.text(newText));
     return EditorDocument(segments: segments, pendingChanges: []);

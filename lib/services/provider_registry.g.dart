@@ -10,11 +10,11 @@ part of 'provider_registry.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(ProviderRegistry)
-const providerRegistryProvider = ProviderRegistryProvider._();
+final providerRegistryProvider = ProviderRegistryProvider._();
 
 final class ProviderRegistryProvider
     extends $NotifierProvider<ProviderRegistry, List<AiProvider>> {
-  const ProviderRegistryProvider._()
+  ProviderRegistryProvider._()
       : super(
           from: null,
           argument: null,
@@ -48,24 +48,23 @@ abstract class _$ProviderRegistry extends $Notifier<List<AiProvider>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<List<AiProvider>, List<AiProvider>>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<List<AiProvider>, List<AiProvider>>,
         List<AiProvider>,
         Object?,
         Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(provider)
-const providerProvider = ProviderFamily._();
+final providerProvider = ProviderFamily._();
 
 final class ProviderProvider
     extends $FunctionalProvider<AiProvider?, AiProvider?, AiProvider?>
     with $Provider<AiProvider?> {
-  const ProviderProvider._(
+  ProviderProvider._(
       {required ProviderFamily super.from, required String super.argument})
       : super(
           retry: null,
@@ -122,7 +121,7 @@ String _$providerHash() => r'20767636b3d33082487fba17540598dc11192118';
 
 final class ProviderFamily extends $Family
     with $FunctionalFamilyOverride<AiProvider?, String> {
-  const ProviderFamily._()
+  ProviderFamily._()
       : super(
           retry: null,
           name: r'providerProvider',

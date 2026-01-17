@@ -10,11 +10,11 @@ part of 'api_key_state.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(ApiKeyState)
-const apiKeyStateProvider = ApiKeyStateProvider._();
+final apiKeyStateProvider = ApiKeyStateProvider._();
 
 final class ApiKeyStateProvider
     extends $AsyncNotifierProvider<ApiKeyState, Map<String, String>> {
-  const ApiKeyStateProvider._()
+  ApiKeyStateProvider._()
       : super(
           from: null,
           argument: null,
@@ -40,7 +40,6 @@ abstract class _$ApiKeyState extends $AsyncNotifier<Map<String, String>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref as $Ref<AsyncValue<Map<String, String>>, Map<String, String>>;
     final element = ref.element as $ClassProviderElement<
@@ -48,17 +47,17 @@ abstract class _$ApiKeyState extends $AsyncNotifier<Map<String, String>> {
         AsyncValue<Map<String, String>>,
         Object?,
         Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(apiKey)
-const apiKeyProvider = ApiKeyFamily._();
+final apiKeyProvider = ApiKeyFamily._();
 
 final class ApiKeyProvider
     extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
     with $FutureModifier<String?>, $FutureProvider<String?> {
-  const ApiKeyProvider._(
+  ApiKeyProvider._(
       {required ApiKeyFamily super.from, required String super.argument})
       : super(
           retry: null,
@@ -107,7 +106,7 @@ String _$apiKeyHash() => r'6200d5341cd77a61c62b14f6821aab359d2057a6';
 
 final class ApiKeyFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<String?>, String> {
-  const ApiKeyFamily._()
+  ApiKeyFamily._()
       : super(
           retry: null,
           name: r'apiKeyProvider',

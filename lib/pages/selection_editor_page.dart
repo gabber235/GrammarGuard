@@ -50,12 +50,10 @@ class SelectionEditorPage extends HookConsumerWidget {
         Clipboard.setData(ClipboardData(text: resultText)).catchError((_) {});
       }
       navigator.pop(resultText);
-      Future.delayed(const Duration(milliseconds: 150), () {
-        windowManager.hide();
-      });
+      Future.delayed(const Duration(milliseconds: 150), windowManager.hide);
     }
 
-    void cancelAndExit() async {
+    Future<void> cancelAndExit() async {
       final navigator = Navigator.of(context);
       if (hasUnsavedChanges || pendingCount > 0) {
         final shouldExit = await showDialog<bool>(

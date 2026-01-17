@@ -10,11 +10,11 @@ part of 'grammar_state.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(GrammarState)
-const grammarStateProvider = GrammarStateProvider._();
+final grammarStateProvider = GrammarStateProvider._();
 
 final class GrammarStateProvider
     extends $NotifierProvider<GrammarState, GrammarStateData> {
-  const GrammarStateProvider._()
+  GrammarStateProvider._()
       : super(
           from: null,
           argument: null,
@@ -48,13 +48,12 @@ abstract class _$GrammarState extends $Notifier<GrammarStateData> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<GrammarStateData, GrammarStateData>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<GrammarStateData, GrammarStateData>,
         GrammarStateData,
         Object?,
         Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

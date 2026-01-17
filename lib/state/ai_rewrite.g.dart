@@ -10,11 +10,11 @@ part of 'ai_rewrite.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(SelectedModel)
-const selectedModelProvider = SelectedModelProvider._();
+final selectedModelProvider = SelectedModelProvider._();
 
 final class SelectedModelProvider
     extends $AsyncNotifierProvider<SelectedModel, AiModel?> {
-  const SelectedModelProvider._()
+  SelectedModelProvider._()
       : super(
           from: null,
           argument: null,
@@ -40,23 +40,22 @@ abstract class _$SelectedModel extends $AsyncNotifier<AiModel?> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AsyncValue<AiModel?>, AiModel?>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<AsyncValue<AiModel?>, AiModel?>,
         AsyncValue<AiModel?>,
         Object?,
         Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(AiRewrite)
-const aiRewriteProvider = AiRewriteProvider._();
+final aiRewriteProvider = AiRewriteProvider._();
 
 final class AiRewriteProvider
     extends $StreamNotifierProvider<AiRewrite, AiRewriteResult> {
-  const AiRewriteProvider._()
+  AiRewriteProvider._()
       : super(
           from: null,
           argument: null,
@@ -82,24 +81,23 @@ abstract class _$AiRewrite extends $StreamNotifier<AiRewriteResult> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AsyncValue<AiRewriteResult>, AiRewriteResult>;
     final element = ref.element as $ClassProviderElement<
         AnyNotifier<AsyncValue<AiRewriteResult>, AiRewriteResult>,
         AsyncValue<AiRewriteResult>,
         Object?,
         Object?>;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(diffs)
-const diffsProvider = DiffsProvider._();
+final diffsProvider = DiffsProvider._();
 
 final class DiffsProvider
     extends $FunctionalProvider<List<Diff>, List<Diff>, List<Diff>>
     with $Provider<List<Diff>> {
-  const DiffsProvider._()
+  DiffsProvider._()
       : super(
           from: null,
           argument: null,
@@ -135,12 +133,12 @@ final class DiffsProvider
 String _$diffsHash() => r'730d4ce5b3b2b61a515cc40be6850bdf15073b6b';
 
 @ProviderFor(leftPanelDiffs)
-const leftPanelDiffsProvider = LeftPanelDiffsProvider._();
+final leftPanelDiffsProvider = LeftPanelDiffsProvider._();
 
 final class LeftPanelDiffsProvider
     extends $FunctionalProvider<List<Diff>, List<Diff>, List<Diff>>
     with $Provider<List<Diff>> {
-  const LeftPanelDiffsProvider._()
+  LeftPanelDiffsProvider._()
       : super(
           from: null,
           argument: null,
@@ -176,12 +174,12 @@ final class LeftPanelDiffsProvider
 String _$leftPanelDiffsHash() => r'107c15806ba1ca529dd1762b0b3e1922de212b85';
 
 @ProviderFor(rightPanelDiffs)
-const rightPanelDiffsProvider = RightPanelDiffsProvider._();
+final rightPanelDiffsProvider = RightPanelDiffsProvider._();
 
 final class RightPanelDiffsProvider
     extends $FunctionalProvider<List<Diff>, List<Diff>, List<Diff>>
     with $Provider<List<Diff>> {
-  const RightPanelDiffsProvider._()
+  RightPanelDiffsProvider._()
       : super(
           from: null,
           argument: null,
@@ -217,11 +215,11 @@ final class RightPanelDiffsProvider
 String _$rightPanelDiffsHash() => r'6372c31b0770bb2c6d54abbbae7a6d98cafef634';
 
 @ProviderFor(diffString)
-const diffStringProvider = DiffStringProvider._();
+final diffStringProvider = DiffStringProvider._();
 
 final class DiffStringProvider
     extends $FunctionalProvider<String, String, String> with $Provider<String> {
-  const DiffStringProvider._()
+  DiffStringProvider._()
       : super(
           from: null,
           argument: null,
@@ -257,11 +255,11 @@ final class DiffStringProvider
 String _$diffStringHash() => r'dfaa5c3266fcac0b6f97772b749c24ac76457acd';
 
 @ProviderFor(leftPanelDiffString)
-const leftPanelDiffStringProvider = LeftPanelDiffStringProvider._();
+final leftPanelDiffStringProvider = LeftPanelDiffStringProvider._();
 
 final class LeftPanelDiffStringProvider
     extends $FunctionalProvider<String, String, String> with $Provider<String> {
-  const LeftPanelDiffStringProvider._()
+  LeftPanelDiffStringProvider._()
       : super(
           from: null,
           argument: null,
@@ -298,11 +296,11 @@ String _$leftPanelDiffStringHash() =>
     r'd281603c28a7007d6fb1a0e6a62714fc2bb1a7ce';
 
 @ProviderFor(rightPanelDiffString)
-const rightPanelDiffStringProvider = RightPanelDiffStringProvider._();
+final rightPanelDiffStringProvider = RightPanelDiffStringProvider._();
 
 final class RightPanelDiffStringProvider
     extends $FunctionalProvider<String, String, String> with $Provider<String> {
-  const RightPanelDiffStringProvider._()
+  RightPanelDiffStringProvider._()
       : super(
           from: null,
           argument: null,

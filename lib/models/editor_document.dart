@@ -7,9 +7,6 @@ enum SegmentType {
 }
 
 class DocumentSegment {
-  final SegmentType type;
-  final String text;
-  final int? changeIndex;
 
   const DocumentSegment.text(this.text)
       : type = SegmentType.text,
@@ -18,14 +15,15 @@ class DocumentSegment {
   const DocumentSegment.change(this.changeIndex)
       : type = SegmentType.change,
         text = "";
+  final SegmentType type;
+  final String text;
+  final int? changeIndex;
 
   bool get isText => type == SegmentType.text;
   bool get isChange => type == SegmentType.change;
 }
 
 class EditorDocument {
-  final List<DocumentSegment> segments;
-  final List<PendingChange> pendingChanges;
 
   const EditorDocument({
     required this.segments,
@@ -83,6 +81,8 @@ class EditorDocument {
 
     return EditorDocument(segments: segments, pendingChanges: changes);
   }
+  final List<DocumentSegment> segments;
+  final List<PendingChange> pendingChanges;
 
   String getText() {
     final sb = StringBuffer();
