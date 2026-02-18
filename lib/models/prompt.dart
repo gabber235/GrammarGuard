@@ -2,200 +2,172 @@ import "package:grammar_guard/models/rewrite_intensity.dart";
 import "package:grammar_guard/models/styling_option.dart";
 
 /// Generates a tailored prompt for an LLM based on user selections.
-///
-/// - [selectedText]: The text input by the user.
-/// - [intensity]: The desired level of rewriting.
-/// - [stylingOptions]: A set of desired styling formats (can be empty).
 String generateLlmPrompt({
   required RewriteIntensity intensity,
   required Set<StylingOption> stylingOptions,
 }) {
   final promptBuffer = StringBuffer()
-    ..writeln(_buildRoleSettingPrompt())
-    ..writeln(_buildIntensityPrompt(intensity, stylingOptions))
-    ..writeln(_buildFormattingPrompt(stylingOptions, intensity))
-    ..writeln(_buildOutputInstructionsPrompt(stylingOptions, intensity));
+    ..writeln("<rewrite_task>")
+    ..writeln(_buildObjectiveSection())
+    ..writeln(_buildGlobalConstraintsSection())
+    ..writeln(_buildIntensityPolicySection(intensity))
+    ..writeln(_buildFormattingPolicySection(stylingOptions, intensity))
+    ..writeln(_buildOutputContractSection())
+    ..write("</rewrite_task>");
 
   return promptBuffer.toString();
 }
 
-// --- Private Helper Functions ---
-
-String _buildRoleSettingPrompt() {
+String _buildObjectiveSection() {
   return """
-You are an expert writing assistant. Your task is to revise the following text according to the specified intensity and formatting instructions.
-
-IMPORTANT: Write in a natural, human-like style. Avoid overly formal or artificial language elements that humans rarely use in modern writing:
-- Never use em-dashes (—) for sentence continuation. Use a period or a comma instead.
-- Avoid archaic or overly formal punctuation and phrasing
-- Write as a modern human would naturally express themselves
+<objective>
+Revise the user text according to the selected rewrite intensity and formatting policy.
+Preserve the original meaning and factual content while improving quality within the allowed intensity scope.
+</objective>
 """;
 }
 
-String _buildIntensityPrompt(
-  RewriteIntensity intensity,
-  Set<StylingOption> stylingOptions,
-) {
-  final buffer = StringBuffer()..writeln("## Revision Intensity:");
+String _buildGlobalConstraintsSection() {
+  return """
+<global_constraints>
+Write in natural modern language.
+Do not use em dash characters.
+Avoid archaic phrasing and overly formal wording.
+Do not include explanations, preambles, or conversational filler.
+</global_constraints>
+""";
+}
+
+String _buildIntensityPolicySection(RewriteIntensity intensity) {
+  final buffer = StringBuffer()..writeln("<intensity_policy>");
+
   switch (intensity) {
     case RewriteIntensity.fixOnly:
-      buffer.writeln("- Goal: Correct only spelling and grammatical errors.");
+      buffer.writeln("Selected intensity is Fix Only.");
+      buffer.writeln("Correct spelling, grammar, and punctuation errors only.");
       buffer.writeln(
-        "- Constraints: Do NOT change phrasing, sentence structure, or meaning unless necessary for correctness. Maintain original style/tone and natural human language.",
+        "Do not change sentence structure, wording, or tone unless a change is required for correctness.",
       );
       buffer.writeln(
-        "- Styling: Strictly preserve all original formatting. Do NOT add any Markdown or LaTeX, regardless of other instructions.",
-      ); // Added
+        "Keep the original voice and preserve meaning with minimal intervention.",
+      );
     case RewriteIntensity.polish:
+      buffer.writeln("Selected intensity is Polish.");
       buffer.writeln(
-        "- Goal: Correct errors, make minor improvements for clarity, flow, word choice.",
+        "Correct all language errors and make minor clarity improvements.",
       );
       buffer.writeln(
-        "- Constraints: Subtle changes, preserve sentence structure, core meaning, tone. Keep language natural and human-like.",
+        "Prefer small edits that improve flow and word choice while keeping the original structure mostly intact.",
       );
-      if (stylingOptions.isNotEmpty) {
-        buffer.writeln(
-          "- Styling: Apply requested ${stylingOptions.map((s) => s.label).join('/')} formatting conservatively (e.g., basic lists, emphasis, inline code).",
-        );
-      } else {
-        buffer.writeln(
-          "- Styling: Preserve existing formatting where possible. Do not add new formatting.",
-        );
-      }
+      buffer.writeln("Preserve the original meaning and tone.");
     case RewriteIntensity.enhance:
+      buffer.writeln("Selected intensity is Enhance.");
       buffer.writeln(
-        "- Goal: Correct errors, significantly improve clarity, conciseness, engagement.",
+        "Correct all language errors and improve clarity, concision, and readability with moderate rewriting.",
       );
       buffer.writeln(
-        "- Constraints: Refine words/structure, ensure professional yet natural tone, preserve core meaning. Write as a modern human would.",
+        "You may refine sentence structure when it improves comprehension.",
       );
-      if (stylingOptions.isNotEmpty) {
-        buffer.writeln(
-          "- Styling: Apply requested ${stylingOptions.map((s) => s.label).join('/')} formatting to improve readability/structure (lists, emphasis, code). Avoid introducing entirely new complex structures (like tables).",
-        );
-      } else {
-        buffer.writeln(
-          "- Styling: Preserve existing formatting where possible. Do not add new formatting.",
-        );
-      }
+      buffer.writeln(
+        "Preserve the original meaning and maintain a natural tone.",
+      );
     case RewriteIntensity.rewrite:
+      buffer.writeln("Selected intensity is Rewrite.");
       buffer.writeln(
-        "- Goal: Correct errors, substantially rewrite for maximum clarity, impact, fluency.",
+        "Correct all language issues and substantially rewrite for maximum clarity, fluency, and impact.",
       );
       buffer.writeln(
-        "- Constraints: Restructure/rephrase freely while preserving core meaning accurately. Maintain natural, human-like expression throughout.",
+        "You may restructure sentences and paragraphs freely when this improves the final result.",
       );
-      if (stylingOptions.isNotEmpty) {
-        buffer.writeln(
-          "- Styling: Apply requested ${stylingOptions.map((s) => s.label).join('/')} formatting liberally. Introduce structure (headings, lists, tables, math environments) as needed for clarity, even if not present originally.",
-        );
-      } else {
-        buffer.writeln(
-          "- Styling: Preserve existing formatting where possible. Do not add new formatting.",
-        );
-      }
+      buffer.writeln(
+        "Preserve the original meaning accurately even when wording and structure change significantly.",
+      );
   }
+  buffer.writeln("</intensity_policy>");
+
   return buffer.toString();
 }
 
-String _buildFormattingPrompt(
+String _buildFormattingPolicySection(
   Set<StylingOption> stylingOptions,
   RewriteIntensity intensity,
 ) {
-  final buffer = StringBuffer()..writeln("## Formatting Instructions:");
+  final buffer = StringBuffer()..writeln("<formatting_policy>");
+  final markdownSelected = stylingOptions.contains(StylingOption.markdown);
+  final latexSelected = stylingOptions.contains(StylingOption.latex);
 
   if (intensity == RewriteIntensity.fixOnly) {
     buffer
+      ..writeln("Fix Only is active.")
+      ..writeln("Do not introduce new Markdown or LaTeX formatting.")
       ..writeln(
-        "- Intensity is 'Fix Only'. Apply NO new formatting (Markdown or LaTeX).",
+        "Preserve existing formatting exactly as it appears in the source text.",
       )
-      ..writeln(
-        "- IMPORTANT: Preserve any existing formatting (like code blocks, lists, bold/italics) exactly as found in the original text.",
-      );
-    return buffer.toString(); // Early exit for FixOnly
-  }
-
-  // --- Other Intensities ---
-  final stylingRequested = stylingOptions.isNotEmpty;
-
-  if (!stylingRequested) {
-    buffer
-      ..writeln("- No specific styling requested.")
-      ..writeln(
-        "- Preserve any existing formatting from the original text where appropriate after revision.",
-      );
+      ..writeln("</formatting_policy>");
     return buffer.toString();
   }
-  final stylesList = <String>[];
 
-  if (stylingOptions.contains(StylingOption.markdown)) {
-    final markdownDesc =
-        "Markdown (use for structure like headings (#), lists (* or -), emphasis (**bold**, *italics*), `inline code`, ```code blocks```)";
-    stylesList.add(markdownDesc);
-  }
-  if (stylingOptions.contains(StylingOption.latex)) {
-    final latexDesc =
-        r"LaTeX (use primarily for mathematical expressions like $E=mc^2$, equations (\\begin{equation}...\\end{equation}), citations (\cite{...}), or specific commands like \section{} where contextually relevant)";
-    stylesList.add(latexDesc);
+  if (!markdownSelected && !latexSelected) {
+    buffer
+      ..writeln("No specific formatting style was selected.")
+      ..writeln("Preserve existing formatting when appropriate.")
+      ..writeln(
+        "Do not add new Markdown or LaTeX markup unless the original text already requires it.",
+      )
+      ..writeln("</formatting_policy>");
+    return buffer.toString();
   }
 
-  buffer
-    ..writeln(
-      "- Apply formatting using: ${stylingOptions.map((s) => s.label).join(' AND ')}.",
-    )
-    ..writeln("- Details:");
-  for (final desc in stylesList) {
-    buffer.writeln("  - $desc");
-  }
-  if (stylingOptions.length > 1) {
+  if (markdownSelected) {
     buffer.writeln(
-      "- Prioritize Markdown for general text structure/emphasis and LaTeX for mathematical/technical notation.",
+      "Markdown is requested. Use Markdown syntax directly in the output text for headings, lists, emphasis, and code when helpful.",
     );
   }
 
-  // --- Intensity-Specific Application Guidance ---
+  if (latexSelected) {
+    buffer.writeln(
+      r"LaTeX is requested. Output LaTeX as literal source text only. Do not render, evaluate, or interpret equations.",
+    );
+    buffer.writeln(
+      r"Use LaTeX only for mathematical or technical notation, such as $E=mc^2$ or \begin{equation}...\end{equation}.",
+    );
+  }
+
+  if (markdownSelected && latexSelected) {
+    buffer.writeln(
+      "When both styles are selected, use Markdown for document structure and LaTeX for technical notation.",
+    );
+  }
+
   switch (intensity) {
     case RewriteIntensity.polish:
     case RewriteIntensity.enhance:
       buffer.writeln(
-        r"- Application Guidance: Apply formatting conservatively. Focus on enhancing existing structure or applying basic formatting where clearly appropriate (e.g., formatting existing lists, adding emphasis, marking inline code). Do NOT introduce major new structural elements like tables or complex LaTeX environments (e.g., \begin{tabular}...) unless they were already present in a similar form.",
+        "Apply formatting conservatively. Focus on readability improvements that stay close to the original structure.",
       );
     case RewriteIntensity.rewrite:
       buffer.writeln(
-        "- Application Guidance: Apply formatting liberally to maximize clarity and structure. Feel free to INTRODUCE new structural elements like headings, lists, tables (using appropriate Markdown/LaTeX syntax), code blocks, or mathematical environments if they significantly improve the revised text's organization and readability, even if absent in the original.",
+        "You may introduce new structure when it clearly improves readability and organization.",
       );
     case RewriteIntensity.fixOnly:
-      // This case is handled by the early exit, but included for completeness
       break;
   }
+
   buffer.writeln(
-    "- Existing Formatting: If the original text contains formatting, maintain consistency or improve it using the specified style(s). Do not arbitrarily remove relevant existing formatting unless the rewrite makes it obsolete.",
+    "Preserve relevant existing formatting unless it conflicts with clarity.",
   );
+  buffer.writeln("</formatting_policy>");
+
   return buffer.toString();
 }
 
-String _buildOutputInstructionsPrompt(
-  Set<StylingOption> stylingOptions,
-  RewriteIntensity intensity,
-) {
+String _buildOutputContractSection() {
   final buffer = StringBuffer()
-    ..writeln("## Output Requirements:")
-    ..writeln(
-      "- Provide ONLY the revised text. Do not include explanations, apologies, preambles, or any conversational text.",
-    )
-    ..writeln(
-      "- Ensure the output adheres strictly to the intensity and formatting instructions provided above.",
-    );
+    ..writeln("<output_contract>")
+    ..writeln("Return only the revised text.")
+    ..writeln("Do not add commentary, labels, metadata, or quotation wrappers.")
+    ..writeln("Ensure the revised text follows all policies above.")
+    ..writeln("</output_contract>");
 
-  // Reiterate formatting expectation based on final decision
-  if (intensity == RewriteIntensity.fixOnly || stylingOptions.isEmpty) {
-    buffer.writeln(
-      "- Preserve original formatting as specified. Apply no new Markdown/LaTeX.",
-    );
-  } else {
-    buffer.writeln(
-      "- Apply ${stylingOptions.map((s) => s.label).join('/')} formatting appropriately, following the intensity-specific guidance (conservative for Polish/Enhance, liberal/introducing for Rewrite).",
-    );
-  }
   return buffer.toString();
 }
