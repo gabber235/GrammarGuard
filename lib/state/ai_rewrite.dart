@@ -1,3 +1,5 @@
+import "dart:developer" as developer;
+
 import "package:diff_match_patch/diff_match_patch.dart";
 import "package:grammar_guard/models/ai_model.dart";
 import "package:grammar_guard/models/diff_option.dart";
@@ -13,6 +15,36 @@ import "package:shared_preferences/shared_preferences.dart";
 part "ai_rewrite.g.dart";
 
 const _selectedModelKey = "selected_model_name";
+
+@Riverpod(keepAlive: true)
+class RewriteGenerationActivity extends _$RewriteGenerationActivity {
+  int _activeGenerationCount = 0;
+
+  void _log(String message) {
+    developer.log(message, name: "rewrite_activity");
+  }
+
+  @override
+  bool build() {
+    _log("build initial activity false");
+    return false;
+  }
+
+  void started() {
+    _activeGenerationCount += 1;
+    state = _activeGenerationCount > 0;
+    _log("started count=$_activeGenerationCount state=$state");
+  }
+
+  void finished() {
+    _activeGenerationCount -= 1;
+    if (_activeGenerationCount < 0) {
+      _activeGenerationCount = 0;
+    }
+    state = _activeGenerationCount > 0;
+    _log("finished count=$_activeGenerationCount state=$state");
+  }
+}
 
 @Riverpod(keepAlive: true)
 class SelectedModel extends _$SelectedModel {
@@ -38,72 +70,80 @@ class SelectedModel extends _$SelectedModel {
 class AiRewrite extends _$AiRewrite {
   @override
   Stream<AiRewriteResult> build() async* {
+    final activity = ref.read(rewriteGenerationActivityProvider.notifier);
+    activity.started();
     final state = ref.watch(grammarStateProvider);
     final currentModel = ref.watch(selectedModelProvider);
 
-    yield* currentModel.when(
-      data: (model) async* {
-        if (model == null) {
-          yield const TextResult(text: "");
-          return;
-        }
+    try {
+      yield* currentModel.when(
+        data: (model) async* {
+          if (model == null) {
+            yield const TextResult(text: "");
+            return;
+          }
 
-        final prompt = generateLlmPrompt(
-          intensity: state.rewriteIntensity,
-          stylingOptions: state.enabledStyling,
-        );
+          final prompt = generateLlmPrompt(
+            intensity: state.rewriteIntensity,
+            stylingOptions: state.enabledStyling,
+          );
 
-        final stream = model.provider.generateContent(
-          prompt: prompt,
-          inputText: state.inputText,
-          model: model,
-          ref: ref,
-        );
+          final stream = model.provider.generateContent(
+            prompt: prompt,
+            inputText: state.inputText,
+            model: model,
+            ref: ref,
+          );
 
-        final sb = StringBuffer();
-        final thinkingSb = StringBuffer();
+          final sb = StringBuffer();
+          final thinkingSb = StringBuffer();
 
-        await for (final event in stream) {
-          switch (event) {
-            case LoadingEvent(message: final message):
-              yield LoadingResult(message: message);
-            case ThinkingDeltaEvent(delta: final delta):
-              thinkingSb.write(delta);
-              yield ThinkingTextResult(
-                thinking: thinkingSb.toString(),
-                text: sb.toString(),
-              );
-            case TextDeltaEvent(delta: final delta):
-              sb.write(delta);
-              if (thinkingSb.isNotEmpty) {
+          await for (final event in stream) {
+            switch (event) {
+              case LoadingEvent(message: final message):
+                yield LoadingResult(message: message);
+              case ThinkingDeltaEvent(delta: final delta):
+                thinkingSb.write(delta);
                 yield ThinkingTextResult(
                   thinking: thinkingSb.toString(),
                   text: sb.toString(),
                 );
-              } else {
-                yield TextResult(text: sb.toString());
-              }
-            case UsageEvent(usage: final usage):
-              final id = generateId();
-              await ref.read(aiUsageProvider.notifier).recordUsage(
-                    id,
-                    usage.modelName,
-                    usage.promptTokenCount,
-                    usage.completionTokenCount,
-                    usage.providerName,
+              case TextDeltaEvent(delta: final delta):
+                sb.write(delta);
+                if (thinkingSb.isNotEmpty) {
+                  yield ThinkingTextResult(
+                    thinking: thinkingSb.toString(),
+                    text: sb.toString(),
                   );
-            case ErrorEvent(error: final error):
-              yield ErrorResult(message: error);
+                } else {
+                  yield TextResult(text: sb.toString());
+                }
+              case UsageEvent(usage: final usage):
+                final id = generateId();
+                await ref
+                    .read(aiUsageProvider.notifier)
+                    .recordUsage(
+                      id,
+                      usage.modelName,
+                      usage.promptTokenCount,
+                      usage.completionTokenCount,
+                      usage.providerName,
+                    );
+              case ErrorEvent(error: final error):
+                yield ErrorResult(message: error);
+            }
           }
-        }
-      },
-      loading: () async* {
-        yield const LoadingResult(message: "Loading model...");
-      },
-      error: (err, stack) async* {
-        yield ErrorResult(message: "Failed to load model: $err");
-      },
-    );
+        },
+        loading: () async* {
+          yield const LoadingResult(message: "Loading model...");
+        },
+        error: (err, stack) async* {
+          yield ErrorResult(message: "Failed to load model: $err");
+        },
+      );
+    } finally {
+      activity.finished();
+    }
   }
 }
 

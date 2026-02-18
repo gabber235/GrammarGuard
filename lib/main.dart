@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
@@ -11,6 +13,7 @@ import "package:grammar_guard/pages/selection_editor_page.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
 import "package:grammar_guard/state/ai_rewrite_result.dart";
 import "package:grammar_guard/state/grammar_state.dart";
+import "package:grammar_guard/state/window_lifecycle.dart";
 import "package:grammar_guard/widgets/always_focused.dart";
 import "package:grammar_guard/widgets/api_key_checker.dart";
 import "package:grammar_guard/widgets/footer.dart";
@@ -47,25 +50,6 @@ void main() async {
     await windowManager.focus();
   });
 
-  // Register global hotkey to show the app (Alt+Shift+G)
-  final showHotKey = HotKey(
-    key: PhysicalKeyboardKey.keyG,
-    modifiers: [HotKeyModifier.alt, HotKeyModifier.shift],
-    scope: HotKeyScope.system,
-  );
-
-  await hotKeyManager.register(
-    showHotKey,
-    keyDownHandler: (_) async {
-      if (await windowManager.isVisible() && _hideWindow) {
-        await windowManager.hide();
-      } else {
-        await windowManager.show();
-        await windowManager.focus();
-      }
-    },
-  );
-
   runApp(const ProviderScope(child: GrammarGuard()));
 }
 
@@ -100,41 +84,202 @@ class HomeScreen extends StatefulHookConsumerWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
+  HotKey? _showHotKey;
+  ProviderSubscription<bool>? _generationActivitySubscription;
+
+  void _log(String message) {
+    debugPrint("[window-flow] $message");
+  }
+
   @override
   void initState() {
     super.initState();
     windowManager.addListener(this);
-    _loadClipboard();
+    unawaited(windowManager.setPreventClose(true));
+    unawaited(_registerHotKey());
+    _listenGenerationTransitions();
+    unawaited(_syncClipboardText());
   }
 
-  Future<void> _loadClipboard() async {
-    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-    if (clipboardData?.text != null) {
-      ref
-          .read(grammarStateProvider.notifier)
-          .setInputText(clipboardData!.text!);
-      ref.invalidate(aiRewriteProvider);
+  Future<void> _registerHotKey() async {
+    final showHotKey = HotKey(
+      key: PhysicalKeyboardKey.keyG,
+      modifiers: [HotKeyModifier.alt, HotKeyModifier.shift],
+      scope: HotKeyScope.system,
+    );
+
+    await hotKeyManager.register(
+      showHotKey,
+      keyDownHandler: (_) async {
+        final isVisible = await windowManager.isVisible();
+        _log("hotkey pressed. visible=$isVisible hideWindow=$_hideWindow");
+        if (isVisible && _hideWindow) {
+          _log("hotkey path hide window");
+          await _hideWindowAndMarkHidden();
+          return;
+        }
+
+        _log("hotkey path show window");
+        await _showWindowAndRefreshIfNeeded();
+      },
+    );
+    _showHotKey = showHotKey;
+    _log("hotkey registered");
+  }
+
+  Future<void> _hideWindowAndMarkHidden() async {
+    _log("hide window requested");
+    await windowManager.hide();
+    ref.read(windowLifecycleProvider.notifier).onWindowHidden();
+    final lifecycle = ref.read(windowLifecycleProvider);
+    _log(
+      "hide completed. visible=${lifecycle.isVisible} refreshTrigger=${lifecycle.refreshTrigger.name}",
+    );
+  }
+
+  Future<void> _showWindowAndRefreshIfNeeded() async {
+    final isVisible = await windowManager.isVisible();
+    _log("show requested. currentlyVisible=$isVisible");
+    if (!isVisible) {
+      await windowManager.show();
+      _log("window shown");
+      ref.read(windowLifecycleProvider.notifier).onWindowShown();
+      final shownState = ref.read(windowLifecycleProvider);
+      _log(
+        "lifecycle marked shown. refreshTrigger=${shownState.refreshTrigger.name} lastHash=${shownState.lastClipboardHash}",
+      );
+      await _refreshClipboardOnOpenIfNeeded();
     }
+    await windowManager.focus();
+    _log("window focused");
+  }
+
+  void _listenGenerationTransitions() {
+    _generationActivitySubscription = ref.listenManual<bool>(
+      rewriteGenerationActivityProvider,
+      (previous, next) {
+        final notifier = ref.read(windowLifecycleProvider.notifier);
+        _log("generation activity changed. previous=$previous next=$next");
+        notifier.setGenerationActivity(isActive: next);
+        final wasActive = previous ?? false;
+        if (!wasActive || next) {
+          final lifecycle = ref.read(windowLifecycleProvider);
+          _log(
+            "generation transition ignored. isGenerating=${lifecycle.isGenerating} closeAllowed=${lifecycle.closeAllowed}",
+          );
+          return;
+        }
+
+        notifier.onGenerationFinished();
+        final lifecycle = ref.read(windowLifecycleProvider);
+        _log(
+          "generation finished transition applied. pendingHideAfterCompletion=${lifecycle.hideAfterCompletionOnBlur}",
+        );
+      },
+    );
+  }
+
+  String _hashClipboardText(String text) {
+    return text.trim().hashCode.toString();
+  }
+
+  Future<void> _syncClipboardText() async {
+    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+    final clipboardText = clipboardData?.text;
+    if (clipboardText == null) {
+      _log("initial clipboard sync skipped. clipboard is empty");
+      return;
+    }
+
+    ref.read(grammarStateProvider.notifier).setInputText(clipboardText);
+    ref.invalidate(aiRewriteProvider);
+
+    final clipboardHash = _hashClipboardText(clipboardText);
+    ref.read(windowLifecycleProvider.notifier).onClipboardSynced(clipboardHash);
+    _log(
+      "initial clipboard synced. chars=${clipboardText.length} hash=$clipboardHash",
+    );
+  }
+
+  Future<void> _refreshClipboardOnOpenIfNeeded() async {
+    _log("refresh on open check started");
+    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+    final clipboardText = clipboardData?.text;
+    if (clipboardText == null) {
+      _log("refresh on open skipped. clipboard is empty");
+      return;
+    }
+
+    final clipboardHash = _hashClipboardText(clipboardText);
+    final notifier = ref.read(windowLifecycleProvider.notifier);
+    final beforeState = ref.read(windowLifecycleProvider);
+    _log(
+      "refresh evaluate input. hash=$clipboardHash trigger=${beforeState.refreshTrigger.name} lastHash=${beforeState.lastClipboardHash} generating=${beforeState.isGenerating}",
+    );
+    notifier.evaluateRefresh(clipboardHash);
+
+    final policy = ref.read(windowLifecyclePolicyProvider);
+    if (!policy.shouldRefresh) {
+      final afterState = ref.read(windowLifecycleProvider);
+      _log(
+        "refresh not applied. shouldRefresh=${policy.shouldRefresh} trigger=${afterState.refreshTrigger.name} lastHash=${afterState.lastClipboardHash} generating=${afterState.isGenerating}",
+      );
+      return;
+    }
+
+    ref.read(grammarStateProvider.notifier).setInputText(clipboardText);
+    ref.invalidate(aiRewriteProvider);
+    notifier.onClipboardSynced(clipboardHash);
+    notifier.acknowledgeRefresh();
+    _log("refresh applied. chars=${clipboardText.length} hash=$clipboardHash");
   }
 
   @override
   void dispose() {
+    _generationActivitySubscription?.close();
+    final showHotKey = _showHotKey;
+    if (showHotKey != null) {
+      unawaited(hotKeyManager.unregister(showHotKey));
+    }
     windowManager.removeListener(this);
     super.dispose();
   }
 
   @override
-  void onWindowFocus() {
-    super.onWindowFocus();
-    _loadClipboard();
+  void onWindowBlur() {
+    super.onWindowBlur();
+    final notifier = ref.read(windowLifecycleProvider.notifier);
+    notifier.onWindowBlurred();
+
+    final policy = ref.read(windowLifecyclePolicyProvider);
+    final lifecycle = ref.read(windowLifecycleProvider);
+    _log(
+      "window blur. shouldHide=${policy.shouldHide} generating=${lifecycle.isGenerating} pendingHideAfterCompletion=${lifecycle.hideAfterCompletionOnBlur}",
+    );
+    if (!policy.shouldHide || !_hideWindow) {
+      _log("window blur did not hide");
+      return;
+    }
+
+    unawaited(_hideWindowAndMarkHidden());
+    notifier.acknowledgeHide();
+    _log("window blur hide requested and acknowledged");
   }
 
   @override
-  void onWindowBlur() {
-    super.onWindowBlur();
-    if (_hideWindow) {
-      windowManager.hide();
+  void onWindowClose() {
+    ref.read(windowLifecycleProvider.notifier).onCloseRequested();
+    final policy = ref.read(windowLifecyclePolicyProvider);
+    final lifecycle = ref.read(windowLifecycleProvider);
+    _log(
+      "window close requested. canClose=${policy.canClose} generating=${lifecycle.isGenerating}",
+    );
+    if (!policy.canClose) {
+      _log("window close blocked because generation is active");
+      return;
     }
+    _log("window close allowed. destroying window");
+    windowManager.destroy();
   }
 
   void _showModelSelector() {
@@ -147,9 +292,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
 
   void _showProviderConfiguration() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const ProviderConfiguration(),
-      ),
+      MaterialPageRoute(builder: (context) => const ProviderConfiguration()),
     );
   }
 
@@ -231,12 +374,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
             ),
             DismissIntent: CallbackAction<DismissIntent>(
               onInvoke: (intent) {
-                Future.delayed(const Duration(milliseconds: 150), () {
-                  if (!mounted) return;
-                  if (_hideWindow) {
-                    windowManager.hide();
-                  }
-                });
+                final notifier = ref.read(windowLifecycleProvider.notifier);
+                notifier.onEscapePressed();
+                final policy = ref.read(windowLifecyclePolicyProvider);
+                _log("escape pressed. shouldHide=${policy.shouldHide}");
+                if (policy.shouldHide && _hideWindow) {
+                  unawaited(_hideWindowAndMarkHidden());
+                  notifier.acknowledgeHide();
+                  _log("escape hide requested and acknowledged");
+                }
                 return null;
               },
             ),
@@ -246,7 +392,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
                 Future.delayed(const Duration(milliseconds: 150), () async {
                   if (!mounted) return;
                   if (_hideWindow) {
-                    await windowManager.hide();
+                    await _hideWindowAndMarkHidden();
                   }
                   final result = ref.read(aiRewriteProvider).value;
                   final outputText = switch (result) {
@@ -313,22 +459,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
             ),
             ShowProviderConfigurationIntent:
                 CallbackAction<ShowProviderConfigurationIntent>(
-              onInvoke: (intent) {
-                if (!mounted) return;
-                _showProviderConfiguration();
-                return null;
-              },
-            ),
+                  onInvoke: (intent) {
+                    if (!mounted) return;
+                    _showProviderConfiguration();
+                    return null;
+                  },
+                ),
             OpenSelectionEditorIntent:
                 CallbackAction<OpenSelectionEditorIntent>(
-              onInvoke: (intent) {
-                if (!mounted) return;
-                final diffs = ref.read(diffsProvider);
-                if (diffs.isEmpty) return null;
-                SelectionEditorPage.show(context, diffs);
-                return null;
-              },
-            ),
+                  onInvoke: (intent) {
+                    if (!mounted) return;
+                    final diffs = ref.read(diffsProvider);
+                    if (diffs.isEmpty) return null;
+                    SelectionEditorPage.show(context, diffs);
+                    return null;
+                  },
+                ),
           },
           child: AlwaysFocused(
             child: Scaffold(
