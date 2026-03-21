@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
+import "package:grammar_guard/models/model_registry.dart";
 import "package:grammar_guard/services/ai_provider.dart";
 import "package:grammar_guard/services/provider_registry.dart";
+import "package:grammar_guard/state/provider_settings_state.dart";
 import "package:grammar_guard/widgets/always_focused.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
@@ -69,6 +71,9 @@ class _ProviderConfigurationState extends ConsumerState<ProviderConfiguration> {
 
   Widget _buildProviderCard(AiProvider provider) {
     final isExpanded = _expandedProviders[provider.name] ?? false;
+    final settings = ref.watch(
+      providerSettingsForProviderProvider(provider.name),
+    );
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -81,6 +86,15 @@ class _ProviderConfigurationState extends ConsumerState<ProviderConfiguration> {
             ),
           ],
         ),
+        trailing: Switch(
+          value: settings.enabled,
+          onChanged: (enabled) async {
+            await ref
+                .read(providerSettingsStateProvider.notifier)
+                .setEnabled(provider.name, enabled: enabled);
+            ref.invalidate(modelRegistryProvider);
+          },
+        ),
         initiallyExpanded: isExpanded,
         onExpansionChanged: (expanded) {
           setState(() {
@@ -90,9 +104,7 @@ class _ProviderConfigurationState extends ConsumerState<ProviderConfiguration> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: provider.buildConfigurationWidget(
-              ref: ref,
-            ),
+            child: provider.buildConfigurationWidget(ref: ref),
           ),
         ],
       ),

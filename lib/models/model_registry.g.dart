@@ -15,15 +15,15 @@ final modelRegistryProvider = ModelRegistryProvider._();
 final class ModelRegistryProvider
     extends $AsyncNotifierProvider<ModelRegistry, List<AiModel>> {
   ModelRegistryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'modelRegistryProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'modelRegistryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$modelRegistryHash();
@@ -33,7 +33,7 @@ final class ModelRegistryProvider
   ModelRegistry create() => ModelRegistry();
 }
 
-String _$modelRegistryHash() => r'b047c1171e489ffcbd2f25fd571d94e3c9689f15';
+String _$modelRegistryHash() => r'2e89d531b466a1c25d913f2e3b503f42f7a55be1';
 
 abstract class _$ModelRegistry extends $AsyncNotifier<List<AiModel>> {
   FutureOr<List<AiModel>> build();
@@ -41,11 +41,14 @@ abstract class _$ModelRegistry extends $AsyncNotifier<List<AiModel>> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<AiModel>>, List<AiModel>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<List<AiModel>>, List<AiModel>>,
-        AsyncValue<List<AiModel>>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<AiModel>>, List<AiModel>>,
+              AsyncValue<List<AiModel>>,
+              Object?,
+              Object?
+            >;
     element.handleCreate(ref, build);
   }
 }
@@ -57,15 +60,15 @@ final class DefaultModelProvider
     extends $FunctionalProvider<AiModel?, AiModel?, AiModel?>
     with $Provider<AiModel?> {
   DefaultModelProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'defaultModelProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'defaultModelProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$defaultModelHash();
@@ -94,19 +97,24 @@ String _$defaultModelHash() => r'f8b969dfb48d8ddee123d68e864a0e12b4ea4703';
 @ProviderFor(configuredModels)
 final configuredModelsProvider = ConfiguredModelsFamily._();
 
-final class ConfiguredModelsProvider extends $FunctionalProvider<
-        AsyncValue<List<AiModel>>, List<AiModel>, FutureOr<List<AiModel>>>
+final class ConfiguredModelsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AiModel>>,
+          List<AiModel>,
+          FutureOr<List<AiModel>>
+        >
     with $FutureModifier<List<AiModel>>, $FutureProvider<List<AiModel>> {
-  ConfiguredModelsProvider._(
-      {required ConfiguredModelsFamily super.from,
-      required Set<String> super.argument})
-      : super(
-          retry: null,
-          name: r'configuredModelsProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  ConfiguredModelsProvider._({
+    required ConfiguredModelsFamily super.from,
+    required Set<String> super.argument,
+  }) : super(
+         retry: null,
+         name: r'configuredModelsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$configuredModelsHash();
@@ -121,16 +129,13 @@ final class ConfiguredModelsProvider extends $FunctionalProvider<
   @$internal
   @override
   $FutureProviderElement<List<AiModel>> $createElement(
-          $ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<AiModel>> create(Ref ref) {
     final argument = this.argument as Set<String>;
-    return configuredModels(
-      ref,
-      argument,
-    );
+    return configuredModels(ref, argument);
   }
 
   @override
@@ -149,17 +154,15 @@ String _$configuredModelsHash() => r'6a0dd972a286f3123b62a5991e33117e83317bb3';
 final class ConfiguredModelsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<AiModel>>, Set<String>> {
   ConfiguredModelsFamily._()
-      : super(
-          retry: null,
-          name: r'configuredModelsProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'configuredModelsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
-  ConfiguredModelsProvider call(
-    Set<String> configuredProviders,
-  ) =>
+  ConfiguredModelsProvider call(Set<String> configuredProviders) =>
       ConfiguredModelsProvider._(argument: configuredProviders, from: this);
 
   @override
@@ -169,18 +172,20 @@ final class ConfiguredModelsFamily extends $Family
 @ProviderFor(model)
 final modelProvider = ModelFamily._();
 
-final class ModelProvider extends $FunctionalProvider<AsyncValue<AiModel?>,
-        AiModel?, FutureOr<AiModel?>>
+final class ModelProvider
+    extends
+        $FunctionalProvider<AsyncValue<AiModel?>, AiModel?, FutureOr<AiModel?>>
     with $FutureModifier<AiModel?>, $FutureProvider<AiModel?> {
-  ModelProvider._(
-      {required ModelFamily super.from, required String super.argument})
-      : super(
-          retry: null,
-          name: r'modelProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  ModelProvider._({
+    required ModelFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'modelProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$modelHash();
@@ -200,10 +205,7 @@ final class ModelProvider extends $FunctionalProvider<AsyncValue<AiModel?>,
   @override
   FutureOr<AiModel?> create(Ref ref) {
     final argument = this.argument as String;
-    return model(
-      ref,
-      argument,
-    );
+    return model(ref, argument);
   }
 
   @override
@@ -222,17 +224,15 @@ String _$modelHash() => r'69438b31262459709811e579c97d233b8eaa6850';
 final class ModelFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<AiModel?>, String> {
   ModelFamily._()
-      : super(
-          retry: null,
-          name: r'modelProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'modelProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
-  ModelProvider call(
-    String name,
-  ) =>
+  ModelProvider call(String name) =>
       ModelProvider._(argument: name, from: this);
 
   @override
@@ -242,19 +242,24 @@ final class ModelFamily extends $Family
 @ProviderFor(modelsForProvider)
 final modelsForProviderProvider = ModelsForProviderFamily._();
 
-final class ModelsForProviderProvider extends $FunctionalProvider<
-        AsyncValue<List<AiModel>>, List<AiModel>, FutureOr<List<AiModel>>>
+final class ModelsForProviderProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AiModel>>,
+          List<AiModel>,
+          FutureOr<List<AiModel>>
+        >
     with $FutureModifier<List<AiModel>>, $FutureProvider<List<AiModel>> {
-  ModelsForProviderProvider._(
-      {required ModelsForProviderFamily super.from,
-      required String super.argument})
-      : super(
-          retry: null,
-          name: r'modelsForProviderProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  ModelsForProviderProvider._({
+    required ModelsForProviderFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'modelsForProviderProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$modelsForProviderHash();
@@ -269,16 +274,13 @@ final class ModelsForProviderProvider extends $FunctionalProvider<
   @$internal
   @override
   $FutureProviderElement<List<AiModel>> $createElement(
-          $ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<AiModel>> create(Ref ref) {
     final argument = this.argument as String;
-    return modelsForProvider(
-      ref,
-      argument,
-    );
+    return modelsForProvider(ref, argument);
   }
 
   @override
@@ -297,17 +299,15 @@ String _$modelsForProviderHash() => r'f53251ad3a7d37488b9b558b2da4885eee828443';
 final class ModelsForProviderFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<AiModel>>, String> {
   ModelsForProviderFamily._()
-      : super(
-          retry: null,
-          name: r'modelsForProviderProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: true,
-        );
+    : super(
+        retry: null,
+        name: r'modelsForProviderProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
 
-  ModelsForProviderProvider call(
-    String providerName,
-  ) =>
+  ModelsForProviderProvider call(String providerName) =>
       ModelsForProviderProvider._(argument: providerName, from: this);
 
   @override

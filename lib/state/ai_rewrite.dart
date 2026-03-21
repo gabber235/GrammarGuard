@@ -56,7 +56,19 @@ class SelectedModel extends _$SelectedModel {
       return ref.watch(defaultModelProvider);
     }
 
-    return ref.watch(modelProvider(modelName).future);
+    final selectedModel = await ref.watch(modelProvider(modelName).future);
+    if (selectedModel != null) {
+      return selectedModel;
+    }
+
+    final defaultModel = ref.watch(defaultModelProvider);
+    if (defaultModel == null) {
+      await prefs.remove(_selectedModelKey);
+      return null;
+    }
+
+    await prefs.setString(_selectedModelKey, defaultModel.name);
+    return defaultModel;
   }
 
   Future<void> select(AiModel model) async {

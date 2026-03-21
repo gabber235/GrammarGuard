@@ -1,6 +1,7 @@
 import "package:collection/collection.dart";
 import "package:grammar_guard/models/ai_model.dart";
 import "package:grammar_guard/services/provider_registry.dart";
+import "package:grammar_guard/state/provider_settings_state.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 
 part "model_registry.g.dart";
@@ -10,8 +11,15 @@ class ModelRegistry extends _$ModelRegistry {
   @override
   Future<List<AiModel>> build() async {
     final providers = ref.watch(providerRegistryProvider);
+    final providerSettings = await ref.watch(
+      providerSettingsStateProvider.future,
+    );
+    final enabledProviders = providers.where((provider) {
+      final settings = providerSettings[provider.name];
+      return settings?.enabled ?? true;
+    });
     final models = await Future.wait(
-      providers.map((provider) => provider.fetchAvailableModels(ref)),
+      enabledProviders.map((provider) => provider.fetchAvailableModels(ref)),
     );
     return models.expand((m) => m).toList();
   }

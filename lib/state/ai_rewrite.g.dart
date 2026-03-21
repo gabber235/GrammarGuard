@@ -86,7 +86,7 @@ final class SelectedModelProvider
   SelectedModel create() => SelectedModel();
 }
 
-String _$selectedModelHash() => r'4cb27e08f2d4bef5ec4051e372223cdc407cba8b';
+String _$selectedModelHash() => r'7bbc7414c7553d540d4214d78a45fa8d7259a274';
 
 abstract class _$SelectedModel extends $AsyncNotifier<AiModel?> {
   FutureOr<AiModel?> build();
