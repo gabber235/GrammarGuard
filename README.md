@@ -26,8 +26,9 @@ capture and window management.
 ## Features
 
 * **System-Wide Text Capture:** Grabs text from your clipboard when triggered
-* **Multi-Provider Support:** Choose between OpenAI, Google (Gemini), Anthropic (Claude), and Ollama (local) models.
+* **Multi-Provider Support:** Choose between OpenAI, Google (Gemini), Anthropic (Claude), Ollama Local, and Ollama Cloud models.
 * **Model Selector:** Easily switch between different AI models and see their token pricing.
+* **Quick Provider Switching:** Seamlessly switch between local (Ollama Local) and cloud (Ollama Cloud) providers based on your needs.
 * **Background Operation:** Runs unobtrusively until needed
 * **Floating Window UI:** Appears on top of other windows for easy access upon activation
 * **Global Shortcut Activation:** Trigger GrammarGuard with `Alt+Shift+G`
@@ -87,31 +88,49 @@ capture and window management.
 5. You can configure multiple providers. The app will securely store your API keys. For Ollama, configure your local server URL (default: http://localhost:11434).
 6. Once at least one provider is configured, you're ready to go!
 
-## Ollama Setup (Local AI Models)
+## Ollama Setup
 
-Ollama allows you to run AI models locally on your machine, providing privacy and eliminating the need for API keys.
+GrammarGuard supports two Ollama providers:
 
-### Installing Ollama
+### Ollama Local (Default)
+
+Ollama Local allows you to run AI models directly on your machine, providing privacy and eliminating the need for API keys.
+
+**Installing Ollama**
 
 1. Download and install Ollama from [https://ollama.com](https://ollama.com)
 2. Start Ollama by running `ollama serve` in your terminal (or it may start automatically)
 3. Download a model, for example: `ollama pull llama3.2` or `ollama pull mistral`
 
-### Configuring Ollama in GrammarGuard
+**Configuring Ollama Local in GrammarGuard**
 
 1. In GrammarGuard, press `C` to open the configuration screen
-2. Select "Ollama" from the provider list
+2. Select "Ollama Local" from the provider list
 3. Configure your server URL (default: `http://localhost:11434`)
 4. Click "Test Connection" to verify Ollama is running
 5. Click "Refresh Models" to load available models from your Ollama installation
 6. Save your configuration
 
-### Ollama Benefits
+**Benefits of Local Models**
 
 * **Privacy:** All processing happens locally on your machine
 * **No API costs:** No per-token charges or usage limits
 * **Offline capability:** Works without internet connection
 * **Model flexibility:** Choose from various open-source models
+
+### Ollama Cloud
+
+Ollama Cloud provides access to Ollama's cloud-hosted models. You can provide an API key when your endpoint requires authentication.
+
+**Configuring Ollama Cloud in GrammarGuard**
+
+1. In GrammarGuard, press `C` to open the configuration screen
+2. Select "Ollama Cloud" from the provider list
+3. Enter the server URL (default: `https://ollama.com`)
+4. Optionally enter your API key if you have one configured
+5. Click "Test Connection" to verify the connection
+6. Click "Refresh Models" to load available models
+7. Save your configuration
 
 **Note:** Local models may be slower than cloud providers depending on your hardware, but offer complete privacy and control.
 

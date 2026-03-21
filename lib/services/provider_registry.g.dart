@@ -15,15 +15,15 @@ final providerRegistryProvider = ProviderRegistryProvider._();
 final class ProviderRegistryProvider
     extends $NotifierProvider<ProviderRegistry, List<AiProvider>> {
   ProviderRegistryProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'providerRegistryProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'providerRegistryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$providerRegistryHash();
@@ -49,11 +49,14 @@ abstract class _$ProviderRegistry extends $Notifier<List<AiProvider>> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<List<AiProvider>, List<AiProvider>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<List<AiProvider>, List<AiProvider>>,
-        List<AiProvider>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<List<AiProvider>, List<AiProvider>>,
+              List<AiProvider>,
+              Object?,
+              Object?
+            >;
     element.handleCreate(ref, build);
   }
 }
@@ -64,15 +67,16 @@ final providerProvider = ProviderFamily._();
 final class ProviderProvider
     extends $FunctionalProvider<AiProvider?, AiProvider?, AiProvider?>
     with $Provider<AiProvider?> {
-  ProviderProvider._(
-      {required ProviderFamily super.from, required String super.argument})
-      : super(
-          retry: null,
-          name: r'providerProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  ProviderProvider._({
+    required ProviderFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'providerProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$providerHash();
@@ -92,10 +96,7 @@ final class ProviderProvider
   @override
   AiProvider? create(Ref ref) {
     final argument = this.argument as String;
-    return provider(
-      ref,
-      argument,
-    );
+    return provider(ref, argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -122,17 +123,15 @@ String _$providerHash() => r'20767636b3d33082487fba17540598dc11192118';
 final class ProviderFamily extends $Family
     with $FunctionalFamilyOverride<AiProvider?, String> {
   ProviderFamily._()
-      : super(
-          retry: null,
-          name: r'providerProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: false,
-        );
+    : super(
+        retry: null,
+        name: r'providerProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
 
-  ProviderProvider call(
-    String name,
-  ) =>
+  ProviderProvider call(String name) =>
       ProviderProvider._(argument: name, from: this);
 
   @override
