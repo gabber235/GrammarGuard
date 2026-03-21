@@ -37,15 +37,15 @@ final aiUsageProvider = AiUsageProvider._();
 final class AiUsageProvider
     extends $AsyncNotifierProvider<AiUsage, Map<String, RequestUsage>> {
   AiUsageProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'aiUsageProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'aiUsageProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$aiUsageHash();
@@ -62,14 +62,23 @@ abstract class _$AiUsage extends $AsyncNotifier<Map<String, RequestUsage>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<Map<String, RequestUsage>>,
-        Map<String, RequestUsage>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<Map<String, RequestUsage>>,
-            Map<String, RequestUsage>>,
-        AsyncValue<Map<String, RequestUsage>>,
-        Object?,
-        Object?>;
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<Map<String, RequestUsage>>,
+              Map<String, RequestUsage>
+            >;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<Map<String, RequestUsage>>,
+                Map<String, RequestUsage>
+              >,
+              AsyncValue<Map<String, RequestUsage>>,
+              Object?,
+              Object?
+            >;
     element.handleCreate(ref, build);
   }
 }
@@ -80,15 +89,15 @@ final totalTokenCountProvider = TotalTokenCountProvider._();
 final class TotalTokenCountProvider extends $FunctionalProvider<int, int, int>
     with $Provider<int> {
   TotalTokenCountProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'totalTokenCountProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'totalTokenCountProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$totalTokenCountHash();
@@ -118,17 +127,18 @@ String _$totalTokenCountHash() => r'961093240deb860224daee6bb453765fea1d8e35';
 final totalPriceProvider = TotalPriceProvider._();
 
 final class TotalPriceProvider
-    extends $FunctionalProvider<double, double, double> with $Provider<double> {
+    extends $FunctionalProvider<double, double, double>
+    with $Provider<double> {
   TotalPriceProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'totalPriceProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'totalPriceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$totalPriceHash();

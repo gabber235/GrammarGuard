@@ -1,11 +1,9 @@
 import "package:diff_match_patch/diff_match_patch.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:grammar_guard/models/editor_document.dart";
 import "package:grammar_guard/models/pending_change.dart";
 import "package:grammar_guard/services/vim/vim_state.dart";
 import "package:grammar_guard/state/selection_editor_notifier.dart";
-import "package:grammar_guard/state/selection_editor_state.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
 void main() {

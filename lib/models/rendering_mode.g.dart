@@ -15,15 +15,15 @@ final renderingModeProvider = RenderingModeProvider._();
 final class RenderingModeProvider
     extends $NotifierProvider<RenderingMode, RenderingModeOption> {
   RenderingModeProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'renderingModeProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'renderingModeProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$renderingModeHash();
@@ -49,11 +49,14 @@ abstract class _$RenderingMode extends $Notifier<RenderingModeOption> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<RenderingModeOption, RenderingModeOption>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<RenderingModeOption, RenderingModeOption>,
-        RenderingModeOption,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<RenderingModeOption, RenderingModeOption>,
+              RenderingModeOption,
+              Object?,
+              Object?
+            >;
     element.handleCreate(ref, build);
   }
 }

@@ -15,15 +15,15 @@ final apiKeyStateProvider = ApiKeyStateProvider._();
 final class ApiKeyStateProvider
     extends $AsyncNotifierProvider<ApiKeyState, Map<String, String>> {
   ApiKeyStateProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'apiKeyStateProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'apiKeyStateProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$apiKeyStateHash();
@@ -42,11 +42,14 @@ abstract class _$ApiKeyState extends $AsyncNotifier<Map<String, String>> {
   void runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<Map<String, String>>, Map<String, String>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<AsyncValue<Map<String, String>>, Map<String, String>>,
-        AsyncValue<Map<String, String>>,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<Map<String, String>>, Map<String, String>>,
+              AsyncValue<Map<String, String>>,
+              Object?,
+              Object?
+            >;
     element.handleCreate(ref, build);
   }
 }
@@ -57,15 +60,16 @@ final apiKeyProvider = ApiKeyFamily._();
 final class ApiKeyProvider
     extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
     with $FutureModifier<String?>, $FutureProvider<String?> {
-  ApiKeyProvider._(
-      {required ApiKeyFamily super.from, required String super.argument})
-      : super(
-          retry: null,
-          name: r'apiKeyProvider',
-          isAutoDispose: false,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+  ApiKeyProvider._({
+    required ApiKeyFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'apiKeyProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$apiKeyHash();
@@ -85,10 +89,7 @@ final class ApiKeyProvider
   @override
   FutureOr<String?> create(Ref ref) {
     final argument = this.argument as String;
-    return apiKey(
-      ref,
-      argument,
-    );
+    return apiKey(ref, argument);
   }
 
   @override
@@ -107,17 +108,15 @@ String _$apiKeyHash() => r'6200d5341cd77a61c62b14f6821aab359d2057a6';
 final class ApiKeyFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<String?>, String> {
   ApiKeyFamily._()
-      : super(
-          retry: null,
-          name: r'apiKeyProvider',
-          dependencies: null,
-          $allTransitiveDependencies: null,
-          isAutoDispose: false,
-        );
+    : super(
+        retry: null,
+        name: r'apiKeyProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
 
-  ApiKeyProvider call(
-    String providerName,
-  ) =>
+  ApiKeyProvider call(String providerName) =>
       ApiKeyProvider._(argument: providerName, from: this);
 
   @override

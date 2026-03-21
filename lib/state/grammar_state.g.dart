@@ -15,15 +15,15 @@ final grammarStateProvider = GrammarStateProvider._();
 final class GrammarStateProvider
     extends $NotifierProvider<GrammarState, GrammarStateData> {
   GrammarStateProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'grammarStateProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'grammarStateProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$grammarStateHash();
@@ -49,11 +49,14 @@ abstract class _$GrammarState extends $Notifier<GrammarStateData> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<GrammarStateData, GrammarStateData>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<GrammarStateData, GrammarStateData>,
-        GrammarStateData,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<GrammarStateData, GrammarStateData>,
+              GrammarStateData,
+              Object?,
+              Object?
+            >;
     element.handleCreate(ref, build);
   }
 }

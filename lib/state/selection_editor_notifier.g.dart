@@ -15,15 +15,15 @@ final selectionEditorProvider = SelectionEditorNotifierProvider._();
 final class SelectionEditorNotifierProvider
     extends $NotifierProvider<SelectionEditorNotifier, SelectionEditorState?> {
   SelectionEditorNotifierProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'selectionEditorProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'selectionEditorProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$selectionEditorNotifierHash();
@@ -51,11 +51,14 @@ abstract class _$SelectionEditorNotifier
   @override
   void runBuild() {
     final ref = this.ref as $Ref<SelectionEditorState?, SelectionEditorState?>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<SelectionEditorState?, SelectionEditorState?>,
-        SelectionEditorState?,
-        Object?,
-        Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<SelectionEditorState?, SelectionEditorState?>,
+              SelectionEditorState?,
+              Object?,
+              Object?
+            >;
     element.handleCreate(ref, build);
   }
 }
