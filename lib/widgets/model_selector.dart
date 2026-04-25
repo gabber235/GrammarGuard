@@ -34,14 +34,27 @@ class ModelListTile extends HookConsumerWidget {
           color: isFocused ? theme.colorScheme.onPrimary : null,
         ),
       ),
-      subtitle: Text(
-        "Input: \$${model.pricePerMillionInputTokens}/1M tokens, "
-        "Output: \$${model.pricePerMillionOutputTokens}/1M tokens",
-        style: TextStyle(
-          color: isFocused
-              ? theme.colorScheme.onPrimary.withValues(alpha: 0.7)
-              : null,
-        ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            model.provider.displayName,
+            style: TextStyle(
+              color: isFocused
+                  ? theme.colorScheme.onPrimary.withValues(alpha: 0.7)
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            "Input: \$${model.pricePerMillionInputTokens}/1M tokens, "
+            "Output: \$${model.pricePerMillionOutputTokens}/1M tokens",
+            style: TextStyle(
+              color: isFocused
+                  ? theme.colorScheme.onPrimary.withValues(alpha: 0.7)
+                  : null,
+            ),
+          ),
+        ],
       ),
       selected: isSelected,
       focusNode: focusNode,
