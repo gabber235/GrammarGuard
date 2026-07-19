@@ -1,0 +1,73 @@
+version: '3'
+
+silent: true
+
+vars:
+  MACOS_WORKSPACE: macos/Runner.xcworkspace
+  MACOS_SCHEME: Runner
+  MACOS_CONFIGURATION: Debug
+  MACOS_DESTINATION: platform=macOS
+
+tasks:
+  default:
+    desc: Run Flutter macOS app with provisioning fallback
+    cmds:
+      - task: macos
+
+  macos:
+    desc: Run Flutter macOS app, provision only after matching signing failure
+    cmds:
+      - |
+        bash -lc '
+        set -uo pipefail
+
+        log_file="$(mktemp -t grammar_guard_flutter_macos.XXXXXX.log)"
+        cleanup() {
+          rm -f "$log_file"
+        }
+        trap cleanup EXIT
+
+        run_flutter() {
+          flutter run -d macos 2>&1 | tee "$log_file"
+          return "${PIPESTATUS[0]}"
+        }
+
+        if run_flutter; then
+          exit 0
+        fi
+
+        status="$?"
+        if ! rg -q "pass -allowProvisioningUpdates to xcodebuild|Automatic signing is disabled and unable to generate a profile|No profiles for .* were found" "$log_file"; then
+          exit "$status"
+        fi
+
+        echo "Provisioning profile missing. Asking Xcode to create or download it."
+
+        xcodebuild \
+          -workspace {{.MACOS_WORKSPACE}} \
+          -scheme {{.MACOS_SCHEME}} \
+          -configuration {{.MACOS_CONFIGURATION}} \
+          -destination "{{.MACOS_DESTINATION}}" \
+          -allowProvisioningUpdates \
+          build
+
+        : > "$log_file"
+        run_flutter
+        '
+
+  macos:run:
+    desc: Run Flutter app on macOS without provisioning fallback
+    cmds:
+      - flutter run -d macos
+
+  macos:provision:
+    desc: Let Xcode create or download local macOS development signing assets
+    cmds:
+      - >
+        xcodebuild
+        -workspace {{.MACOS_WORKSPACE}}
+        -scheme {{.MACOS_SCHEME}}
+        -configuration {{.MACOS_CONFIGURATION}}
+        -destination '{{.MACOS_DESTINATION}}'
+        -allowProvisioningUpdates
+        build
