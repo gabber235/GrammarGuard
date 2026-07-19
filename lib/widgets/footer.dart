@@ -1,14 +1,17 @@
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
+import "package:grammar_guard/hooks/timer.dart";
 import "package:grammar_guard/models/diff_option.dart";
 import "package:grammar_guard/models/rendering_mode.dart";
 import "package:grammar_guard/state/ai_rewrite.dart";
 import "package:grammar_guard/state/ai_usage.dart";
+import "package:grammar_guard/state/generation_stats.dart";
 import "package:grammar_guard/widgets/model_selector.dart";
 import "package:grammar_guard/widgets/provider_configuration.dart";
 import "package:grammar_guard/widgets/toggle_option.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-class Footer extends ConsumerWidget {
+class Footer extends HookConsumerWidget {
   const Footer({super.key});
 
   @override
@@ -18,6 +21,27 @@ class Footer extends ConsumerWidget {
     final totalTokens = ref.watch(totalTokenCountProvider);
     final totalPrice = ref.watch(totalPriceProvider);
     final selectedModel = ref.watch(selectedModelProvider);
+    final generationStats = ref.watch(generationStatsProvider);
+    final now = useState(DateTime.now());
+
+    useTimer(
+      const Duration(milliseconds: 500),
+      (_) {
+        if (generationStats.isActive) {
+          now.value = DateTime.now();
+        }
+      },
+      keys: [generationStats.isActive],
+    );
+
+    final elapsed = generationStats.elapsedAt(now.value);
+    final elapsedText = _formatDuration(elapsed);
+    final activeSpeed = generationStats.liveEstimatedTokensPerSecond(elapsed);
+    final finalSpeed = generationStats.finalTokensPerSecond;
+    final speedText = _formatTokensPerSecond(
+      generationStats.isActive ? activeSpeed : (finalSpeed ?? activeSpeed),
+      estimated: generationStats.isActive,
+    );
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -26,14 +50,25 @@ class Footer extends ConsumerWidget {
           children: [
             _UsageInfo(
               icon: Icons.token,
-              label: "Tokens",
               value: totalTokens.toString(),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             _UsageInfo(
               icon: Icons.attach_money_rounded,
-              label: "Cost",
               value: "\$${totalPrice.toStringAsFixed(3)}",
+            ),
+            const SizedBox(width: 12),
+            _UsageInfo(
+              icon: Icons.schedule,
+              value: elapsedText,
+            ),
+            const SizedBox(width: 12),
+            Tooltip(
+              message: generationStats.loadingTimeTooltipText(),
+              child: _UsageInfo(
+                icon: Icons.speed,
+                value: speedText,
+              ),
             ),
           ],
         ),
@@ -87,23 +122,19 @@ class Footer extends ConsumerWidget {
 class _UsageInfo extends StatelessWidget {
   const _UsageInfo({
     required this.icon,
-    required this.label,
     required this.value,
   });
 
   final IconData icon;
-  final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 16, color: Colors.white70),
-        Text(
-          "$label: ",
-          style: const TextStyle(fontSize: 14, color: Colors.white70),
-        ),
+        const SizedBox(width: 4),
         Text(
           value,
           style: const TextStyle(
@@ -115,4 +146,32 @@ class _UsageInfo extends StatelessWidget {
       ],
     );
   }
+}
+
+String _formatDuration(Duration duration) {
+  final seconds = duration.inMilliseconds / 1000;
+  if (seconds < 100) {
+    return "${seconds.toStringAsFixed(1)}s";
+  }
+
+  final minutes = duration.inMinutes;
+  final remainingSeconds = duration.inSeconds.remainder(60);
+  if (minutes > 0) {
+    return "${minutes}m ${remainingSeconds}s";
+  }
+
+  return "${duration.inSeconds}s";
+}
+
+String _formatTokensPerSecond(double value, {required bool estimated}) {
+  final prefix = estimated ? "~" : "";
+  if (value <= 0) {
+    return "${prefix}0 tok/s";
+  }
+
+  if (value < 10) {
+    return "$prefix${value.toStringAsFixed(1)} tok/s";
+  }
+
+  return "$prefix${value.round()} tok/s";
 }

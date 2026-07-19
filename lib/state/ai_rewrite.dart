@@ -8,6 +8,7 @@ import "package:grammar_guard/models/prompt.dart";
 import "package:grammar_guard/services/generation_event.dart";
 import "package:grammar_guard/state/ai_rewrite_result.dart";
 import "package:grammar_guard/state/ai_usage.dart";
+import "package:grammar_guard/state/generation_stats.dart";
 import "package:grammar_guard/state/grammar_state.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:shared_preferences/shared_preferences.dart";
@@ -83,7 +84,9 @@ class AiRewrite extends _$AiRewrite {
   @override
   Stream<AiRewriteResult> build() async* {
     final activity = ref.read(rewriteGenerationActivityProvider.notifier);
+    final stats = ref.read(generationStatsProvider.notifier);
     activity.started();
+    stats.start();
     final state = ref.watch(grammarStateProvider);
     final currentModel = ref.watch(selectedModelProvider);
 
@@ -121,6 +124,7 @@ class AiRewrite extends _$AiRewrite {
                   text: sb.toString(),
                 );
               case TextDeltaEvent(delta: final delta):
+                stats.recordTextDelta(delta);
                 sb.write(delta);
                 if (thinkingSb.isNotEmpty) {
                   yield ThinkingTextResult(
@@ -131,6 +135,7 @@ class AiRewrite extends _$AiRewrite {
                   yield TextResult(text: sb.toString());
                 }
               case UsageEvent(usage: final usage):
+                stats.recordUsage(usage);
                 final id = generateId();
                 await ref
                     .read(aiUsageProvider.notifier)
@@ -142,6 +147,7 @@ class AiRewrite extends _$AiRewrite {
                       usage.providerName,
                     );
               case ErrorEvent(error: final error):
+                stats.markError();
                 yield ErrorResult(message: error);
             }
           }
@@ -154,6 +160,7 @@ class AiRewrite extends _$AiRewrite {
         },
       );
     } finally {
+      stats.finish();
       activity.finished();
     }
   }

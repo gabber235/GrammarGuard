@@ -130,7 +130,7 @@ final class AiRewriteProvider
   AiRewrite create() => AiRewrite();
 }
 
-String _$aiRewriteHash() => r'c1679e34e82d2d89fc60fb16cd266611f28ab7d9';
+String _$aiRewriteHash() => r'b99766bd094ba46b8c53cb6f6055e93502e5579a';
 
 abstract class _$AiRewrite extends $StreamNotifier<AiRewriteResult> {
   Stream<AiRewriteResult> build();
