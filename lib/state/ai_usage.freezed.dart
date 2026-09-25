@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'ai_usage.dart';
@@ -9,6 +9,7 @@ part of 'ai_usage.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $RequestUsageCopyWith<RequestUsage> get copyWith => _$RequestUsageCopyWithImpl<R
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RequestUsage&&(identical(other.promptTokenCount, promptTokenCount) || other.promptTokenCount == promptTokenCount)&&(identical(other.completionTokenCount, completionTokenCount) || other.completionTokenCount == completionTokenCount)&&(identical(other.modelName, modelName) || other.modelName == modelName)&&(identical(other.providerName, providerName) || other.providerName == providerName)&&(identical(other.cost, cost) || other.cost == cost));
+  final _this = this as RequestUsage;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RequestUsage&&(identical(other.promptTokenCount, _this.promptTokenCount) || other.promptTokenCount == _this.promptTokenCount)&&(identical(other.completionTokenCount, _this.completionTokenCount) || other.completionTokenCount == _this.completionTokenCount)&&(identical(other.modelName, _this.modelName) || other.modelName == _this.modelName)&&(identical(other.providerName, _this.providerName) || other.providerName == _this.providerName)&&(identical(other.cost, _this.cost) || other.cost == _this.cost));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,promptTokenCount,completionTokenCount,modelName,providerName,cost);
+int get hashCode {
+  final _this = this as RequestUsage;
+  return Object.hash(runtimeType,_this.promptTokenCount,_this.completionTokenCount,_this.modelName,_this.providerName,_this.cost);
+}
 
 @override
 String toString() {
-  return 'RequestUsage(promptTokenCount: $promptTokenCount, completionTokenCount: $completionTokenCount, modelName: $modelName, providerName: $providerName, cost: $cost)';
+  final _this = this as RequestUsage;
+  return 'RequestUsage(promptTokenCount: ${_this.promptTokenCount}, completionTokenCount: ${_this.completionTokenCount}, modelName: ${_this.modelName}, providerName: ${_this.providerName}, cost: ${_this.cost})';
 }
 
 
@@ -66,7 +72,7 @@ class _$RequestUsageCopyWithImpl<$Res>
 /// Create a copy of RequestUsage
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? promptTokenCount = null,Object? completionTokenCount = null,Object? modelName = null,Object? providerName = null,Object? cost = null,}) {
-  return _then(_self.copyWith(
+  return _then(RequestUsage(
 promptTokenCount: null == promptTokenCount ? _self.promptTokenCount : promptTokenCount // ignore: cast_nullable_to_non_nullable
 as int,completionTokenCount: null == completionTokenCount ? _self.completionTokenCount : completionTokenCount // ignore: cast_nullable_to_non_nullable
 as int,modelName: null == modelName ? _self.modelName : modelName // ignore: cast_nullable_to_non_nullable
@@ -235,16 +241,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RequestUsage&&(identical(other.promptTokenCount, promptTokenCount) || other.promptTokenCount == promptTokenCount)&&(identical(other.completionTokenCount, completionTokenCount) || other.completionTokenCount == completionTokenCount)&&(identical(other.modelName, modelName) || other.modelName == modelName)&&(identical(other.providerName, providerName) || other.providerName == providerName)&&(identical(other.cost, cost) || other.cost == cost));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RequestUsage&&(identical(other.promptTokenCount, promptTokenCount) || other.promptTokenCount == promptTokenCount)&&(identical(other.completionTokenCount, completionTokenCount) || other.completionTokenCount == completionTokenCount)&&(identical(other.modelName, modelName) || other.modelName == modelName)&&(identical(other.providerName, providerName) || other.providerName == providerName)&&(identical(other.cost, cost) || other.cost == cost));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,promptTokenCount,completionTokenCount,modelName,providerName,cost);
+int get hashCode {
+    return Object.hash(runtimeType,promptTokenCount,completionTokenCount,modelName,providerName,cost);
+}
 
 @override
 String toString() {
-  return 'RequestUsage(promptTokenCount: $promptTokenCount, completionTokenCount: $completionTokenCount, modelName: $modelName, providerName: $providerName, cost: $cost)';
+    return 'RequestUsage(promptTokenCount: $promptTokenCount, completionTokenCount: $completionTokenCount, modelName: $modelName, providerName: $providerName, cost: $cost)';
 }
 
 

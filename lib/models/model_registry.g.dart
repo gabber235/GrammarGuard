@@ -39,7 +39,7 @@ abstract class _$ModelRegistry extends $AsyncNotifier<List<AiModel>> {
   FutureOr<List<AiModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<AiModel>>, List<AiModel>>;
     final element =
         ref.element
@@ -49,7 +49,7 @@ abstract class _$ModelRegistry extends $AsyncNotifier<List<AiModel>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

@@ -1,5 +1,6 @@
 import "dart:developer" as developer;
 
+import "package:collection/collection.dart";
 import "package:diff_match_patch/diff_match_patch.dart";
 import "package:grammar_guard/models/ai_model.dart";
 import "package:grammar_guard/models/diff_option.dart";
@@ -57,7 +58,10 @@ class SelectedModel extends _$SelectedModel {
       return ref.watch(defaultModelProvider);
     }
 
-    final selectedModel = await ref.watch(modelProvider(modelName).future);
+    final models = await ref.watch(modelRegistryProvider.future);
+    final selectedModel = models.firstWhereOrNull(
+      (model) => model.name == modelName,
+    );
     if (selectedModel != null) {
       return selectedModel;
     }

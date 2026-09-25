@@ -47,7 +47,7 @@ abstract class _$GenerationStats extends $Notifier<GenerationStatsSnapshot> {
   GenerationStatsSnapshot build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<GenerationStatsSnapshot, GenerationStatsSnapshot>;
     final element =
@@ -58,6 +58,6 @@ abstract class _$GenerationStats extends $Notifier<GenerationStatsSnapshot> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

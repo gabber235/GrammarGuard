@@ -61,7 +61,7 @@ abstract class _$AiUsage extends $AsyncNotifier<Map<String, RequestUsage>> {
   FutureOr<Map<String, RequestUsage>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref
             as $Ref<
@@ -79,7 +79,7 @@ abstract class _$AiUsage extends $AsyncNotifier<Map<String, RequestUsage>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

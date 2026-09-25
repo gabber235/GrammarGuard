@@ -48,7 +48,7 @@ abstract class _$RewriteGenerationActivity extends $Notifier<bool> {
   bool build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<bool, bool>;
     final element =
         ref.element
@@ -58,7 +58,7 @@ abstract class _$RewriteGenerationActivity extends $Notifier<bool> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -86,13 +86,13 @@ final class SelectedModelProvider
   SelectedModel create() => SelectedModel();
 }
 
-String _$selectedModelHash() => r'7bbc7414c7553d540d4214d78a45fa8d7259a274';
+String _$selectedModelHash() => r'6fb46dc2af92b803b566032f5c6a5b162f2b8614';
 
 abstract class _$SelectedModel extends $AsyncNotifier<AiModel?> {
   FutureOr<AiModel?> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<AiModel?>, AiModel?>;
     final element =
         ref.element
@@ -102,7 +102,7 @@ abstract class _$SelectedModel extends $AsyncNotifier<AiModel?> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -136,7 +136,7 @@ abstract class _$AiRewrite extends $StreamNotifier<AiRewriteResult> {
   Stream<AiRewriteResult> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<AiRewriteResult>, AiRewriteResult>;
     final element =
         ref.element
@@ -146,7 +146,7 @@ abstract class _$AiRewrite extends $StreamNotifier<AiRewriteResult> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

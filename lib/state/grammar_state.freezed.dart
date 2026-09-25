@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'grammar_state.dart';
@@ -9,6 +9,7 @@ part of 'grammar_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -24,23 +25,29 @@ $GrammarStateDataCopyWith<GrammarStateData> get copyWith => _$GrammarStateDataCo
 
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  final _this = this as GrammarStateData;
   properties
     ..add(DiagnosticsProperty('type', 'GrammarStateData'))
-    ..add(DiagnosticsProperty('inputText', inputText))..add(DiagnosticsProperty('enabledStyling', enabledStyling))..add(DiagnosticsProperty('rewriteIntensity', rewriteIntensity));
+    ..add(DiagnosticsProperty('inputText', _this.inputText))..add(DiagnosticsProperty('enabledStyling', _this.enabledStyling))..add(DiagnosticsProperty('rewriteIntensity', _this.rewriteIntensity));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GrammarStateData&&(identical(other.inputText, inputText) || other.inputText == inputText)&&const DeepCollectionEquality().equals(other.enabledStyling, enabledStyling)&&(identical(other.rewriteIntensity, rewriteIntensity) || other.rewriteIntensity == rewriteIntensity));
+  final _this = this as GrammarStateData;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GrammarStateData&&(identical(other.inputText, _this.inputText) || other.inputText == _this.inputText)&&const DeepCollectionEquality().equals(other.enabledStyling, _this.enabledStyling)&&(identical(other.rewriteIntensity, _this.rewriteIntensity) || other.rewriteIntensity == _this.rewriteIntensity));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inputText,const DeepCollectionEquality().hash(enabledStyling),rewriteIntensity);
+int get hashCode {
+  final _this = this as GrammarStateData;
+  return Object.hash(runtimeType,_this.inputText,const DeepCollectionEquality().hash(_this.enabledStyling),_this.rewriteIntensity);
+}
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'GrammarStateData(inputText: $inputText, enabledStyling: $enabledStyling, rewriteIntensity: $rewriteIntensity)';
+  final _this = this as GrammarStateData;
+  return 'GrammarStateData(inputText: ${_this.inputText}, enabledStyling: ${_this.enabledStyling}, rewriteIntensity: ${_this.rewriteIntensity})';
 }
 
 
@@ -69,7 +76,7 @@ class _$GrammarStateDataCopyWithImpl<$Res>
 /// Create a copy of GrammarStateData
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? inputText = null,Object? enabledStyling = null,Object? rewriteIntensity = null,}) {
-  return _then(_self.copyWith(
+  return _then(GrammarStateData(
 inputText: null == inputText ? _self.inputText : inputText // ignore: cast_nullable_to_non_nullable
 as String,enabledStyling: null == enabledStyling ? _self.enabledStyling : enabledStyling // ignore: cast_nullable_to_non_nullable
 as Set<StylingOption>,rewriteIntensity: null == rewriteIntensity ? _self.rewriteIntensity : rewriteIntensity // ignore: cast_nullable_to_non_nullable
@@ -214,7 +221,7 @@ return $default(_that.inputText,_that.enabledStyling,_that.rewriteIntensity);cas
 
 
 class _GrammarStateData with DiagnosticableTreeMixin implements GrammarStateData {
-  const _GrammarStateData({this.inputText = "", final  Set<StylingOption> enabledStyling = const {}, this.rewriteIntensity = RewriteIntensity.polish}): _enabledStyling = enabledStyling;
+  const _GrammarStateData({this.inputText = "",  Set<StylingOption> enabledStyling = const {}, this.rewriteIntensity = RewriteIntensity.polish}): _enabledStyling = enabledStyling;
   
 
 @override@JsonKey() final  String inputText;
@@ -236,23 +243,25 @@ _$GrammarStateDataCopyWith<_GrammarStateData> get copyWith => __$GrammarStateDat
 
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
+    properties
     ..add(DiagnosticsProperty('type', 'GrammarStateData'))
     ..add(DiagnosticsProperty('inputText', inputText))..add(DiagnosticsProperty('enabledStyling', enabledStyling))..add(DiagnosticsProperty('rewriteIntensity', rewriteIntensity));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GrammarStateData&&(identical(other.inputText, inputText) || other.inputText == inputText)&&const DeepCollectionEquality().equals(other._enabledStyling, _enabledStyling)&&(identical(other.rewriteIntensity, rewriteIntensity) || other.rewriteIntensity == rewriteIntensity));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GrammarStateData&&(identical(other.inputText, inputText) || other.inputText == inputText)&&const DeepCollectionEquality().equals(other.enabledStyling, _enabledStyling)&&(identical(other.rewriteIntensity, rewriteIntensity) || other.rewriteIntensity == rewriteIntensity));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inputText,const DeepCollectionEquality().hash(_enabledStyling),rewriteIntensity);
+int get hashCode {
+    return Object.hash(runtimeType,inputText,const DeepCollectionEquality().hash(_enabledStyling),rewriteIntensity);
+}
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'GrammarStateData(inputText: $inputText, enabledStyling: $enabledStyling, rewriteIntensity: $rewriteIntensity)';
+    return 'GrammarStateData(inputText: $inputText, enabledStyling: $enabledStyling, rewriteIntensity: $rewriteIntensity)';
 }
 
 

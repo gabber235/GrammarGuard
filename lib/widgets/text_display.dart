@@ -1,7 +1,6 @@
 import "package:diff_match_patch/diff_match_patch.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:gpt_markdown/custom_widgets/markdown_config.dart";
 import "package:gpt_markdown/gpt_markdown.dart";
 import "package:grammar_guard/hooks/delayed_execution.dart";
 import "package:grammar_guard/models/diff_option.dart";

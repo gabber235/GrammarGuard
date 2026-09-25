@@ -47,7 +47,7 @@ abstract class _$GrammarState extends $Notifier<GrammarStateData> {
   GrammarStateData build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<GrammarStateData, GrammarStateData>;
     final element =
         ref.element
@@ -57,6 +57,6 @@ abstract class _$GrammarState extends $Notifier<GrammarStateData> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

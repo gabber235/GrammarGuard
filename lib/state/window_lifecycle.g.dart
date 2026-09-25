@@ -47,7 +47,7 @@ abstract class _$WindowLifecycle extends $Notifier<WindowLifecycleState> {
   WindowLifecycleState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<WindowLifecycleState, WindowLifecycleState>;
     final element =
         ref.element
@@ -57,7 +57,7 @@ abstract class _$WindowLifecycle extends $Notifier<WindowLifecycleState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

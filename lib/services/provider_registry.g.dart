@@ -47,7 +47,7 @@ abstract class _$ProviderRegistry extends $Notifier<List<AiProvider>> {
   List<AiProvider> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<List<AiProvider>, List<AiProvider>>;
     final element =
         ref.element
@@ -57,7 +57,7 @@ abstract class _$ProviderRegistry extends $Notifier<List<AiProvider>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
