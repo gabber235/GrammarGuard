@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:grammar_guard/config/desktop_window.dart";
 import "package:grammar_guard/services/vim/vim_state.dart";
 import "package:grammar_guard/state/selection_editor_notifier.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -122,12 +123,13 @@ class _KeybindHints extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryModifier = usesPaletteWindow ? "⌘" : "Ctrl+";
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _KeyHint(keys: "⌘Y", action: "Accept", onTap: onAccept),
+        _KeyHint(keys: "${primaryModifier}Y", action: "Accept", onTap: onAccept),
         const SizedBox(width: 12),
-        _KeyHint(keys: "⌘N", action: "Reject", onTap: onReject),
+        _KeyHint(keys: "${primaryModifier}N", action: "Reject", onTap: onReject),
         const SizedBox(width: 12),
         _KeyHint(keys: "Enter", action: "Confirm all", onTap: onConfirmAll),
         const SizedBox(width: 12),

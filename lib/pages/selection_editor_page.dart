@@ -2,6 +2,7 @@ import "package:diff_match_patch/diff_match_patch.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:grammar_guard/config/desktop_window.dart";
 import "package:grammar_guard/state/selection_editor_notifier.dart";
 import "package:grammar_guard/widgets/editor/editor_footer.dart";
 import "package:grammar_guard/widgets/editor/selection_editor.dart";
@@ -50,7 +51,9 @@ class SelectionEditorPage extends HookConsumerWidget {
         Clipboard.setData(ClipboardData(text: resultText)).catchError((_) {});
       }
       navigator.pop(resultText);
-      Future.delayed(const Duration(milliseconds: 150), windowManager.hide);
+      if (usesPaletteWindow) {
+        Future.delayed(const Duration(milliseconds: 150), windowManager.hide);
+      }
     }
 
     Future<void> cancelAndExit() async {
@@ -83,7 +86,7 @@ class SelectionEditorPage extends HookConsumerWidget {
                   ? Icons.format_list_numbered
                   : Icons.format_list_numbered_rtl,
             ),
-            tooltip: "Toggle line numbers (⌘L)",
+            tooltip: "Toggle line numbers",
             onPressed: () => showLineNumbers.value = !showLineNumbers.value,
           ),
           const SizedBox(width: 8),

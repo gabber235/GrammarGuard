@@ -1,9 +1,11 @@
 import "dart:async";
+import "dart:io";
 
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:grammar_guard/actions/grammar_intents.dart";
+import "package:grammar_guard/config/desktop_window.dart";
 import "package:grammar_guard/config/theme.dart";
 import "package:grammar_guard/models/diff_option.dart";
 import "package:grammar_guard/models/rendering_mode.dart";
@@ -25,24 +27,28 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
 import "package:window_manager/window_manager.dart";
 
-const bool _hideWindow = true;
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await hotKeyManager.unregisterAll();
+  try {
+    await hotKeyManager.unregisterAll();
+  } on Exception catch (error) {
+    debugPrint("[window-flow] could not clear old hotkeys: $error");
+  }
 
   await windowManager.ensureInitialized();
 
-  final windowOptions = const WindowOptions(
-    size: Size(1000, 600),
+  final windowOptions = WindowOptions(
+    size: const Size(1000, 600),
     center: true,
     backgroundColor: Colors.transparent,
-    skipTaskbar: true,
-    titleBarStyle: TitleBarStyle.hidden,
-    alwaysOnTop: true,
+    skipTaskbar: usesPaletteWindow,
+    titleBarStyle: usesPaletteWindow
+        ? TitleBarStyle.hidden
+        : TitleBarStyle.normal,
+    alwaysOnTop: usesPaletteWindow,
     title: "Grammar Guard",
-    windowButtonVisibility: false,
+    windowButtonVisibility: !usesPaletteWindow,
   );
 
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -102,29 +108,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
   }
 
   Future<void> _registerHotKey() async {
+    if (Platform.isLinux &&
+        (Platform.environment["XDG_SESSION_TYPE"] == "wayland" ||
+            Platform.environment.containsKey("WAYLAND_DISPLAY"))) {
+      _log("system hotkey unavailable in this Wayland session");
+      return;
+    }
+
     final showHotKey = HotKey(
       key: PhysicalKeyboardKey.keyG,
       modifiers: [HotKeyModifier.alt, HotKeyModifier.shift],
       scope: HotKeyScope.system,
     );
 
-    await hotKeyManager.register(
-      showHotKey,
-      keyDownHandler: (_) async {
-        final isVisible = await windowManager.isVisible();
-        _log("hotkey pressed. visible=$isVisible hideWindow=$_hideWindow");
-        if (isVisible && _hideWindow) {
-          _log("hotkey path hide window");
-          await _hideWindowAndMarkHidden();
-          return;
-        }
+    try {
+      await hotKeyManager.register(
+        showHotKey,
+        keyDownHandler: (_) async {
+          final isVisible = await windowManager.isVisible();
+          _log("hotkey pressed. visible=$isVisible palette=$usesPaletteWindow");
+          if (isVisible && usesPaletteWindow) {
+            _log("hotkey path hide window");
+            await _hideWindowAndMarkHidden();
+            return;
+          }
 
-        _log("hotkey path show window");
-        await _showWindowAndRefreshIfNeeded();
-      },
-    );
-    _showHotKey = showHotKey;
-    _log("hotkey registered");
+          _log("hotkey path show window");
+          await _showWindowAndRefreshIfNeeded();
+        },
+      );
+      _showHotKey = showHotKey;
+      _log("hotkey registered");
+    } on Exception catch (error) {
+      _log("system hotkey unavailable: $error");
+    }
   }
 
   Future<void> _hideWindowAndMarkHidden() async {
@@ -248,6 +265,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
   @override
   void onWindowBlur() {
     super.onWindowBlur();
+    if (!usesPaletteWindow) return;
     final notifier = ref.read(windowLifecycleProvider.notifier);
     notifier.onWindowBlurred();
 
@@ -256,7 +274,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
     _log(
       "window blur. shouldHide=${policy.shouldHide} generating=${lifecycle.isGenerating} pendingHideAfterCompletion=${lifecycle.hideAfterCompletionOnBlur}",
     );
-    if (!policy.shouldHide || !_hideWindow) {
+    if (!policy.shouldHide) {
       _log("window blur did not hide");
       return;
     }
@@ -374,11 +392,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
             ),
             DismissIntent: CallbackAction<DismissIntent>(
               onInvoke: (intent) {
+                if (!usesPaletteWindow) return null;
                 final notifier = ref.read(windowLifecycleProvider.notifier);
                 notifier.onEscapePressed();
                 final policy = ref.read(windowLifecyclePolicyProvider);
                 _log("escape pressed. shouldHide=${policy.shouldHide}");
-                if (policy.shouldHide && _hideWindow) {
+                if (policy.shouldHide) {
                   unawaited(_hideWindowAndMarkHidden());
                   notifier.acknowledgeHide();
                   _log("escape hide requested and acknowledged");
@@ -391,7 +410,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WindowListener {
                 if (!mounted) return;
                 Future.delayed(const Duration(milliseconds: 150), () async {
                   if (!mounted) return;
-                  if (_hideWindow) {
+                  if (usesPaletteWindow) {
                     await _hideWindowAndMarkHidden();
                   }
                   final result = ref.read(aiRewriteProvider).value;

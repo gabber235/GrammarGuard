@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:grammar_guard/config/desktop_window.dart";
 import "package:grammar_guard/models/editor_document.dart";
 import "package:grammar_guard/models/pending_change.dart";
 import "package:grammar_guard/services/vim/vim_state.dart";
@@ -47,6 +48,7 @@ class SelectionEditor extends HookConsumerWidget {
         final shift = HardwareKeyboard.instance.isShiftPressed;
         final ctrl = HardwareKeyboard.instance.isControlPressed;
         final meta = HardwareKeyboard.instance.isMetaPressed;
+        final primaryModifier = usesPaletteWindow ? meta : ctrl;
         final vimMode = editorState.vimState.mode;
         final isNormalMode = vimMode == VimMode.normal;
 
@@ -60,27 +62,27 @@ class SelectionEditor extends HookConsumerWidget {
           return KeyEventResult.handled;
         }
 
-        if (meta && key == LogicalKeyboardKey.keyY) {
-          ref.read(selectionEditorProvider.notifier).acceptCurrentChange();
-          return KeyEventResult.handled;
-        }
-
-        if (meta && key == LogicalKeyboardKey.keyN) {
-          ref.read(selectionEditorProvider.notifier).rejectCurrentChange();
-          return KeyEventResult.handled;
-        }
-
-        if (meta && shift && key == LogicalKeyboardKey.keyY) {
+        if (primaryModifier && shift && key == LogicalKeyboardKey.keyY) {
           ref.read(selectionEditorProvider.notifier).acceptAll();
           return KeyEventResult.handled;
         }
 
-        if (meta && shift && key == LogicalKeyboardKey.keyN) {
+        if (primaryModifier && shift && key == LogicalKeyboardKey.keyN) {
           ref.read(selectionEditorProvider.notifier).rejectAll();
           return KeyEventResult.handled;
         }
 
-        if (meta && key == LogicalKeyboardKey.keyZ) {
+        if (primaryModifier && key == LogicalKeyboardKey.keyY) {
+          ref.read(selectionEditorProvider.notifier).acceptCurrentChange();
+          return KeyEventResult.handled;
+        }
+
+        if (primaryModifier && key == LogicalKeyboardKey.keyN) {
+          ref.read(selectionEditorProvider.notifier).rejectCurrentChange();
+          return KeyEventResult.handled;
+        }
+
+        if (primaryModifier && key == LogicalKeyboardKey.keyZ) {
           if (shift) {
             ref.read(selectionEditorProvider.notifier).redo();
           } else {

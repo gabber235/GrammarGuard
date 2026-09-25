@@ -1,5 +1,7 @@
 import "package:diff_match_patch/diff_match_patch.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:grammar_guard/models/editor_document.dart";
 import "package:grammar_guard/state/selection_editor_notifier.dart";
@@ -22,6 +24,51 @@ Widget createTestWidget(Widget child,
 
 void main() {
   group("SelectionEditor", () {
+    for (final (platform, modifier) in [
+      (TargetPlatform.macOS, LogicalKeyboardKey.metaLeft),
+      (TargetPlatform.linux, LogicalKeyboardKey.controlLeft),
+      (TargetPlatform.windows, LogicalKeyboardKey.controlLeft),
+    ]) {
+      testWidgets("accepts all changes with the primary shortcut on $platform", (
+        tester,
+      ) async {
+        debugDefaultTargetPlatformOverride = platform;
+        addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        container.read(selectionEditorProvider.notifier).initialize([
+          Diff(DIFF_EQUAL, "A "),
+          Diff(DIFF_INSERT, "first "),
+          Diff(DIFF_EQUAL, "B "),
+          Diff(DIFF_INSERT, "second"),
+        ]);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              home: Scaffold(body: SelectionEditor(showLineNumbers: true)),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.sendKeyDownEvent(modifier);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyY);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+        await tester.sendKeyUpEvent(modifier);
+        await tester.pump();
+
+        expect(
+          container.read(selectionEditorProvider)!.getPendingChangeCount(),
+          0,
+        );
+        debugDefaultTargetPlatformOverride = null;
+      });
+    }
+
     testWidgets("displays message when no document is loaded", (tester) async {
       await tester.pumpWidget(
         createTestWidget(
