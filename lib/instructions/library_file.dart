@@ -282,15 +282,27 @@ int _lineOf(YamlMap map, String key) => _line(map.nodes[key] ?? map);
 int _line(YamlNode node) => node.span.start.line + 1;
 
 /// Unknown keys are mistakes, usually a comma inside an unquoted text in
-/// the `{id: ..., text: ...}` form, which silently cuts the text short.
+/// the `{id: ..., text: ...}` form, which silently cuts the text short: the
+/// rest of the sentence becomes a key of its own.
 void _onlyKeys(YamlMap map, Set<String> known, String where) {
-  for (final key in map.keys) {
-    if (!known.contains("$key")) {
+  final keys = [for (final key in map.keys) "$key"];
+  for (final (at, key) in keys.indexed) {
+    if (known.contains(key)) continue;
+    // The tail of a sentence, not a misspelled key: name the value it was
+    // cut from, and whose it is.
+    if (at > 0 && (key.contains(" ") || key.endsWith("."))) {
+      final field = keys[at - 1];
+      final owner = map["id"] ?? map["name"];
       throw LibraryProblem(
-        "Unknown key `$key` in $where. Known keys: ${known.join(", ")}. "
-        "If a text has a comma, put the text in quotes.",
-        _lineOf(map, "$key"),
+        "The $field of ${owner == null ? where : "`$owner`"} has a comma, so YAML cut it off. "
+        'Put the $field in quotes: $field: "..."',
+        _lineOf(map, key),
       );
     }
+    throw LibraryProblem(
+      "Unknown key `$key` in $where. Known keys: ${known.join(", ")}. "
+      "If a text has a comma, put the text in quotes.",
+      _lineOf(map, key),
+    );
   }
 }

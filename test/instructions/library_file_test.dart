@@ -19,13 +19,34 @@ void main() {
     }
   });
 
-  test("a comma in an unquoted text is caught, not cut short", () {
+  test("a comma in an unquoted text is caught, not cut short, and the message says so plainly", () {
     expect(
       () => parseLibrary("instructions:\n  - {id: casual, name: Casual, text: Use a relaxed, friendly tone.}\n"),
-      throwsA(isA<LibraryProblem>().having((p) => p.message, "message", contains("Unknown key `friendly tone.`"))),
+      throwsA(
+        isA<LibraryProblem>()
+            .having((p) => p.line, "line", 2)
+            .having(
+              (p) => p.message,
+              "message",
+              'The text of `casual` has a comma, so YAML cut it off. Put the text in quotes: text: "..."',
+            ),
+      ),
     );
     // The bundled file passes the same check, so every text is complete.
     expect(bundled()[const InstructionId("casual")]?.text, "Use a relaxed, friendly tone.");
+  });
+
+  test("a misspelled key still lists the known keys", () {
+    expect(
+      () => parseLibrary("instructions:\n  - {id: a, name: A, text: t, groop: tone}\n"),
+      throwsA(
+        isA<LibraryProblem>().having(
+          (p) => p.message,
+          "message",
+          allOf(contains("Unknown key `groop`"), contains("Known keys: id, name, text")),
+        ),
+      ),
+    );
   });
 
   test("errors name the line", () {
