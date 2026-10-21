@@ -5,9 +5,7 @@
 
 ### Features
 
-* **library:** recover from a broken library.yaml in one click ([d06f33e](https://github.com/gabber235/GrammarGuard/commit/d06f33ed5352386f7ecbb4608303b016f9565afa))
 * **library:** recover from a broken library.yaml in one click ([9000082](https://github.com/gabber235/GrammarGuard/commit/90000824fc7e92731944c2334ec309a69dcbb04c))
-* **settings:** pick the assistant model and an instruction's group in place ([8d172ef](https://github.com/gabber235/GrammarGuard/commit/8d172ef4791d5f3e4fcff2f13464d8fc76d573fd))
 * **settings:** pick the assistant model and an instruction's group in place ([16e3410](https://github.com/gabber235/GrammarGuard/commit/16e3410e96444812dcc4c165278abb84adba76b4))
 
 
