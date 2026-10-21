@@ -142,16 +142,21 @@ void mockStorage() {
 }
 
 /// A widget test with fakes for every port, the bundled library, and an
-/// Anthropic key so the catalog is not empty.
-void testFlow(String description, Future<void> Function(FlowApp app) body) {
-  testWidgets(description, (tester) async {
-    mockStorage();
-    final app = FlowApp();
-    await app.start(tester);
-    await body(app);
-    // Let short delays end (the "Copied" toast keeps the popup up 700 ms).
-    await tester.pump(const Duration(seconds: 5));
-  });
+/// Anthropic key so the catalog is not empty. [platform] runs it as that
+/// OS, for behavior that differs per platform (text field keys, labels).
+void testFlow(String description, Future<void> Function(FlowApp app) body, {TargetPlatform? platform}) {
+  testWidgets(
+    variant: platform == null ? const DefaultTestVariant() : TargetPlatformVariant.only(platform),
+    description,
+    (tester) async {
+      mockStorage();
+      final app = FlowApp();
+      await app.start(tester);
+      await body(app);
+      // Let short delays end (the "Copied" toast keeps the popup up 700 ms).
+      await tester.pump(const Duration(seconds: 5));
+    },
+  );
 }
 
 const discord = SourceApp(id: "com.hnc.discord", name: "Discord", processId: 42);

@@ -1,7 +1,6 @@
 import "package:alchemist/alchemist.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
-import "package:flutter_test/flutter_test.dart";
 
 import "../support/desktop.dart";
 import "../support/screens.dart";
@@ -19,9 +18,9 @@ void main() {
       constraints: BoxConstraints.tight(const Size(1000, 600)),
       builder: () {
         // The app ships on desktop: macOS key labels and text fields, no
-        // touch selection handles.
+        // touch selection handles. Set while the screen is built, and back
+        // in pumpBeforeTest: Flutter checks it is unset before teardowns run.
         debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-        addTearDown(() => debugDefaultTargetPlatformOverride = null);
         mockStorage();
         app = FlowApp();
         return MediaQuery(
@@ -30,9 +29,13 @@ void main() {
         );
       },
       pumpBeforeTest: (tester) async {
-        await app.start(tester, pump: false);
-        await drive(app);
-        await app.settle();
+        try {
+          await app.start(tester, pump: false);
+          await drive(app);
+          await app.settle();
+        } finally {
+          debugDefaultTargetPlatformOverride = null;
+        }
       },
     );
   }

@@ -103,14 +103,16 @@ void main() {
     expect(find.byType(CommandBar), findsNothing);
   });
 
-  testFlow("M opens the bar on models with the cursor after the @", (app) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.macOS; // desktop fields select all on focus
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    await captureFromDiscord(app);
-    await app.press(LogicalKeyboardKey.keyM);
-    final field = app.tester.widget<TextField>(find.byType(TextField));
-    expect(field.controller!.value.selection, const TextSelection.collapsed(offset: 1));
-  });
+  testFlow(
+    "M opens the bar on models with the cursor after the @",
+    (app) async {
+      await captureFromDiscord(app);
+      await app.press(LogicalKeyboardKey.keyM);
+      final field = app.tester.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.value.selection, const TextSelection.collapsed(offset: 1));
+    },
+    platform: TargetPlatform.macOS, // desktop fields select all on focus
+  );
 
   testFlow("C opens the bar on models, and Enter compares instead of switching", (app) async {
     await captureFromDiscord(app);

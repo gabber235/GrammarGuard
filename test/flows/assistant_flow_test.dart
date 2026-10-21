@@ -153,14 +153,15 @@ void main() {
     expect(app.model.calls, isEmpty);
   });
 
-  testFlow("Esc closes the bar and keeps the typed text out of the assistant", (app) async {
-    // macOS maps keys in text fields differently from the test default.
-    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
-    await app.press(LogicalKeyboardKey.space);
-    await app.tester.enterText(find.byType(TextField), "form");
-    await app.press(LogicalKeyboardKey.escape);
-    expect(find.byType(CommandBar), findsNothing);
-    expect(app.read(assistantProvider).open, isFalse);
-  });
+  testFlow(
+    "Esc closes the bar and keeps the typed text out of the assistant",
+    (app) async {
+      await app.press(LogicalKeyboardKey.space);
+      await app.tester.enterText(find.byType(TextField), "form");
+      await app.press(LogicalKeyboardKey.escape);
+      expect(find.byType(CommandBar), findsNothing);
+      expect(app.read(assistantProvider).open, isFalse);
+    },
+    platform: TargetPlatform.macOS, // macOS maps keys in text fields differently
+  );
 }

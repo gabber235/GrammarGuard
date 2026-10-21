@@ -22,12 +22,11 @@ import "../support/test_flow.dart";
 /// result to pull requests and the README.
 void main() {
   const out = "build/media";
+  // The app ships on desktop: macOS key labels and text fields.
 
   /// The app over the stand in desktop, fonts loaded, started like a user
   /// would find it.
   Future<FlowApp> open(WidgetTester tester, {required Brightness brightness, required bool motion}) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-    addTearDown(() => debugDefaultTargetPlatformOverride = null);
     await tester.runAsync(loadFonts);
     tester.platformDispatcher.platformBrightnessTestValue = brightness;
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
@@ -57,7 +56,7 @@ void main() {
 
   group("screens", () {
     for (final screen in screens) {
-      testWidgets(screen.name, (tester) async {
+      testWidgets(screen.name, variant: _macOS, (tester) async {
         final app = await open(tester, brightness: screen.brightness, motion: false);
         await screen.drive(app);
         await app.settle();
@@ -78,7 +77,7 @@ void main() {
     required int length,
     int step = 20,
   }) {
-    testWidgets(name, (tester) async {
+    testWidgets(name, variant: _macOS, (tester) async {
       final app = await open(tester, brightness: Brightness.dark, motion: true);
       await before(app);
       await tester.pump(const Duration(seconds: 1));
@@ -165,3 +164,5 @@ void main() {
     );
   });
 }
+
+final _macOS = TargetPlatformVariant.only(TargetPlatform.macOS);
