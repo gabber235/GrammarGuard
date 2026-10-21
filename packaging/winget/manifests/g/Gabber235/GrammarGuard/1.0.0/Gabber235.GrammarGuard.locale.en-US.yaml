@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.12.0.schema.json
+
+PackageIdentifier: Gabber235.GrammarGuard
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: Gabber235
+PublisherUrl: https://github.com/gabber235
+PublisherSupportUrl: https://github.com/gabber235/GrammarGuard/issues
+Author: Gabber235
+PackageName: GrammarGuard
+PackageUrl: https://github.com/gabber235/GrammarGuard
+License: MIT
+LicenseUrl: https://github.com/gabber235/GrammarGuard/blob/main/LICENSE
+Copyright: Copyright (c) 2025 Gabber235
+ShortDescription: Rewrite selected text anywhere and review every change
+Description: Select text in any app, press a shortcut, and review the AI rewrite word by word before it is pasted back. Instructions and per-app profiles shape every rewrite; it works with cloud and local models.
+Moniker: grammarguard
+Tags:
+- ai
+- grammar
+- rewrite
+- spelling
+- writing
+ReleaseNotesUrl: https://github.com/gabber235/GrammarGuard/releases/tag/v1.0.0
+ManifestType: defaultLocale
+ManifestVersion: 1.12.0
