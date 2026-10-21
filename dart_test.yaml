@@ -1,0 +1,7 @@
+tags:
+  # Real model calls; only run on demand with `just eval <backend/model>`.
+  eval:
+    skip: "Calls a real model. Run it with: just eval <backend/model>"
+  # Frames of every view change, for judging motion: `just motion`.
+  motion:
+    skip: "Films transitions into build/motion. Run it with: just motion"
