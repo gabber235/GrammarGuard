@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://github.com/gabber235/GrammarGuard/compare/v1.0.0...v1.1.0) (2026-10-21)
+
+
+### Features
+
+* **library:** recover from a broken library.yaml in one click ([d06f33e](https://github.com/gabber235/GrammarGuard/commit/d06f33ed5352386f7ecbb4608303b016f9565afa))
+* **library:** recover from a broken library.yaml in one click ([9000082](https://github.com/gabber235/GrammarGuard/commit/90000824fc7e92731944c2334ec309a69dcbb04c))
+* **settings:** pick the assistant model and an instruction's group in place ([8d172ef](https://github.com/gabber235/GrammarGuard/commit/8d172ef4791d5f3e4fcff2f13464d8fc76d573fd))
+* **settings:** pick the assistant model and an instruction's group in place ([16e3410](https://github.com/gabber235/GrammarGuard/commit/16e3410e96444812dcc4c165278abb84adba76b4))
+
+
+### Bug fixes
+
+* **library:** say plainly when a comma cut a text short ([c1af4b9](https://github.com/gabber235/GrammarGuard/commit/c1af4b9154ffcb49932b638a8c134ec8c3d8ea05))
+* **llm:** never offer embedding models ([45b868d](https://github.com/gabber235/GrammarGuard/commit/45b868d1663bdb578d7f49059289e5302a868b80))
+* **macos:** sign local builds with the developer's team again ([4ad75d5](https://github.com/gabber235/GrammarGuard/commit/4ad75d5f56092af5e3e63e162f8d63231c63229d))
+
 ## 1.0.0 (2026-10-21)
 
 
@@ -18,4 +35,3 @@
 ### Bug fixes
 
 * keep the rail's pill still when writing ends ([3df5a74](https://github.com/gabber235/GrammarGuard/commit/3df5a749872fadc3620637bbef4da16f4a4bfb06))
-
