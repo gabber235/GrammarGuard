@@ -196,14 +196,21 @@ jobs:
           echo "MACOS_SHA=$(sha256sum dist/GrammarGuard-macos.zip | cut -d' ' -f1)" >> "$GITHUB_ENV"
           echo "WINDOWS_SHA=$(sha256sum dist/GrammarGuard-windows-x64.zip | cut -d' ' -f1)" >> "$GITHUB_ENV"
 
+      # main only takes pull requests; this repository's deploy key may
+      # push this one commit (see the "Protect Main" ruleset).
       - name: Pin the Nix package to this release
+        env:
+          PIN_KEY: ${{ secrets.NIX_PIN_DEPLOY_KEY }}
         run: |
           tool/release.sh nix "$VERSION"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add nix/release.json
-          git diff --cached --quiet || git commit -m "chore(nix): install GrammarGuard $VERSION"
-          git push origin HEAD:main
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(nix): install GrammarGuard $VERSION"
+          mkdir -p ~/.ssh && echo "$PIN_KEY" > ~/.ssh/pin && chmod 600 ~/.ssh/pin
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/pin -o StrictHostKeyChecking=accept-new" \
+            git push "git@github.com:${{ github.repository }}.git" HEAD:main
 
       - name: Homebrew tap
         if: env.TAP_KEY != ''
