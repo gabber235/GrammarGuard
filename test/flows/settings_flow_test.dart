@@ -1,17 +1,25 @@
+import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:grammar_guard/app/settings/settings_page.dart";
+import "package:grammar_guard/instructions/instruction.dart";
 import "package:grammar_guard/instructions/library_store.dart";
+import "package:grammar_guard/llm/llm.dart";
 import "package:grammar_guard/settings/hotkey_setting.dart";
+import "package:grammar_guard/ui/surfaces.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
 
 import "../support/test_flow.dart";
 
 void main() {
-  Future<void> openGeneral(FlowApp app) async {
+  Future<void> openSettings(FlowApp app) async {
     await app.tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
     await app.press(LogicalKeyboardKey.comma);
     await app.tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+  }
+
+  Future<void> openGeneral(FlowApp app) async {
+    await openSettings(app);
     await app.tester.tap(find.text("General"));
     await app.settle();
   }
@@ -79,5 +87,73 @@ void main() {
     expect(app.read(libraryStoreProvider).value!.problem, isNull);
     final kept = app.files.directory("/support").listSync().where((f) => f.basename.contains(".broken-"));
     expect(kept.single.basename, startsWith("library.yaml.broken-"));
+  });
+
+  testFlow("the assistant model list opens in place, filters, and picks with the keyboard", (app) async {
+    await openSettings(app);
+    final panel = find.ancestor(of: find.text("Assistant model"), matching: find.byType(Panel));
+    final closed = app.tester.getSize(panel).height;
+
+    await app.tester.tap(find.text("Choose a model"));
+    await app.settle();
+    expect(app.tester.getSize(panel).height, greaterThan(closed), reason: "the panel grows to hold the list");
+    expect(
+      find.descendant(of: panel, matching: find.text("Claude Sonnet 5.5")),
+      findsOneWidget,
+      reason: "the rows are in the panel, not in a menu over the window",
+    );
+
+    await app.tester.enterText(find.descendant(of: panel, matching: find.byType(TextField)), "opus");
+    await app.settle();
+    expect(find.text("Claude Sonnet 5.5"), findsNothing);
+    expect(find.text("Claude Opus 5.5"), findsOneWidget);
+
+    await app.press(LogicalKeyboardKey.arrowDown);
+    await app.press(LogicalKeyboardKey.enter);
+
+    expect(app.library.assistantModel, const ModelRef(Backend.anthropic, "claude-opus-5"));
+    expect(find.descendant(of: panel, matching: find.text("Claude Opus 5")), findsOneWidget);
+    expect(find.descendant(of: panel, matching: find.byType(TextField)), findsNothing);
+    expect(app.tester.getSize(panel).height, closed);
+  });
+
+  testFlow("Esc closes the open list and keeps Settings; Enter opens it again", (app) async {
+    await openSettings(app);
+    await app.tester.tap(find.text("Choose a model"));
+    await app.settle();
+
+    await app.press(LogicalKeyboardKey.escape);
+    expect(find.text("Claude Sonnet 5.5"), findsNothing);
+    expect(find.byType(SettingsPage), findsOneWidget, reason: "Esc closed the list only");
+
+    await app.press(LogicalKeyboardKey.enter);
+    expect(find.text("Claude Sonnet 5.5"), findsOneWidget, reason: "focus stayed on the picker");
+
+    await app.press(LogicalKeyboardKey.escape);
+    await app.press(LogicalKeyboardKey.escape);
+    expect(find.byType(SettingsPage), findsNothing);
+  });
+
+  testFlow("an instruction's group is picked from a list that opens inside the dialog", (app) async {
+    await openSettings(app);
+    await app.tester.tap(find.text("Instructions"));
+    await app.settle();
+    await app.tester.tap(find.text("Casual").first);
+    await app.settle();
+    final dialog = find.byType(AlertDialog);
+
+    await app.tester.tap(find.descendant(of: dialog, matching: find.text("Tone")));
+    await app.settle();
+    await app.tester.tap(find.descendant(of: dialog, matching: find.text("Length")));
+    await app.settle();
+    expect(
+      find.descendant(of: dialog, matching: find.text("Audience")),
+      findsNothing,
+      reason: "picking closes it",
+    );
+
+    await app.tester.tap(find.text("Save"));
+    await app.settle();
+    expect(app.library[const InstructionId("casual")]?.group, const GroupId("length"));
   });
 }
