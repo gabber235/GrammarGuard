@@ -84,8 +84,16 @@ in
         set -e
         cd "$DEVENV_ROOT"
         flutter pub get >/dev/null
+        # Generated code must match its sources: gen may not change it. A
+        # fingerprint, not git diff, so uncommitted work can be checked too.
+        generated() { find lib test -name '*.g.dart' -o -name '*.freezed.dart' | sort | xargs shasum | shasum; }
+        before=$(generated)
         gen
-        git diff --exit-code -- '*.g.dart' '*.freezed.dart'
+        if [[ $(generated) != "$before" ]]; then
+          echo "Generated code was out of date; gen has updated it. Review and commit the changes." >&2
+          git status --short -- '*.g.dart' '*.freezed.dart' >&2
+          exit 1
+        fi
         dart format --set-exit-if-changed ${dartFiles}
         flutter analyze --no-fatal-infos
         flutter test
