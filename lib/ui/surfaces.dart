@@ -1,6 +1,7 @@
 // The few shapes every screen is built from, so they all read alike.
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter/rendering.dart";
 import "package:grammar_guard/ui/motion.dart";
 import "package:grammar_guard/ui/theme.dart";
 
@@ -173,4 +174,43 @@ class SectionLabel extends StatelessWidget {
     padding: const EdgeInsets.only(bottom: 8),
     child: Text(text, style: Theme.of(context).textTheme.labelMedium),
   );
+}
+
+/// How far the bottom of a list fades out.
+const listFade = 32.0;
+
+/// Fades out the last [listFade] pixels of a list while [on], so a cut off
+/// row reads as "more below".
+class BottomFade extends StatelessWidget {
+  const BottomFade({required this.child, this.on = true, super.key});
+
+  final Widget child;
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) => ShaderMask(
+    // Kept while off, with nothing faded: dropping the mask would rebuild
+    // the list under it and lose its scroll position.
+    blendMode: BlendMode.dstIn,
+    shaderCallback: (rect) => LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Colors.black, Colors.black, if (on) Colors.transparent else Colors.black],
+      stops: [0, (1 - listFade / rect.height).clamp(0, 1), 1],
+    ).createShader(rect),
+    child: child,
+  );
+}
+
+/// Scrolls just enough to show [row] whole, clear of the bottom fade.
+void revealRow(BuildContext row) {
+  final box = row.findRenderObject();
+  if (box == null) return;
+  final viewport = RenderAbstractViewport.of(box);
+  final position = Scrollable.of(row).position;
+  // The scroll offsets that put the row at the top edge, and just above the fade.
+  final atTop = viewport.getOffsetToReveal(box, 0).offset;
+  final atBottom = viewport.getOffsetToReveal(box, 1).offset + listFade;
+  final target = position.pixels.clamp(atBottom, atTop).clamp(position.minScrollExtent, position.maxScrollExtent);
+  if (target != position.pixels) position.jumpTo(target);
 }

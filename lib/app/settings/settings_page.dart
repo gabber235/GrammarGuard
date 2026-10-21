@@ -19,6 +19,7 @@ import "package:grammar_guard/llm/llm.dart";
 import "package:grammar_guard/platform/ports.dart";
 import "package:grammar_guard/session/hotkey_binding.dart";
 import "package:grammar_guard/settings/hotkey_setting.dart";
+import "package:grammar_guard/ui/inline_picker.dart";
 import "package:grammar_guard/ui/motion.dart";
 import "package:grammar_guard/ui/surfaces.dart";
 import "package:grammar_guard/ui/theme.dart";
@@ -245,30 +246,26 @@ class _AssistantModelPicker extends ConsumerWidget {
       for (final m in ref.watch(modelCatalogProvider).value ?? const <ModelInfo>[])
         if (m.tools != false && m.ref.backend != Backend.apple) m,
     ];
+    // The service is named only when there is more than one to tell apart.
+    final several = models.map((m) => m.ref.backend).toSet().length > 1;
     return Panel(
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Assistant model", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                SizedBox(height: 4),
-                Text(
-                  "Sets up instructions and profiles for you. It calls tools, so pick a capable model.",
-                  style: TextStyle(fontSize: 13),
-                ),
-              ],
-            ),
+          const Text("Assistant model", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          const Text(
+            "Sets up instructions and profiles for you. It calls tools, so pick a capable model.",
+            style: TextStyle(fontSize: 13),
           ),
-          const SizedBox(width: 16),
-          DropdownButton<ModelRef>(
-            value: models.any((m) => m.ref == current) ? current : null,
-            hint: const Text("Choose a model"),
-            underline: const SizedBox.shrink(),
-            borderRadius: BorderRadius.circular(GgTheme.smallRadius),
-            items: [for (final m in models) DropdownMenuItem(value: m.ref, child: Text(m.label))],
-            onChanged: (model) => writeLibrary(
+          const SizedBox(height: 12),
+          InlinePicker<ModelRef>(
+            value: current,
+            hint: "Choose a model",
+            options: [
+              for (final m in models) PickerOption(m.ref, m.label, detail: several ? m.ref.backend.label : null),
+            ],
+            onPicked: (model) => writeLibrary(
               ScaffoldMessenger.of(context),
               () => ref.read(libraryStoreProvider.notifier).apply([
                 LibraryChange.setDefaults(assistantModel: model),

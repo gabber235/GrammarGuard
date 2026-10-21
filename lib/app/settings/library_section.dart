@@ -11,6 +11,7 @@ import "package:grammar_guard/instructions/library_file.dart";
 import "package:grammar_guard/instructions/library_store.dart";
 import "package:grammar_guard/instructions/scopes.dart";
 import "package:grammar_guard/session/session.dart";
+import "package:grammar_guard/ui/inline_picker.dart";
 import "package:grammar_guard/ui/surfaces.dart";
 import "package:grammar_guard/ui/theme.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -299,6 +300,9 @@ class _InstructionDialog extends HookWidget {
     }
 
     return AlertDialog(
+      // The group list opens inside the dialog, which may then outgrow a
+      // small window.
+      scrollable: true,
       title: Text(existing == null ? "New instruction" : "Edit ${existing!.name}"),
       content: SizedBox(
         width: 460,
@@ -318,14 +322,14 @@ class _InstructionDialog extends HookWidget {
               decoration: const InputDecoration(labelText: "What the model is told", alignLabelWithHint: true),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<GroupId?>(
-              initialValue: group.value,
-              decoration: const InputDecoration(labelText: "Group"),
-              items: [
-                const DropdownMenuItem(child: Text("No group")),
-                for (final g in library.groups) DropdownMenuItem(value: g.id, child: Text(g.name)),
+            InlinePicker<GroupId?>(
+              label: "Group",
+              value: group.value,
+              options: [
+                const PickerOption(null, "No group"),
+                for (final g in library.groups) PickerOption(g.id, g.name),
               ],
-              onChanged: (value) => group.value = value,
+              onPicked: (value) => group.value = value,
             ),
             if (error.value case final message?)
               Padding(

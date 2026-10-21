@@ -73,7 +73,7 @@ final class ModelCatalogProvider extends $AsyncNotifierProvider<ModelCatalog, Li
   ModelCatalog create() => ModelCatalog();
 }
 
-String _$modelCatalogHash() => r'6cd14394d4d0e02aa5c11560968bcf3470ad30c2';
+String _$modelCatalogHash() => r'347eb907bbd803c93a3602dd5dfe5065c40e8aae';
 
 /// Every model the user can pick. Starts from the bundled list so the window
 /// never waits on the network, then refreshes from each backend's own list

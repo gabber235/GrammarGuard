@@ -134,10 +134,24 @@ final screens = <Screen>[
 
   // Settings, every page.
   const Screen("settings models", _settings),
+  Screen("settings models picker", (app) async {
+    await app.chooseAssistantModel();
+    await _settings(app);
+    await app.tester.tap(find.text("Claude Haiku 4.5 (latest)"));
+    await app.settle();
+    await _keys(app, [LogicalKeyboardKey.arrowDown]);
+  }),
   Screen("settings instructions", (app) => _settings(app, "Instructions")),
   Screen("settings instruction dialog", (app) async {
     await _settings(app, "Instructions");
     await app.tester.tap(find.text("Casual").first);
+    await app.settle();
+  }),
+  Screen("settings instruction group picker", (app) async {
+    await _settings(app, "Instructions");
+    await app.tester.tap(find.text("Casual").first);
+    await app.settle();
+    await app.tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text("Tone")));
     await app.settle();
   }),
   Screen("settings profiles", (app) async {
