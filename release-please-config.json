@@ -2,6 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "bootstrap-sha": "1275e356ffe0bf55e1b482e52476e0e38d4621a2",
   "include-v-in-tag": true,
+  "include-component-in-tag": false,
   "packages": {
     ".": {
       "release-type": "dart",
