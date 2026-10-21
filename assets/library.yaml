@@ -1,0 +1,82 @@
+# Your GrammarGuard setup. Copied here on first launch.
+# Edit it here, in Settings, or ask the assistant. Changes apply at once.
+
+groups:
+  - {id: edit, name: How much to change, steps: true}   # [ and ] step through
+  - {id: tone, name: Tone}
+  - {id: length, name: Length}
+  - {id: audience, name: Audience}
+  - {id: format, name: Format}
+  - {id: style, name: Style, pick: many}
+
+instructions:
+  - id: fix-only
+    name: Fix only
+    group: edit
+    pin: 1
+    excludes: [shorter, longer]       # fixing never changes the length
+    text: >-
+      Fix spelling, grammar and punctuation only. Keep every word, the tone
+      and the formatting unless a change is needed to be correct.
+  - {id: polish, name: Polish, group: edit, pin: 2, text: "Fix all language errors and make small clarity and word choice improvements. Keep the structure and tone."}
+  - {id: enhance, name: Enhance, group: edit, pin: 3, text: "Fix all errors and improve clarity, flow and concision. You may restructure sentences."}
+  - {id: rewrite, name: Rewrite, group: edit, pin: 4, text: "Rewrite freely for clarity and impact. You may restructure sentences and paragraphs."}
+
+  - {id: casual, name: Casual, group: tone, text: "Use a relaxed, friendly tone."}
+  - {id: professional, name: Professional, group: tone, pin: 6, text: "Use a clear, professional tone."}
+  - {id: shorter, name: Shorter, group: length, pin: 5, text: "Make it noticeably shorter without losing information."}
+  - {id: longer, name: Longer, group: length, text: "Expand it with useful detail."}
+  - {id: experts, name: For experts, group: audience, text: "Write for readers who know the subject. Keep jargon."}
+  - {id: general, name: For anyone, group: audience, text: "Write for a general reader. Explain or avoid jargon."}
+
+  - {id: natural, name: Natural language, group: style, text: "Use natural modern wording. Avoid archaic or overly formal phrasing."}
+  - {id: no-em-dash, name: No em dashes, group: style, text: "Do not use em dash characters."}
+  - {id: keep-code, name: Keep code as is, group: style, text: "Never change code blocks, inline code, commands or file paths."}
+
+  - {id: markdown, name: Markdown, group: format, text: "Use GitHub flavored Markdown where it helps, such as lists, emphasis and code blocks."}
+  - id: discord
+    name: Discord markdown
+    group: format
+    text: >-
+      This is a Discord message. Only use Discord markdown: **bold**, *italic*,
+      __underline__, ~~strike~~, ||spoiler||, "# " headings, "-# " small text,
+      [text](url) links, > quotes and code blocks. Never use tables or images.
+      Stay under 2000 characters.
+  - {id: slack, name: Slack formatting, group: format, text: 'This is a Slack message. Only use *bold*, _italic_, ~strike~, `code` and plain "- " lists. No headings or tables.'}
+  - {id: teams, name: Teams formatting, group: format, text: "This is a Microsoft Teams message. Use *bold*, _italic_, short lists and at most ### headings."}
+  - {id: email, name: Plain email, group: format, text: "Plain text email. Short paragraphs and a greeting only if the text has one."}
+  - {id: latex, name: LaTeX, group: format, text: "This is LaTeX source. Keep every command and all math exactly. Only change the prose."}
+
+defaults: [polish, natural, no-em-dash]
+default_model:        # empty: the first model in the catalog
+assistant_model:      # empty: the strongest model you have a key for
+
+# Every matching profile applies, top to bottom. Later ones win inside a group.
+profiles:
+  - name: Discord
+    when: {apps: [com.hnc.discord, discord.exe, discord], title: "\\| Discord"}
+    use: [discord, casual]
+  - name: Slack
+    when: {apps: [com.tinyspeck.slackmacgap, slack.exe, slack], title: "\\| Slack"}
+    use: [slack]
+  - name: Teams
+    when: {apps: [com.microsoft.teams2, ms-teams.exe, teams-for-linux]}
+    use: [teams, professional]
+  - name: Email
+    when: {apps: [com.apple.mail, com.microsoft.outlook, outlook.exe, olk.exe, thunderbird], url: "mail\\.google\\.com|outlook\\.live\\.com"}
+    use: [email]
+    deliver: paste_rich            # Mail and Outlook want formatting, not Markdown
+  - name: GitHub
+    when: {url: "github\\.com", title: "GitHub"}
+    use: [markdown]
+  - name: LaTeX
+    when: {apps: [texstudio, texstudio.exe, org.texstudio.texstudio], title: "\\.tex\\b|Overleaf", contains: [latex]}
+    use: [latex, fix-only]
+  - name: Code in the text
+    when: {contains: [code]}       # any app: a text with code keeps its code
+    use: [keep-code]
+  - name: Long text
+    when: {min_words: 200}
+    options: {reasoning_effort: medium}
+
+keep_words: []

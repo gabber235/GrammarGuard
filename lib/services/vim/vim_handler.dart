@@ -1,116 +1,46 @@
 import "package:flutter/services.dart";
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:grammar_guard/services/vim/vim_motions.dart";
 import "package:grammar_guard/services/vim/vim_state.dart";
 
-class VimHandlerResult {
+part "vim_handler.freezed.dart";
 
-  const VimHandlerResult({
-    required this.mode,
-    required this.cursorPosition,
-    this.visualStart,
-    this.pendingOperator,
-    this.countBuffer = "",
-    this.textToInsert,
-    this.deleteAtCursor = false,
-    this.deleteBeforeCursor = false,
-    this.deleteToPosition,
-    this.deleteLine = false,
-    this.deleteSelection = false,
-    this.changeToPosition,
-    this.changeLine = false,
-    this.yankLine = false,
-    this.yankSelection = false,
-    this.pasteAfter = false,
-    this.pasteBefore = false,
-    this.undo = false,
-    this.redo = false,
-    this.insertNewLineBelow = false,
-    this.insertNewLineAbove = false,
-  });
+/// What one key press asks the editor to do.
+@freezed
+abstract class VimHandlerResult with _$VimHandlerResult {
+  const VimHandlerResult._();
 
-  factory VimHandlerResult.fromState(VimState state) {
-    return VimHandlerResult(
-      mode: state.mode,
-      cursorPosition: state.cursorPosition,
-      visualStart: state.visualStart,
-      pendingOperator: state.pendingOperator,
-      countBuffer: state.countBuffer,
-    );
-  }
-  final VimMode mode;
-  final int cursorPosition;
-  final int? visualStart;
-  final String? pendingOperator;
-  final String countBuffer;
-
-  final String? textToInsert;
-  final bool deleteAtCursor;
-  final bool deleteBeforeCursor;
-  final int? deleteToPosition;
-  final bool deleteLine;
-  final bool deleteSelection;
-  final int? changeToPosition;
-  final bool changeLine;
-  final bool yankLine;
-  final bool yankSelection;
-  final bool pasteAfter;
-  final bool pasteBefore;
-  final bool undo;
-  final bool redo;
-  final bool insertNewLineBelow;
-  final bool insertNewLineAbove;
-
-  VimHandlerResult copyWith({
-    VimMode? mode,
-    int? cursorPosition,
+  const factory VimHandlerResult({
+    required VimMode mode,
+    required int cursorPosition,
     int? visualStart,
     String? pendingOperator,
-    String? countBuffer,
+    @Default("") String countBuffer,
     String? textToInsert,
-    bool? deleteAtCursor,
-    bool? deleteBeforeCursor,
+    @Default(false) bool deleteAtCursor,
+    @Default(false) bool deleteBeforeCursor,
     int? deleteToPosition,
-    bool? deleteLine,
-    bool? deleteSelection,
+    @Default(false) bool deleteLine,
+    @Default(false) bool deleteSelection,
     int? changeToPosition,
-    bool? changeLine,
-    bool? yankLine,
-    bool? yankSelection,
-    bool? pasteAfter,
-    bool? pasteBefore,
-    bool? undo,
-    bool? redo,
-    bool? insertNewLineBelow,
-    bool? insertNewLineAbove,
-    bool clearVisualStart = false,
-    bool clearPendingOperator = false,
-  }) {
-    return VimHandlerResult(
-      mode: mode ?? this.mode,
-      cursorPosition: cursorPosition ?? this.cursorPosition,
-      visualStart: clearVisualStart ? null : (visualStart ?? this.visualStart),
-      pendingOperator: clearPendingOperator
-          ? null
-          : (pendingOperator ?? this.pendingOperator),
-      countBuffer: countBuffer ?? this.countBuffer,
-      textToInsert: textToInsert ?? this.textToInsert,
-      deleteAtCursor: deleteAtCursor ?? this.deleteAtCursor,
-      deleteBeforeCursor: deleteBeforeCursor ?? this.deleteBeforeCursor,
-      deleteToPosition: deleteToPosition ?? this.deleteToPosition,
-      deleteLine: deleteLine ?? this.deleteLine,
-      deleteSelection: deleteSelection ?? this.deleteSelection,
-      changeToPosition: changeToPosition ?? this.changeToPosition,
-      changeLine: changeLine ?? this.changeLine,
-      yankLine: yankLine ?? this.yankLine,
-      yankSelection: yankSelection ?? this.yankSelection,
-      pasteAfter: pasteAfter ?? this.pasteAfter,
-      pasteBefore: pasteBefore ?? this.pasteBefore,
-      undo: undo ?? this.undo,
-      redo: redo ?? this.redo,
-      insertNewLineBelow: insertNewLineBelow ?? this.insertNewLineBelow,
-      insertNewLineAbove: insertNewLineAbove ?? this.insertNewLineAbove,
-    );
-  }
+    @Default(false) bool changeLine,
+    @Default(false) bool yankLine,
+    @Default(false) bool yankSelection,
+    @Default(false) bool pasteAfter,
+    @Default(false) bool pasteBefore,
+    @Default(false) bool undo,
+    @Default(false) bool redo,
+    @Default(false) bool insertNewLineBelow,
+    @Default(false) bool insertNewLineAbove,
+  }) = _VimHandlerResult;
+
+  factory VimHandlerResult.fromState(VimState state) => VimHandlerResult(
+    mode: state.mode,
+    cursorPosition: state.cursorPosition,
+    visualStart: state.visualStart,
+    pendingOperator: state.pendingOperator,
+    countBuffer: state.countBuffer,
+  );
 
   VimState toVimState() {
     return VimState(
@@ -133,9 +63,10 @@ class VimHandler {
     required bool shift,
     required bool ctrl,
     required bool meta,
+    String? character,
   }) {
     if (state.mode == VimMode.insert) {
-      return _handleInsertMode(key, text, state, shift: shift, ctrl: ctrl);
+      return _handleInsertMode(key, text, state, shift: shift, ctrl: ctrl, character: character);
     }
 
     if (state.mode == VimMode.visual) {
@@ -156,19 +87,14 @@ class VimHandler {
     final count = state.getCount();
 
     if (key == LogicalKeyboardKey.escape) {
-      return result.copyWith(
-        countBuffer: "",
-        clearPendingOperator: true,
-      );
+      return result.copyWith(countBuffer: "", pendingOperator: null);
     }
 
     if (ctrl && key == LogicalKeyboardKey.keyR) {
       return result.copyWith(redo: true, countBuffer: "");
     }
 
-    if (_isDigit(key) &&
-        !shift &&
-        !(key == LogicalKeyboardKey.digit0 && state.countBuffer.isEmpty)) {
+    if (_isDigit(key) && !shift && !(key == LogicalKeyboardKey.digit0 && state.countBuffer.isEmpty)) {
       final digit = _keyToDigit(key);
       if (digit != null) {
         return result.copyWith(countBuffer: state.countBuffer + digit);
@@ -187,8 +113,7 @@ class VimHandler {
       return result.copyWith(cursorPosition: pos, countBuffer: "");
     }
 
-    if (key == LogicalKeyboardKey.keyL ||
-        key == LogicalKeyboardKey.arrowRight) {
+    if (key == LogicalKeyboardKey.keyL || key == LogicalKeyboardKey.arrowRight) {
       var pos = state.cursorPosition;
       for (var i = 0; i < count; i++) {
         pos = VimMotions.moveRight(text, pos);
@@ -237,40 +162,23 @@ class VimHandler {
     }
 
     if (key == LogicalKeyboardKey.digit0 && state.countBuffer.isEmpty) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveToLineStart(text, state.cursorPosition),
-        countBuffer: "",
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveToLineStart(text, state.cursorPosition), countBuffer: "");
     }
 
-    if ((key == LogicalKeyboardKey.digit4 && shift) ||
-        key == LogicalKeyboardKey.dollar) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveToLineEnd(text, state.cursorPosition),
-        countBuffer: "",
-      );
+    if ((key == LogicalKeyboardKey.digit4 && shift) || key == LogicalKeyboardKey.dollar) {
+      return result.copyWith(cursorPosition: VimMotions.moveToLineEnd(text, state.cursorPosition), countBuffer: "");
     }
 
     if (key == LogicalKeyboardKey.keyG && shift) {
-      return result.copyWith(
-        cursorPosition:
-            VimMotions.moveToDocumentEnd(text, state.cursorPosition),
-        countBuffer: "",
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveToDocumentEnd(text, state.cursorPosition), countBuffer: "");
     }
 
     if (key == LogicalKeyboardKey.keyG && !shift) {
-      return result.copyWith(
-        pendingOperator: "g",
-        countBuffer: "",
-      );
+      return result.copyWith(pendingOperator: "g", countBuffer: "");
     }
 
     if (key == LogicalKeyboardKey.keyI && !shift) {
-      return result.copyWith(
-        mode: VimMode.insert,
-        countBuffer: "",
-      );
+      return result.copyWith(mode: VimMode.insert, countBuffer: "");
     }
 
     if (key == LogicalKeyboardKey.keyI && shift) {
@@ -283,47 +191,24 @@ class VimHandler {
 
     if (key == LogicalKeyboardKey.keyA && !shift) {
       final newPos = (state.cursorPosition + 1).clamp(0, text.length);
-      return result.copyWith(
-        mode: VimMode.insert,
-        cursorPosition: newPos,
-        countBuffer: "",
-      );
+      return result.copyWith(mode: VimMode.insert, cursorPosition: newPos, countBuffer: "");
     }
 
     if (key == LogicalKeyboardKey.keyA && shift) {
-      final lineEnd = VimMotions.getLineEndPosition(
-        text,
-        VimMotions.getLineNumber(text, state.cursorPosition),
-      );
-      return result.copyWith(
-        mode: VimMode.insert,
-        cursorPosition: lineEnd,
-        countBuffer: "",
-      );
+      final lineEnd = VimMotions.getLineEndPosition(text, VimMotions.getLineNumber(text, state.cursorPosition));
+      return result.copyWith(mode: VimMode.insert, cursorPosition: lineEnd, countBuffer: "");
     }
 
     if (key == LogicalKeyboardKey.keyO && !shift) {
-      return result.copyWith(
-        mode: VimMode.insert,
-        insertNewLineBelow: true,
-        countBuffer: "",
-      );
+      return result.copyWith(mode: VimMode.insert, insertNewLineBelow: true, countBuffer: "");
     }
 
     if (key == LogicalKeyboardKey.keyO && shift) {
-      return result.copyWith(
-        mode: VimMode.insert,
-        insertNewLineAbove: true,
-        countBuffer: "",
-      );
+      return result.copyWith(mode: VimMode.insert, insertNewLineAbove: true, countBuffer: "");
     }
 
     if (key == LogicalKeyboardKey.keyV && !shift) {
-      return result.copyWith(
-        mode: VimMode.visual,
-        visualStart: state.cursorPosition,
-        countBuffer: "",
-      );
+      return result.copyWith(mode: VimMode.visual, visualStart: state.cursorPosition, countBuffer: "");
     }
 
     if (key == LogicalKeyboardKey.keyX) {
@@ -368,67 +253,44 @@ class VimHandler {
 
     if (operator == "g" && key == LogicalKeyboardKey.keyG) {
       return result.copyWith(
-        cursorPosition:
-            VimMotions.moveToDocumentStart(text, state.cursorPosition),
+        cursorPosition: VimMotions.moveToDocumentStart(text, state.cursorPosition),
         countBuffer: "",
-        clearPendingOperator: true,
+        pendingOperator: null,
       );
     }
 
     if (operator == "d") {
       if (key == LogicalKeyboardKey.keyD) {
-        return result.copyWith(
-          deleteLine: true,
-          countBuffer: "",
-          clearPendingOperator: true,
-        );
+        return result.copyWith(deleteLine: true, countBuffer: "", pendingOperator: null);
       }
       if (key == LogicalKeyboardKey.keyW) {
-        final targetPos =
-            VimMotions.moveWordForward(text, state.cursorPosition);
-        return result.copyWith(
-          deleteToPosition: targetPos,
-          countBuffer: "",
-          clearPendingOperator: true,
-        );
+        final targetPos = VimMotions.moveWordForward(text, state.cursorPosition);
+        return result.copyWith(deleteToPosition: targetPos, countBuffer: "", pendingOperator: null);
       }
     }
 
     if (operator == "c") {
       if (key == LogicalKeyboardKey.keyC) {
-        return result.copyWith(
-          changeLine: true,
-          mode: VimMode.insert,
-          countBuffer: "",
-          clearPendingOperator: true,
-        );
+        return result.copyWith(changeLine: true, mode: VimMode.insert, countBuffer: "", pendingOperator: null);
       }
       if (key == LogicalKeyboardKey.keyW) {
-        final targetPos =
-            VimMotions.moveWordForward(text, state.cursorPosition);
+        final targetPos = VimMotions.moveWordForward(text, state.cursorPosition);
         return result.copyWith(
           changeToPosition: targetPos,
           mode: VimMode.insert,
           countBuffer: "",
-          clearPendingOperator: true,
+          pendingOperator: null,
         );
       }
     }
 
     if (operator == "y") {
       if (key == LogicalKeyboardKey.keyY) {
-        return result.copyWith(
-          yankLine: true,
-          countBuffer: "",
-          clearPendingOperator: true,
-        );
+        return result.copyWith(yankLine: true, countBuffer: "", pendingOperator: null);
       }
     }
 
-    return result.copyWith(
-      countBuffer: "",
-      clearPendingOperator: true,
-    );
+    return result.copyWith(countBuffer: "", pendingOperator: null);
   }
 
   static VimHandlerResult _handleVisualMode(
@@ -441,78 +303,47 @@ class VimHandler {
     final result = VimHandlerResult.fromState(state);
 
     if (key == LogicalKeyboardKey.escape) {
-      return result.copyWith(
-        mode: VimMode.normal,
-        clearVisualStart: true,
-        countBuffer: "",
-      );
+      return result.copyWith(mode: VimMode.normal, visualStart: null, countBuffer: "");
     }
 
     if (key == LogicalKeyboardKey.keyH || key == LogicalKeyboardKey.arrowLeft) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveLeft(text, state.cursorPosition),
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveLeft(text, state.cursorPosition));
     }
 
-    if (key == LogicalKeyboardKey.keyL ||
-        key == LogicalKeyboardKey.arrowRight) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveRight(text, state.cursorPosition),
-      );
+    if (key == LogicalKeyboardKey.keyL || key == LogicalKeyboardKey.arrowRight) {
+      return result.copyWith(cursorPosition: VimMotions.moveRight(text, state.cursorPosition));
     }
 
     if (key == LogicalKeyboardKey.keyJ || key == LogicalKeyboardKey.arrowDown) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveDown(text, state.cursorPosition),
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveDown(text, state.cursorPosition));
     }
 
     if (key == LogicalKeyboardKey.keyK || key == LogicalKeyboardKey.arrowUp) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveUp(text, state.cursorPosition),
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveUp(text, state.cursorPosition));
     }
 
     if (key == LogicalKeyboardKey.keyW) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveWordForward(text, state.cursorPosition),
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveWordForward(text, state.cursorPosition));
     }
 
     if (key == LogicalKeyboardKey.keyB) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveWordBackward(text, state.cursorPosition),
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveWordBackward(text, state.cursorPosition));
     }
 
     if (key == LogicalKeyboardKey.keyE) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveWordEnd(text, state.cursorPosition),
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveWordEnd(text, state.cursorPosition));
     }
 
     if (key == LogicalKeyboardKey.keyD) {
-      return result.copyWith(
-        deleteSelection: true,
-        mode: VimMode.normal,
-        clearVisualStart: true,
-      );
+      return result.copyWith(deleteSelection: true, mode: VimMode.normal, visualStart: null);
     }
 
     if (key == LogicalKeyboardKey.keyY) {
-      return result.copyWith(
-        yankSelection: true,
-        mode: VimMode.normal,
-        clearVisualStart: true,
-      );
+      return result.copyWith(yankSelection: true, mode: VimMode.normal, visualStart: null);
     }
 
     if (key == LogicalKeyboardKey.keyC) {
-      return result.copyWith(
-        deleteSelection: true,
-        mode: VimMode.insert,
-        clearVisualStart: true,
-      );
+      return result.copyWith(deleteSelection: true, mode: VimMode.insert, visualStart: null);
     }
 
     return result;
@@ -524,21 +355,17 @@ class VimHandler {
     VimState state, {
     required bool shift,
     required bool ctrl,
+    String? character,
   }) {
     final result = VimHandlerResult.fromState(state);
 
     if (key == LogicalKeyboardKey.escape) {
       final newPos = (state.cursorPosition - 1).clamp(0, text.length - 1);
-      return result.copyWith(
-        mode: VimMode.normal,
-        cursorPosition: text.isEmpty ? 0 : newPos,
-      );
+      return result.copyWith(mode: VimMode.normal, cursorPosition: text.isEmpty ? 0 : newPos);
     }
 
     if (key == LogicalKeyboardKey.arrowLeft) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveLeft(text, state.cursorPosition),
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveLeft(text, state.cursorPosition));
     }
 
     if (key == LogicalKeyboardKey.arrowRight) {
@@ -547,15 +374,11 @@ class VimHandler {
     }
 
     if (key == LogicalKeyboardKey.arrowDown) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveDown(text, state.cursorPosition),
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveDown(text, state.cursorPosition));
     }
 
     if (key == LogicalKeyboardKey.arrowUp) {
-      return result.copyWith(
-        cursorPosition: VimMotions.moveUp(text, state.cursorPosition),
-      );
+      return result.copyWith(cursorPosition: VimMotions.moveUp(text, state.cursorPosition));
     }
 
     if (key == LogicalKeyboardKey.backspace) {
@@ -574,7 +397,10 @@ class VimHandler {
       return result.copyWith(textToInsert: " ");
     }
 
-    final char = _keyToChar(key, shift);
+    // What the keyboard layout produced: punctuation, accents and shifted
+    // symbols included. The key label is only a fallback for synthetic keys.
+    final printable = character != null && character.isNotEmpty && character.runes.every((r) => r >= 0x20 && r != 0x7F);
+    final char = !ctrl && printable ? character : _keyToChar(key, shift);
     if (char != null) {
       return result.copyWith(textToInsert: char);
     }

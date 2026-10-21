@@ -48,20 +48,14 @@ void main() {
         final state = SelectionEditorState.fromDocument(document);
         final newState = state.acceptCurrentChange();
 
-        expect(
-          newState.document.pendingChanges.first.status,
-          equals(ChangeStatus.accepted),
-        );
+        expect(newState.document.pendingChanges.first.status, equals(ChangeStatus.accepted));
       });
 
       test("rejectCurrentChange rejects change at cursor", () {
         final state = SelectionEditorState.fromDocument(document);
         final newState = state.rejectCurrentChange();
 
-        expect(
-          newState.document.pendingChanges.first.status,
-          equals(ChangeStatus.rejected),
-        );
+        expect(newState.document.pendingChanges.first.status, equals(ChangeStatus.rejected));
       });
 
       test("accept moves cursor to next pending change", () {
@@ -102,34 +96,21 @@ void main() {
         final state = SelectionEditorState.fromDocument(document).moveCursor(0);
         final newState = state.acceptCurrentChange();
 
-        expect(
-          newState.document.pendingChanges.first.status,
-          equals(ChangeStatus.accepted),
-        );
+        expect(newState.document.pendingChanges.first.status, equals(ChangeStatus.accepted));
       });
 
       test("acceptAll accepts all pending changes", () {
         final state = SelectionEditorState.fromDocument(document);
         final newState = state.acceptAll();
 
-        expect(
-          newState.document.pendingChanges.every(
-            (c) => c.status == ChangeStatus.accepted,
-          ),
-          isTrue,
-        );
+        expect(newState.document.pendingChanges.every((c) => c.status == ChangeStatus.accepted), isTrue);
       });
 
       test("rejectAll rejects all pending changes", () {
         final state = SelectionEditorState.fromDocument(document);
         final newState = state.rejectAll();
 
-        expect(
-          newState.document.pendingChanges.every(
-            (c) => c.status == ChangeStatus.rejected,
-          ),
-          isTrue,
-        );
+        expect(newState.document.pendingChanges.every((c) => c.status == ChangeStatus.rejected), isTrue);
       });
     });
 
@@ -139,10 +120,7 @@ void main() {
         final accepted = state.acceptCurrentChange();
         final undone = accepted.undo();
 
-        expect(
-          undone.document.pendingChanges.first.status,
-          equals(ChangeStatus.pending),
-        );
+        expect(undone.document.pendingChanges.first.status, equals(ChangeStatus.pending));
       });
 
       test("redo restores undone change", () {
@@ -151,10 +129,7 @@ void main() {
         final undone = accepted.undo();
         final redone = undone.redo();
 
-        expect(
-          redone.document.pendingChanges.first.status,
-          equals(ChangeStatus.accepted),
-        );
+        expect(redone.document.pendingChanges.first.status, equals(ChangeStatus.accepted));
       });
 
       test("canUndo returns false when no history", () {
@@ -206,10 +181,7 @@ void main() {
         final state = SelectionEditorState.fromDocument(document);
         final moved = state.moveCursor(1000);
 
-        expect(
-          moved.vimState.cursorPosition,
-          lessThan(1000),
-        );
+        expect(moved.vimState.cursorPosition, lessThan(1000));
       });
     });
 
@@ -222,8 +194,7 @@ void main() {
       });
 
       test("enterNormalMode changes vim mode", () {
-        final state =
-            SelectionEditorState.fromDocument(document).enterInsertMode();
+        final state = SelectionEditorState.fromDocument(document).enterInsertMode();
         final normalMode = state.enterNormalMode();
 
         expect(normalMode.vimState.mode, equals(VimMode.normal));
@@ -240,39 +211,41 @@ void main() {
 
     group("text insertion", () {
       test("insertText inserts at cursor position", () {
-        final state = SelectionEditorState.fromDocument(document)
-            .moveCursor(0)
-            .enterInsertMode();
+        final state = SelectionEditorState.fromDocument(document).moveCursor(0).enterInsertMode();
         final inserted = state.insertText("X");
 
         expect(inserted.document.getText().startsWith("X"), isTrue);
       });
 
       test("insertText moves cursor forward", () {
-        final state = SelectionEditorState.fromDocument(document)
-            .moveCursor(0)
-            .enterInsertMode();
+        final state = SelectionEditorState.fromDocument(document).moveCursor(0).enterInsertMode();
         final inserted = state.insertText("X");
 
         expect(inserted.vimState.cursorPosition, equals(1));
       });
 
-      test("insert in original region auto-rejects change", () {
+      test("insert at the start of a change keeps it pending", () {
         final state = SelectionEditorState.fromDocument(document);
         final inserted = state.enterInsertMode().insertText("X");
 
-        expect(inserted.document.pendingChanges, isEmpty);
-        expect(inserted.document.getText().contains("X"), isTrue);
+        expect(inserted.document.getText(), equals("Hello Xoldnew world"));
+        expect(inserted.document.getPendingChangeCount(), equals(1));
+      });
+
+      test("insert in original region auto-rejects change", () {
+        final state = SelectionEditorState.fromDocument(document).moveCursor(7).enterInsertMode();
+        final inserted = state.insertText("X");
+
+        expect(inserted.document.getText(), equals("Hello oXld world"));
+        expect(inserted.document.getPendingChangeCount(), equals(0));
       });
 
       test("insert in new region auto-accepts change", () {
-        final state = SelectionEditorState.fromDocument(document)
-            .moveCursor(9)
-            .enterInsertMode();
+        final state = SelectionEditorState.fromDocument(document).moveCursor(10).enterInsertMode();
         final inserted = state.insertText("X");
 
-        expect(inserted.document.pendingChanges, isEmpty);
-        expect(inserted.document.getText().contains("X"), isTrue);
+        expect(inserted.document.getText(), equals("Hello nXew world"));
+        expect(inserted.document.getPendingChangeCount(), equals(0));
       });
     });
 
@@ -298,20 +271,6 @@ void main() {
       });
     });
 
-    group("getResultText", () {
-      test("returns null when pending changes exist", () {
-        final state = SelectionEditorState.fromDocument(document);
-
-        expect(state.getResultText(), isNull);
-      });
-
-      test("returns text after all changes resolved", () {
-        final state = SelectionEditorState.fromDocument(document).acceptAll();
-
-        expect(state.getResultText(), equals("Hello new world"));
-      });
-    });
-
     group("change counts", () {
       test("getPendingChangeCount returns pending count", () {
         final state = SelectionEditorState.fromDocument(document);
@@ -326,29 +285,95 @@ void main() {
       });
     });
 
-    group("hasUnsavedChanges", () {
-      test("returns false on initial state", () {
-        final state = SelectionEditorState.fromDocument(document);
+    // B3: any keystroke used to flatten the document, baking "original +
+    // suggestion" into the text and dropping every pending change.
+    group("editing next to pending changes (B3)", () {
+      late SelectionEditorState theCat;
 
-        expect(state.hasUnsavedChanges, isFalse);
+      setUp(() {
+        theCat = SelectionEditorState.fromDocument(
+          EditorDocument.fromDiffs([Diff(DIFF_DELETE, "teh"), Diff(DIFF_INSERT, "the"), Diff(DIFF_EQUAL, " cat")]),
+        );
       });
 
-      test("returns true after accept", () {
-        final state =
-            SelectionEditorState.fromDocument(document).acceptCurrentChange();
+      test("typing after the change keeps it pending", () {
+        final typed = theCat.enterInsertMode().replaceRange(10, 10, "!");
 
-        expect(state.hasUnsavedChanges, isTrue);
+        expect(typed.document.getText(), equals("tehthe cat!"));
+        expect(typed.document.getPendingChangeCount(), equals(1));
+        expect(typed.document.pendingChanges.single.originalText, equals("teh"));
+        expect(typed.document.acceptAll().getText(), equals("the cat!"));
+        expect(typed.document.rejectAll().getText(), equals("teh cat!"));
       });
 
-      test("returns true after text edit", () {
-        final diffs = [Diff(DIFF_EQUAL, "Hello world")];
-        final doc = EditorDocument.fromDiffs(diffs);
-        final state = SelectionEditorState.fromDocument(doc)
-            .moveCursor(5)
-            .enterInsertMode()
-            .insertText("X");
+      test("typing inside the suggestion accepts it", () {
+        final typed = theCat.moveCursor(4).enterInsertMode().insertText("X");
 
-        expect(state.hasUnsavedChanges, isTrue);
+        expect(typed.document.getText(), equals("tXhe cat"));
+        expect(typed.document.getPendingChangeCount(), equals(0));
+      });
+
+      test("typing inside the original rejects it", () {
+        final typed = theCat.moveCursor(1).enterInsertMode().insertText("X");
+
+        expect(typed.document.getText(), equals("tXeh cat"));
+        expect(typed.document.getPendingChangeCount(), equals(0));
+      });
+
+      test("undo restores the pending change", () {
+        final typed = theCat.moveCursor(1).enterInsertMode().insertText("X");
+        final undone = typed.undo();
+
+        expect(undone.document, equals(theCat.document));
+        expect(undone.document.getPendingChangeCount(), equals(1));
+      });
+
+      test("edits keep the Vim mode", () {
+        final typed = theCat.enterInsertMode().replaceRange(10, 10, "!");
+
+        expect(typed.vimState.mode, equals(VimMode.insert));
+      });
+
+      test("changing a word keeps insert mode and the change", () {
+        // What cw on "cat" does: delete to the next word, stay in insert.
+        final changed = theCat.enterInsertMode().replaceRange(7, 10, "", cursor: 7).insertText("dog");
+
+        expect(changed.vimState.mode, equals(VimMode.insert));
+        expect(changed.document.getText(), equals("tehthe dog"));
+        expect(changed.document.getPendingChangeCount(), equals(1));
+      });
+
+      test("deleting a line keeps changes on other lines and the history", () {
+        final lines = SelectionEditorState.fromDocument(
+          EditorDocument.fromDiffs([
+            Diff(DIFF_DELETE, "teh"),
+            Diff(DIFF_INSERT, "the"),
+            Diff(DIFF_EQUAL, " cat\nmiddle line\nthe "),
+            Diff(DIFF_DELETE, "dgo"),
+            Diff(DIFF_INSERT, "dog"),
+          ]),
+        );
+        final kept = lines.acceptCurrentChange();
+
+        // What dd on the middle line does.
+        final deleted = kept.replaceRange(8, 20, "", cursor: 8);
+
+        expect(deleted.document.getText(), equals("the cat\nthe dgodog"));
+        expect(
+          deleted.document.pendingChanges.map((c) => c.status),
+          equals([ChangeStatus.accepted, ChangeStatus.pending]),
+        );
+        expect(deleted.undoStack, hasLength(2));
+        expect(deleted.undo().document, equals(kept.document));
+        expect(deleted.undo().undo().document, equals(lines.document));
+      });
+
+      test("edits keep the undo history", () {
+        final accepted = theCat.acceptCurrentChange();
+        final typed = accepted.moveCursor(7).enterInsertMode().insertText("!");
+
+        expect(typed.undoStack, hasLength(2));
+        expect(typed.undo().undo().document, equals(theCat.document));
       });
     });
   });

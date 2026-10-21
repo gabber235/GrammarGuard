@@ -15,11 +15,7 @@ void main() {
       });
 
       test("creates document with insertion", () {
-        final diffs = [
-          Diff(DIFF_EQUAL, "Hello "),
-          Diff(DIFF_INSERT, "beautiful "),
-          Diff(DIFF_EQUAL, "world"),
-        ];
+        final diffs = [Diff(DIFF_EQUAL, "Hello "), Diff(DIFF_INSERT, "beautiful "), Diff(DIFF_EQUAL, "world")];
         final doc = EditorDocument.fromDiffs(diffs);
 
         expect(doc.segments.length, equals(3));
@@ -29,11 +25,7 @@ void main() {
       });
 
       test("creates document with deletion", () {
-        final diffs = [
-          Diff(DIFF_EQUAL, "Hello "),
-          Diff(DIFF_DELETE, "ugly "),
-          Diff(DIFF_EQUAL, "world"),
-        ];
+        final diffs = [Diff(DIFF_EQUAL, "Hello "), Diff(DIFF_DELETE, "ugly "), Diff(DIFF_EQUAL, "world")];
         final doc = EditorDocument.fromDiffs(diffs);
 
         expect(doc.pendingChanges.length, equals(1));
@@ -110,39 +102,9 @@ void main() {
       });
     });
 
-    group("getResultText", () {
-      test("returns final text after all changes are resolved", () {
-        final diffs = [
-          Diff(DIFF_EQUAL, "Hello "),
-          Diff(DIFF_DELETE, "old"),
-          Diff(DIFF_INSERT, "new"),
-          Diff(DIFF_EQUAL, " world"),
-        ];
-        var doc = EditorDocument.fromDiffs(diffs);
-        doc = doc.acceptChange(0);
-
-        expect(doc.getResultText(), equals("Hello new world"));
-      });
-
-      test("returns null when there are pending changes", () {
-        final diffs = [
-          Diff(DIFF_EQUAL, "Hello "),
-          Diff(DIFF_INSERT, "new"),
-          Diff(DIFF_EQUAL, " world"),
-        ];
-        final doc = EditorDocument.fromDiffs(diffs);
-
-        expect(doc.getResultText(), isNull);
-      });
-    });
-
     group("acceptChange", () {
       test("accepts change by index", () {
-        final diffs = [
-          Diff(DIFF_EQUAL, "Hello "),
-          Diff(DIFF_INSERT, "beautiful "),
-          Diff(DIFF_EQUAL, "world"),
-        ];
+        final diffs = [Diff(DIFF_EQUAL, "Hello "), Diff(DIFF_INSERT, "beautiful "), Diff(DIFF_EQUAL, "world")];
         var doc = EditorDocument.fromDiffs(diffs);
         doc = doc.acceptChange(0);
 
@@ -150,27 +112,18 @@ void main() {
       });
 
       test("does not modify original document", () {
-        final diffs = [
-          Diff(DIFF_EQUAL, "Hello "),
-          Diff(DIFF_INSERT, "beautiful "),
-          Diff(DIFF_EQUAL, "world"),
-        ];
+        final diffs = [Diff(DIFF_EQUAL, "Hello "), Diff(DIFF_INSERT, "beautiful "), Diff(DIFF_EQUAL, "world")];
         final doc = EditorDocument.fromDiffs(diffs);
         final newDoc = doc.acceptChange(0);
 
         expect(doc.pendingChanges.first.isPending, isTrue);
-        expect(
-            newDoc.pendingChanges.first.status, equals(ChangeStatus.accepted),);
+        expect(newDoc.pendingChanges.first.status, equals(ChangeStatus.accepted));
       });
     });
 
     group("rejectChange", () {
       test("rejects change by index", () {
-        final diffs = [
-          Diff(DIFF_EQUAL, "Hello "),
-          Diff(DIFF_INSERT, "unwanted "),
-          Diff(DIFF_EQUAL, "world"),
-        ];
+        final diffs = [Diff(DIFF_EQUAL, "Hello "), Diff(DIFF_INSERT, "unwanted "), Diff(DIFF_EQUAL, "world")];
         var doc = EditorDocument.fromDiffs(diffs);
         doc = doc.rejectChange(0);
 
@@ -190,10 +143,8 @@ void main() {
         var doc = EditorDocument.fromDiffs(diffs);
         doc = doc.acceptAll();
 
-        expect(
-            doc.pendingChanges.every((c) => c.status == ChangeStatus.accepted),
-            isTrue,);
-        expect(doc.getResultText(), equals("Hello beautiful world"));
+        expect(doc.pendingChanges.every((c) => c.status == ChangeStatus.accepted), isTrue);
+        expect(doc.getText(), equals("Hello beautiful world"));
       });
     });
 
@@ -209,10 +160,8 @@ void main() {
         var doc = EditorDocument.fromDiffs(diffs);
         doc = doc.rejectAll();
 
-        expect(
-            doc.pendingChanges.every((c) => c.status == ChangeStatus.rejected),
-            isTrue,);
-        expect(doc.getResultText(), equals("Hi world"));
+        expect(doc.pendingChanges.every((c) => c.status == ChangeStatus.rejected), isTrue);
+        expect(doc.getText(), equals("Hi world"));
       });
     });
 
@@ -232,11 +181,7 @@ void main() {
       });
 
       test("returns null when position is not inside a change", () {
-        final diffs = [
-          Diff(DIFF_EQUAL, "Hello "),
-          Diff(DIFF_INSERT, "new"),
-          Diff(DIFF_EQUAL, " world"),
-        ];
+        final diffs = [Diff(DIFF_EQUAL, "Hello "), Diff(DIFF_INSERT, "new"), Diff(DIFF_EQUAL, " world")];
         final doc = EditorDocument.fromDiffs(diffs);
 
         expect(doc.getChangeAtPosition(0), isNull);
@@ -261,11 +206,7 @@ void main() {
       });
 
       test("returns null when no more pending changes", () {
-        final diffs = [
-          Diff(DIFF_EQUAL, "Hello "),
-          Diff(DIFF_INSERT, "new"),
-          Diff(DIFF_EQUAL, " world"),
-        ];
+        final diffs = [Diff(DIFF_EQUAL, "Hello "), Diff(DIFF_INSERT, "new"), Diff(DIFF_EQUAL, " world")];
         var doc = EditorDocument.fromDiffs(diffs);
         doc = doc.acceptChange(0);
 
@@ -302,11 +243,7 @@ void main() {
       });
 
       test("decreases when changes are accepted or rejected", () {
-        final diffs = [
-          Diff(DIFF_INSERT, "first "),
-          Diff(DIFF_EQUAL, "and "),
-          Diff(DIFF_INSERT, "second"),
-        ];
+        final diffs = [Diff(DIFF_INSERT, "first "), Diff(DIFF_EQUAL, "and "), Diff(DIFF_INSERT, "second")];
         var doc = EditorDocument.fromDiffs(diffs);
         expect(doc.getPendingChangeCount(), equals(2));
 
@@ -320,11 +257,7 @@ void main() {
 
     group("getTotalChangeCount", () {
       test("returns total number of changes", () {
-        final diffs = [
-          Diff(DIFF_INSERT, "first "),
-          Diff(DIFF_EQUAL, "and "),
-          Diff(DIFF_INSERT, "second"),
-        ];
+        final diffs = [Diff(DIFF_INSERT, "first "), Diff(DIFF_EQUAL, "and "), Diff(DIFF_INSERT, "second")];
         var doc = EditorDocument.fromDiffs(diffs);
         doc = doc.acceptChange(0);
 
@@ -334,11 +267,7 @@ void main() {
 
     group("getChangeStartPosition", () {
       test("returns the start position of a change by index", () {
-        final diffs = [
-          Diff(DIFF_EQUAL, "Hello "),
-          Diff(DIFF_INSERT, "beautiful "),
-          Diff(DIFF_EQUAL, "world"),
-        ];
+        final diffs = [Diff(DIFF_EQUAL, "Hello "), Diff(DIFF_INSERT, "beautiful "), Diff(DIFF_EQUAL, "world")];
         final doc = EditorDocument.fromDiffs(diffs);
 
         expect(doc.getChangeStartPosition(0), equals(6));
@@ -452,6 +381,123 @@ void main() {
         expect(doc.getLineLength(0), equals(5));
         expect(doc.getLineLength(1), equals(5));
         expect(doc.getLineLength(2), equals(4));
+      });
+    });
+
+    group("getPreviousPendingChangeIndex", () {
+      final doc = EditorDocument.fromDiffs([
+        Diff(DIFF_EQUAL, "A "),
+        Diff(DIFF_INSERT, "first "),
+        Diff(DIFF_EQUAL, "B "),
+        Diff(DIFF_INSERT, "second "),
+        Diff(DIFF_EQUAL, "C"),
+      ]);
+
+      test("returns the last pending change starting before the position", () {
+        expect(doc.getPreviousPendingChangeIndex(10), equals(0));
+        expect(doc.getPreviousPendingChangeIndex(11), equals(1));
+        expect(doc.getPreviousPendingChangeIndex(100), equals(1));
+      });
+
+      test("returns null before the first change", () {
+        expect(doc.getPreviousPendingChangeIndex(2), isNull);
+        expect(doc.getPreviousPendingChangeIndex(0), isNull);
+      });
+
+      test("skips decided changes", () {
+        expect(doc.acceptChange(1).getPreviousPendingChangeIndex(100), equals(0));
+      });
+    });
+
+    group("replaceRange", () {
+      // "A tehthe x katcat B": change 0 spans [2, 8) with its suggestion
+      // from 5, change 1 spans [11, 17) with its suggestion from 14.
+      final twoChanges = EditorDocument.fromDiffs([
+        Diff(DIFF_EQUAL, "A "),
+        Diff(DIFF_DELETE, "teh"),
+        Diff(DIFF_INSERT, "the"),
+        Diff(DIFF_EQUAL, " x "),
+        Diff(DIFF_DELETE, "kat"),
+        Diff(DIFF_INSERT, "cat"),
+        Diff(DIFF_EQUAL, " B"),
+      ]);
+
+      test("edits plain text and keeps every pending change", () {
+        final doc = twoChanges.replaceRange(9, 10, "y");
+
+        expect(doc.getText(), equals("A tehthe y katcat B"));
+        expect(doc.getPendingChangeCount(), equals(2));
+        expect(doc.acceptAll().getText(), equals("A the y cat B"));
+        expect(doc.rejectAll().getText(), equals("A teh y kat B"));
+      });
+
+      test("inserts at the start of a change before it, keeping it pending", () {
+        final doc = twoChanges.replaceRange(2, 2, "X");
+
+        expect(doc.getText(), equals("A Xtehthe x katcat B"));
+        expect(doc.getPendingChangeCount(), equals(2));
+        expect(doc.getChangeStartPosition(0), equals(3));
+      });
+
+      test("inserts at the end of a change after it, keeping it pending", () {
+        final doc = twoChanges.replaceRange(8, 8, "X");
+
+        expect(doc.getText(), equals("A tehtheX x katcat B"));
+        expect(doc.getPendingChangeCount(), equals(2));
+        expect(doc.acceptAll().getText(), equals("A theX x cat B"));
+      });
+
+      test("inserts between original and suggestion by keeping the suggestion", () {
+        final doc = twoChanges.replaceRange(5, 5, "X");
+
+        expect(doc.getText(), equals("A Xthe x katcat B"));
+        expect(doc.pendingChanges[0].status, equals(ChangeStatus.accepted));
+        expect(doc.getPendingChangeCount(), equals(1));
+      });
+
+      test("deleting across two changes undoes both and removes the range", () {
+        final doc = twoChanges.replaceRange(1, 18, "");
+
+        expect(doc.getText(), equals("AB"));
+        expect(doc.getPendingChangeCount(), equals(0));
+      });
+
+      test("deleting from one suggestion into the next original keeps one, undoes the other", () {
+        final doc = twoChanges.replaceRange(6, 13, "");
+
+        // Change 0 kept ("the"), change 1 undone ("kat"); the cut runs
+        // from after "t" in "the" to after "ka" in "kat".
+        expect(doc.getText(), equals("A tt B"));
+        expect(doc.getPendingChangeCount(), equals(0));
+      });
+
+      test("leaves the original document untouched", () {
+        twoChanges.replaceRange(1, 18, "");
+
+        expect(twoChanges.getText(), equals("A tehthe x katcat B"));
+        expect(twoChanges.getPendingChangeCount(), equals(2));
+      });
+
+      test("inserts into an empty document", () {
+        final empty = EditorDocument.fromDiffs([]);
+
+        expect(empty.getText(), isEmpty);
+        expect(empty.replaceRange(0, 0, "Hi").getText(), equals("Hi"));
+        expect(empty.replaceRange(0, 0, "").getText(), isEmpty);
+      });
+
+      test("deleting all text leaves an empty document", () {
+        final doc = EditorDocument.fromDiffs([Diff(DIFF_EQUAL, "Hello")]).replaceRange(0, 5, "");
+
+        expect(doc.getText(), isEmpty);
+        expect(doc.getLineCount(), equals(1));
+      });
+
+      test("keeps decided changes outside the range as changes", () {
+        final doc = twoChanges.acceptChange(0).replaceRange(14, 16, "");
+
+        expect(doc.getText(), equals("A the x katcat"));
+        expect(doc.pendingChanges.map((c) => c.status), equals([ChangeStatus.accepted, ChangeStatus.pending]));
       });
     });
   });

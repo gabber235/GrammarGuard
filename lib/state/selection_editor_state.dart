@@ -1,280 +1,109 @@
+import "package:freezed_annotation/freezed_annotation.dart";
 import "package:grammar_guard/models/editor_document.dart";
 import "package:grammar_guard/services/vim/vim_state.dart";
 
-class SelectionEditorState {
+part "selection_editor_state.freezed.dart";
 
-  SelectionEditorState._({
-    required this.document,
-    required this.vimState,
-    List<SelectionEditorState>? undoStack,
-    List<SelectionEditorState>? redoStack,
-    this.hasUnsavedChanges = false,
-  })  : _undoStack = undoStack ?? [],
-        _redoStack = redoStack ?? [];
+/// The review document, the Vim cursor and the undo history. Every change
+/// returns a new state; the old one goes on the undo stack.
+@freezed
+abstract class SelectionEditorState with _$SelectionEditorState {
+  const SelectionEditorState._();
 
+  const factory SelectionEditorState({
+    required EditorDocument document,
+    required VimState vimState,
+    @Default(<SelectionEditorState>[]) List<SelectionEditorState> undoStack,
+    @Default(<SelectionEditorState>[]) List<SelectionEditorState> redoStack,
+  }) = _SelectionEditorState;
+
+  /// Starts on the first pending change.
   factory SelectionEditorState.fromDocument(EditorDocument document) {
-    final firstChangeIndex = document.getNextPendingChangeIndex(0);
-    final cursorPosition = firstChangeIndex != null
-        ? document.getChangeStartPosition(firstChangeIndex)
-        : 0;
-
-    return SelectionEditorState._(
+    final first = document.getNextPendingChangeIndex(0);
+    return SelectionEditorState(
       document: document,
-      vimState: VimState(cursorPosition: cursorPosition),
-    );
-  }
-  final EditorDocument document;
-  final VimState vimState;
-  final List<SelectionEditorState> _undoStack;
-  final List<SelectionEditorState> _redoStack;
-  final bool hasUnsavedChanges;
-
-  bool get canUndo => _undoStack.isNotEmpty;
-  bool get canRedo => _redoStack.isNotEmpty;
-
-  SelectionEditorState acceptCurrentChange() {
-    final changeIndex = document.getChangeAtPosition(vimState.cursorPosition) ??
-        document.getNextPendingChangeIndex(vimState.cursorPosition);
-
-    if (changeIndex == null) return this;
-
-    final newDoc = document.acceptChange(changeIndex);
-    final nextChangeIndex =
-        newDoc.getNextPendingChangeIndex(vimState.cursorPosition);
-
-    final newCursor = nextChangeIndex != null
-        ? newDoc.getChangeStartPosition(nextChangeIndex)
-        : vimState.cursorPosition;
-
-    return SelectionEditorState._(
-      document: newDoc,
-      vimState: vimState.moveCursor(newCursor),
-      undoStack: [..._undoStack, this],
-      redoStack: [],
-      hasUnsavedChanges: true,
+      vimState: VimState(cursorPosition: first == null ? 0 : document.getChangeStartPosition(first)),
     );
   }
 
-  SelectionEditorState rejectCurrentChange() {
-    final changeIndex = document.getChangeAtPosition(vimState.cursorPosition) ??
-        document.getNextPendingChangeIndex(vimState.cursorPosition);
+  bool get canUndo => undoStack.isNotEmpty;
+  bool get canRedo => redoStack.isNotEmpty;
 
-    if (changeIndex == null) return this;
+  /// A new document, recorded for undo.
+  SelectionEditorState _edit(EditorDocument next, {VimState? vimState}) =>
+      SelectionEditorState(document: next, vimState: vimState ?? this.vimState, undoStack: [...undoStack, this]);
 
-    final newDoc = document.rejectChange(changeIndex);
-    final nextChangeIndex =
-        newDoc.getNextPendingChangeIndex(vimState.cursorPosition);
+  int? get _target =>
+      document.getChangeAtPosition(vimState.cursorPosition) ??
+      document.getNextPendingChangeIndex(vimState.cursorPosition);
 
-    final newCursor = nextChangeIndex != null
-        ? newDoc.getChangeStartPosition(nextChangeIndex)
-        : vimState.cursorPosition;
+  SelectionEditorState acceptCurrentChange() => _decide(accept: true);
+  SelectionEditorState rejectCurrentChange() => _decide(accept: false);
 
-    return SelectionEditorState._(
-      document: newDoc,
-      vimState: vimState.moveCursor(newCursor),
-      undoStack: [..._undoStack, this],
-      redoStack: [],
-      hasUnsavedChanges: true,
+  /// Decides the change under (or after) the cursor and moves to the next.
+  SelectionEditorState _decide({required bool accept}) {
+    final index = _target;
+    if (index == null) return this;
+    final next = accept ? document.acceptChange(index) : document.rejectChange(index);
+    final following = next.getNextPendingChangeIndex(vimState.cursorPosition);
+    return _edit(
+      next,
+      vimState: vimState.moveCursor(
+        following == null ? vimState.cursorPosition : next.getChangeStartPosition(following),
+      ),
     );
   }
 
-  SelectionEditorState acceptAll() {
-    return SelectionEditorState._(
-      document: document.acceptAll(),
-      vimState: vimState,
-      undoStack: [..._undoStack, this],
-      redoStack: [],
-      hasUnsavedChanges: true,
-    );
-  }
-
-  SelectionEditorState rejectAll() {
-    return SelectionEditorState._(
-      document: document.rejectAll(),
-      vimState: vimState,
-      undoStack: [..._undoStack, this],
-      redoStack: [],
-      hasUnsavedChanges: true,
-    );
-  }
+  SelectionEditorState acceptAll() => _edit(document.acceptAll());
+  SelectionEditorState rejectAll() => _edit(document.rejectAll());
 
   SelectionEditorState undo() {
     if (!canUndo) return this;
-
-    final previous = _undoStack.last;
-    return SelectionEditorState._(
-      document: previous.document,
-      vimState: previous.vimState,
-      undoStack: _undoStack.sublist(0, _undoStack.length - 1),
-      redoStack: [..._redoStack, this],
-      hasUnsavedChanges: previous.hasUnsavedChanges,
-    );
+    final previous = undoStack.last;
+    return previous.copyWith(undoStack: undoStack.sublist(0, undoStack.length - 1), redoStack: [...redoStack, this]);
   }
 
   SelectionEditorState redo() {
     if (!canRedo) return this;
-
-    final next = _redoStack.last;
-    return SelectionEditorState._(
-      document: next.document,
-      vimState: next.vimState,
-      undoStack: [..._undoStack, this],
-      redoStack: _redoStack.sublist(0, _redoStack.length - 1),
-      hasUnsavedChanges: next.hasUnsavedChanges,
-    );
+    final next = redoStack.last;
+    return next.copyWith(undoStack: [...undoStack, this], redoStack: redoStack.sublist(0, redoStack.length - 1));
   }
 
+  /// In insert mode the cursor may sit after the last character (A, a).
   SelectionEditorState moveCursor(int position) {
-    final maxPosition = document.getText().length - 1;
-    final clampedPosition =
-        position.clamp(0, maxPosition < 0 ? 0 : maxPosition);
-
-    return SelectionEditorState._(
-      document: document,
-      vimState: vimState.moveCursor(clampedPosition),
-      undoStack: _undoStack,
-      redoStack: _redoStack,
-      hasUnsavedChanges: hasUnsavedChanges,
-    );
+    final length = document.getText().length;
+    final max = vimState.isInsertMode ? length : length - 1;
+    return copyWith(vimState: vimState.moveCursor(position.clamp(0, max < 0 ? 0 : max)));
   }
 
-  SelectionEditorState enterInsertMode() {
-    return SelectionEditorState._(
-      document: document,
-      vimState: vimState.enterInsertMode(),
-      undoStack: _undoStack,
-      redoStack: _redoStack,
-      hasUnsavedChanges: hasUnsavedChanges,
-    );
-  }
+  SelectionEditorState enterInsertMode() => copyWith(vimState: vimState.enterInsertMode());
+  SelectionEditorState enterNormalMode() => copyWith(vimState: vimState.enterNormalMode());
+  SelectionEditorState enterVisualMode() => copyWith(vimState: vimState.enterVisualMode());
 
-  SelectionEditorState enterNormalMode() {
-    return SelectionEditorState._(
-      document: document,
-      vimState: vimState.enterNormalMode(),
-      undoStack: _undoStack,
-      redoStack: _redoStack,
-      hasUnsavedChanges: hasUnsavedChanges,
-    );
-  }
-
-  SelectionEditorState enterVisualMode() {
-    return SelectionEditorState._(
-      document: document,
-      vimState: vimState.enterVisualMode(),
-      undoStack: _undoStack,
-      redoStack: _redoStack,
-      hasUnsavedChanges: hasUnsavedChanges,
-    );
+  /// The one editing operation. Keeps untouched suggestions, the undo
+  /// history and the Vim mode (so `cw` stays in insert mode).
+  SelectionEditorState replaceRange(int start, int end, String text, {int? cursor}) {
+    final next = document.replaceRange(start, end, text);
+    final length = next.getText().length;
+    return _edit(next, vimState: vimState.moveCursor((cursor ?? start + text.length).clamp(0, length)));
   }
 
   SelectionEditorState insertText(String text) {
-    final position = vimState.cursorPosition;
-
-    var state = this;
-    final changeIndex = document.getChangeAtPosition(position);
-    if (changeIndex != null) {
-      final change = document.pendingChanges[changeIndex];
-      if (change.isPending) {
-        if (document.isInOriginalRegion(position)) {
-          state = state._autoRejectChange(changeIndex);
-        } else if (document.isInNewRegion(position)) {
-          state = state._autoAcceptChange(changeIndex);
-        }
-      }
-    }
-
-    final docText = state.document.getText();
-    final actualPosition = position.clamp(0, docText.length);
-    final newText = docText.substring(0, actualPosition) +
-        text +
-        docText.substring(actualPosition);
-
-    final newDoc = _rebuildDocumentFromText(state.document, newText);
-
-    return SelectionEditorState._(
-      document: newDoc,
-      vimState: state.vimState.moveCursor(actualPosition + text.length),
-      undoStack: [..._undoStack, this],
-      redoStack: [],
-      hasUnsavedChanges: true,
-    );
-  }
-
-  SelectionEditorState _autoRejectChange(int changeIndex) {
-    return SelectionEditorState._(
-      document: document.rejectChange(changeIndex),
-      vimState: vimState,
-      undoStack: _undoStack,
-      redoStack: _redoStack,
-      hasUnsavedChanges: hasUnsavedChanges,
-    );
-  }
-
-  SelectionEditorState _autoAcceptChange(int changeIndex) {
-    return SelectionEditorState._(
-      document: document.acceptChange(changeIndex),
-      vimState: vimState,
-      undoStack: _undoStack,
-      redoStack: _redoStack,
-      hasUnsavedChanges: hasUnsavedChanges,
-    );
+    final at = vimState.cursorPosition;
+    return replaceRange(at, at, text);
   }
 
   SelectionEditorState deleteCharBefore() {
-    final position = vimState.cursorPosition;
-    if (position <= 0) return this;
-
-    final currentText = document.getText();
-    final newText = currentText.substring(0, position - 1) +
-        currentText.substring(position);
-
-    final newDoc = _rebuildDocumentFromText(document, newText);
-
-    return SelectionEditorState._(
-      document: newDoc,
-      vimState: vimState.moveCursor(position - 1),
-      undoStack: [..._undoStack, this],
-      redoStack: [],
-      hasUnsavedChanges: true,
-    );
+    final at = vimState.cursorPosition;
+    return at <= 0 ? this : replaceRange(at - 1, at, "");
   }
 
   SelectionEditorState deleteCharAt() {
-    final position = vimState.cursorPosition;
-    final currentText = document.getText();
-    if (position >= currentText.length) return this;
-
-    final newText = currentText.substring(0, position) +
-        currentText.substring(position + 1);
-
-    final newDoc = _rebuildDocumentFromText(document, newText);
-
-    return SelectionEditorState._(
-      document: newDoc,
-      vimState: vimState,
-      undoStack: [..._undoStack, this],
-      redoStack: [],
-      hasUnsavedChanges: true,
-    );
+    final at = vimState.cursorPosition;
+    if (at >= document.getText().length) return this;
+    return replaceRange(at, at + 1, "", cursor: at);
   }
 
-  EditorDocument _rebuildDocumentFromText(
-      EditorDocument original, String newText,) {
-    final segments = <DocumentSegment>[];
-    segments.add(DocumentSegment.text(newText));
-    return EditorDocument(segments: segments, pendingChanges: []);
-  }
-
-  String? getResultText() {
-    return document.getResultText();
-  }
-
-  int getPendingChangeCount() {
-    return document.getPendingChangeCount();
-  }
-
-  int getTotalChangeCount() {
-    return document.getTotalChangeCount();
-  }
+  int getPendingChangeCount() => document.getPendingChangeCount();
+  int getTotalChangeCount() => document.getTotalChangeCount();
 }

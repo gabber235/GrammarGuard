@@ -4,13 +4,7 @@ import "package:grammar_guard/services/vim/vim_state.dart";
 void main() {
   group("VimMode", () {
     test("has all expected modes", () {
-      expect(
-          VimMode.values,
-          containsAll([
-            VimMode.normal,
-            VimMode.insert,
-            VimMode.visual,
-          ]),);
+      expect(VimMode.values, containsAll([VimMode.normal, VimMode.insert, VimMode.visual]));
     });
 
     test("displayName returns correct strings", () {
@@ -33,10 +27,7 @@ void main() {
       });
 
       test("creates with custom values", () {
-        final state = VimState(
-          mode: VimMode.insert,
-          cursorPosition: 10,
-        );
+        final state = VimState(mode: VimMode.insert, cursorPosition: 10);
 
         expect(state.mode, equals(VimMode.insert));
         expect(state.cursorPosition, equals(10));
@@ -68,11 +59,7 @@ void main() {
       });
 
       test("exitVisualMode returns to normal and clears visualStart", () {
-        final state = VimState(
-          mode: VimMode.visual,
-          cursorPosition: 10,
-          visualStart: 5,
-        );
+        final state = VimState(mode: VimMode.visual, cursorPosition: 10, visualStart: 5);
         final newState = state.exitVisualMode();
 
         expect(newState.mode, equals(VimMode.normal));
@@ -105,11 +92,7 @@ void main() {
       });
 
       test("getSelectionRange returns range when in visual mode", () {
-        final state = VimState(
-          mode: VimMode.visual,
-          cursorPosition: 10,
-          visualStart: 5,
-        );
+        final state = VimState(mode: VimMode.visual, cursorPosition: 10, visualStart: 5);
 
         final range = state.getSelectionRange();
         expect(range, isNotNull);
@@ -118,11 +101,7 @@ void main() {
       });
 
       test("getSelectionRange handles reversed selection", () {
-        final state = VimState(
-          mode: VimMode.visual,
-          cursorPosition: 3,
-          visualStart: 10,
-        );
+        final state = VimState(mode: VimMode.visual, cursorPosition: 3, visualStart: 10);
 
         final range = state.getSelectionRange();
         expect(range, isNotNull);
@@ -198,10 +177,7 @@ void main() {
 
     group("copyWith", () {
       test("copies with new mode", () {
-        final state = VimState(
-          mode: VimMode.normal,
-          cursorPosition: 5,
-        );
+        final state = VimState(mode: VimMode.normal, cursorPosition: 5);
         final copied = state.copyWith(mode: VimMode.insert);
 
         expect(copied.mode, equals(VimMode.insert));
@@ -210,11 +186,7 @@ void main() {
 
       test("copies with multiple changes", () {
         final state = VimState();
-        final copied = state.copyWith(
-          mode: VimMode.visual,
-          cursorPosition: 10,
-          visualStart: 5,
-        );
+        final copied = state.copyWith(mode: VimMode.visual, cursorPosition: 10, visualStart: 5);
 
         expect(copied.mode, equals(VimMode.visual));
         expect(copied.cursorPosition, equals(10));
