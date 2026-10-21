@@ -6,10 +6,11 @@ default:
 # Regenerate Freezed, json and Riverpod code.
 gen:
     dart run build_runner build --delete-conflicting-outputs
+    dart format $(git ls-files '*.g.dart' '*.freezed.dart') >/dev/null
 
 # What CI runs: generated code is fresh, formatting, analysis, every test.
 check:
-    dart run build_runner build --delete-conflicting-outputs
+    just gen
     git diff --exit-code -- '*.g.dart' '*.freezed.dart'
     dart format --set-exit-if-changed $(find lib test integration_test eval tool -name '*.dart' ! -name '*.g.dart' ! -name '*.freezed.dart')
     flutter analyze --no-fatal-infos
