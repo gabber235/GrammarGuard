@@ -114,6 +114,9 @@ jobs:
       - name: Integration test
         run: flutter test integration_test -d windows
 
+  # Release builds of every pull request, packaged exactly as a release is
+  # (tool/release.sh), to download and try before merging. Also proves the
+  # packaging works before a real release depends on it.
   build-macos:
     needs: test-and-analyze
     runs-on: macos-latest
@@ -127,15 +130,21 @@ jobs:
           flutter-version: '3.47.5'
           channel: 'stable'
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Build
+        run: |
+          flutter pub get
+          flutter build macos --release
+          tool/release.sh macos
 
-      - name: Build for macOS
-        run: flutter build macos --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GrammarGuard-macos
+          path: dist/
+          retention-days: 14
 
   build-linux:
     needs: test-and-analyze
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -151,15 +160,24 @@ jobs:
           flutter-version: '3.47.5'
           channel: 'stable'
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Build
+        run: |
+          flutter pub get
+          flutter build linux --release
+          tool/release.sh linux "0.0.0~pr${{ github.event.number || github.run_number }}"
 
-      - name: Build for Linux
-        run: flutter build linux --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GrammarGuard-linux
+          path: dist/
+          retention-days: 14
 
   build-windows:
     needs: test-and-analyze
     runs-on: windows-2022
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -170,8 +188,14 @@ jobs:
           flutter-version: '3.47.5'
           channel: 'stable'
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Build
+        run: |
+          flutter pub get
+          flutter build windows --release
+          tool/release.sh windows "0.0.0.${{ github.run_number }}"
 
-      - name: Build for Windows
-        run: flutter build windows --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GrammarGuard-windows
+          path: dist/
+          retention-days: 14
