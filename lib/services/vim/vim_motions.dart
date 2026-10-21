@@ -186,10 +186,7 @@ class VimMotions {
   static bool _isWordChar(String char) {
     if (char.isEmpty) return false;
     final code = char.codeUnitAt(0);
-    return (code >= 65 && code <= 90) ||
-        (code >= 97 && code <= 122) ||
-        (code >= 48 && code <= 57) ||
-        code == 95;
+    return (code >= 65 && code <= 90) || (code >= 97 && code <= 122) || (code >= 48 && code <= 57) || code == 95;
   }
 
   static bool _isWhitespace(String char) {

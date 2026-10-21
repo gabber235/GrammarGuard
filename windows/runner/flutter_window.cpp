@@ -25,21 +25,19 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+  text_bridge_ = std::make_unique<TextBridge>(
+      flutter_controller_->engine()->messenger(), GetHandle());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
-  });
-
-  // Flutter can complete the first frame before the "show window" callback is
-  // registered. The following call ensures a frame is pending to ensure the
-  // window is shown. It is a no-op if the first frame hasn't completed yet.
-  flutter_controller_->ForceRedraw();
+  // The window starts hidden: the Dart session shows it through
+  // window_manager, at once when no hotkey is available, otherwise on the
+  // first hotkey press.
 
   return true;
 }
 
 void FlutterWindow::OnDestroy() {
+  text_bridge_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }

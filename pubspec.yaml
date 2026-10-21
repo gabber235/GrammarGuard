@@ -10,7 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.0
 
   # State management
   hooks_riverpod: ^3.0.0
@@ -29,12 +28,23 @@ dependencies:
   # Window management
   window_manager: ^0.5.0
   hotkey_manager: ^0.2.0
+  tray_manager: ^0.5.3
+  flutter_acrylic: ^1.1.4
+
+  # Look and motion
+  flutter_animate: ^4.5.2
+  animations: ^3.0.0
 
   # Serialization
   freezed_annotation: ^3.0.0
   json_annotation: ^4.12.0
   diff_match_patch: ^0.4.0
   gpt_markdown: ^1.0.0
+  markdown: ^7.0.0
+  yaml: ^3.1.4
+  yaml_edit: ^2.2.4
+  clock: ^1.1.3
+  file: ^7.0.1
 
   # AI
   llm_dart:
@@ -44,7 +54,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   flutter_lints:
+  alchemist: ^0.14.1
 
   # Code generation
   build_runner:
@@ -57,3 +70,20 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/library.yaml
+    - assets/models.json
+    - assets/tray_icon.ico
+    - assets/tray_icon.png
+    - assets/tray_icon@2x.png
+  fonts:
+    - family: Atkinson Hyperlegible Next
+      fonts:
+        - asset: assets/fonts/AtkinsonHyperlegibleNext-Regular.ttf
+        - asset: assets/fonts/AtkinsonHyperlegibleNext-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/AtkinsonHyperlegibleNext-ExtraBold.ttf
+          weight: 800
+    - family: Atkinson Hyperlegible Mono
+      fonts:
+        - asset: assets/fonts/AtkinsonHyperlegibleMono-Regular.ttf

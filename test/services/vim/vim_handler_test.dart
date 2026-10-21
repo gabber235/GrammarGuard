@@ -310,11 +310,7 @@ void main() {
 
       test("escape in visual mode returns to normal", () {
         const text = "Hello";
-        final state = VimState(
-          mode: VimMode.visual,
-          cursorPosition: 3,
-          visualStart: 1,
-        );
+        final state = VimState(mode: VimMode.visual, cursorPosition: 3, visualStart: 1);
         final result = VimHandler.handleKey(
           LogicalKeyboardKey.escape,
           text,
@@ -451,11 +447,7 @@ void main() {
     group("visual mode", () {
       test("motions extend selection", () {
         const text = "Hello world";
-        final state = VimState(
-          mode: VimMode.visual,
-          cursorPosition: 0,
-          visualStart: 0,
-        );
+        final state = VimState(mode: VimMode.visual, cursorPosition: 0, visualStart: 0);
         final result = VimHandler.handleKey(
           LogicalKeyboardKey.keyW,
           text,
@@ -472,11 +464,7 @@ void main() {
 
       test("d in visual mode sets delete selection", () {
         const text = "Hello world";
-        final state = VimState(
-          mode: VimMode.visual,
-          cursorPosition: 5,
-          visualStart: 0,
-        );
+        final state = VimState(mode: VimMode.visual, cursorPosition: 5, visualStart: 0);
         final result = VimHandler.handleKey(
           LogicalKeyboardKey.keyD,
           text,
@@ -492,11 +480,7 @@ void main() {
 
       test("y in visual mode sets yank selection", () {
         const text = "Hello world";
-        final state = VimState(
-          mode: VimMode.visual,
-          cursorPosition: 5,
-          visualStart: 0,
-        );
+        final state = VimState(mode: VimMode.visual, cursorPosition: 5, visualStart: 0);
         final result = VimHandler.handleKey(
           LogicalKeyboardKey.keyY,
           text,
@@ -633,6 +617,70 @@ void main() {
         );
 
         expect(result.textToInsert, equals("\n"));
+      });
+
+      group("typed character", () {
+        const insertState = VimState(mode: VimMode.insert, cursorPosition: 5);
+
+        VimHandlerResult type(LogicalKeyboardKey key, String? character, {bool shift = false, bool ctrl = false}) =>
+            VimHandler.handleKey(
+              key,
+              "Hello",
+              insertState,
+              shift: shift,
+              ctrl: ctrl,
+              meta: false,
+              character: character,
+            );
+
+        test("inserts punctuation the key label cannot express", () {
+          expect(type(LogicalKeyboardKey.period, ".").textToInsert, equals("."));
+          expect(type(LogicalKeyboardKey.comma, ",").textToInsert, equals(","));
+          expect(type(LogicalKeyboardKey.digit1, "!", shift: true).textToInsert, equals("!"));
+          expect(type(LogicalKeyboardKey.slash, "?", shift: true).textToInsert, equals("?"));
+          expect(type(LogicalKeyboardKey.quote, "'").textToInsert, equals("'"));
+        });
+
+        test("inserts accented and non Latin characters", () {
+          expect(type(LogicalKeyboardKey.keyE, "é").textToInsert, equals("é"));
+          expect(type(LogicalKeyboardKey.keyU, "ü").textToInsert, equals("ü"));
+          expect(type(LogicalKeyboardKey.keyE, "ë").textToInsert, equals("ë"));
+          expect(type(LogicalKeyboardKey.keyA, "한").textToInsert, equals("한"));
+        });
+
+        test("prefers the typed character over the key label", () {
+          // An AZERTY keyboard reports keyQ for the key that types "a".
+          expect(type(LogicalKeyboardKey.keyQ, "a").textToInsert, equals("a"));
+        });
+
+        test("falls back to the key label without a character", () {
+          expect(type(LogicalKeyboardKey.keyX, null).textToInsert, equals("x"));
+          expect(type(LogicalKeyboardKey.keyX, "").textToInsert, equals("x"));
+        });
+
+        test("ignores control characters", () {
+          expect(type(LogicalKeyboardKey.period, "\u0001").textToInsert, isNull);
+          expect(type(LogicalKeyboardKey.delete, "\u007F").textToInsert, isNull);
+        });
+
+        test("ignores the character while ctrl is held", () {
+          expect(type(LogicalKeyboardKey.period, ".", ctrl: true).textToInsert, isNull);
+        });
+
+        test("normal mode ignores the character", () {
+          final result = VimHandler.handleKey(
+            LogicalKeyboardKey.period,
+            "Hello",
+            const VimState(cursorPosition: 1),
+            shift: false,
+            ctrl: false,
+            meta: false,
+            character: ".",
+          );
+
+          expect(result.textToInsert, isNull);
+          expect(result.mode, equals(VimMode.normal));
+        });
       });
     });
 

@@ -1,0 +1,65 @@
+name: UI media
+
+# Renders every screen and the motion films (test/media) and publishes them
+# to the ui-media branch: pr/<number>/ with a comment on the pull request,
+# readme/ for the README after a push to main. A closed pull request's
+# images are removed.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# One publisher at a time: each run force pushes the whole branch.
+concurrency:
+  group: ui-media
+  cancel-in-progress: false
+
+jobs:
+  media:
+    runs-on: ubuntu-latest
+    env:
+      DEST: ${{ github.event_name == 'pull_request' && format('pr/{0}', github.event.number) || 'readme' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove a closed pull request's images
+        if: github.event.action == 'closed'
+        run: tool/media.sh unpublish "$DEST"
+
+      - name: Set up Flutter
+        if: github.event.action != 'closed'
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: 'stable'
+
+      - name: Install dependencies
+        if: github.event.action != 'closed'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y webp
+          flutter pub get
+
+      - name: Render screens and films
+        if: github.event.action != 'closed'
+        run: flutter test test/media --run-skipped
+
+      - name: Encode and publish
+        if: github.event.action != 'closed'
+        run: |
+          tool/media.sh encode
+          tool/media.sh publish "$DEST"
+
+      - name: Comment on the pull request
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tool/media.sh comment "${{ github.event.number }}" "${{ github.base_ref }}"

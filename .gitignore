@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/docs/plans/
+
+# Platform goldens use real fonts and differ per machine; only CI goldens are committed.
+test/**/goldens/macos/
+test/**/failures/
+
+# Self-signed release certificate from `just make-signing-cert`; never commit.
+signing.key
+signing.crt
+signing.p12
+macos/Runner/Configs/Signing.xcconfig

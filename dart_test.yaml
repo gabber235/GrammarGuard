@@ -1,0 +1,7 @@
+tags:
+  # Real model calls; only run on demand with `just eval <backend/model>`.
+  eval:
+    skip: "Calls a real model. Run it with: just eval <backend/model>"
+  # Screens and films for people to look at: `just media`.
+  media:
+    skip: "Renders screens and films into build/media. Run it with: just media"

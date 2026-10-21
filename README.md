@@ -1,177 +1,137 @@
 # GrammarGuard
 
-**Enhance, rewrite, and format selected text from your desktop.**
+**Select text anywhere, press a shortcut, review the rewrite word by word, and paste it back.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Overview
+<img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/in_use.webp" alt="GrammarGuard in use: the hotkey, the rewrite streaming in as a diff, reviewing changes, and the bar" width="100%">
 
-GrammarGuard is a Flutter desktop application for macOS, Linux, and Windows. It
-runs discreetly in the background, ready to help you improve any text you select, anywhere on your system.
+GrammarGuard is a desktop app for macOS, Linux and Windows. It waits in the background until you press its
+shortcut over selected text. The rewrite streams in as a diff of your own words, you keep or undo each change,
+and Enter pastes the result back where it came from.
 
-Forget the copy-paste-edit-copy-back routine. With GrammarGuard, simply select text in any application, press a
-shortcut, and instantly get suggestions for:
+The images on this page are rendered from the app on every change to `main`, so they always show the current
+version.
 
-* Correcting spelling and grammar
-* Rewriting text with adjustable intensity – from subtle polishing to significant rephrasing
-* Adding Markdown or LaTeX formatting
+## What it does
 
-GrammarGuard supports multiple AI providers, including **OpenAI (GPT models)**, **Google AI (Gemini)**, **Anthropic (Claude)**, and **Ollama (local models)**, allowing you to choose the best model for your needs. It appears in a convenient floating window, allowing for quick refinements without disrupting your focus.
+<table>
+<tr>
+<td width="50%"><img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/screens/review.webp" alt="The review"></td>
+<td width="50%"><img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/screens/bar.webp" alt="The bar"></td>
+</tr>
+<tr>
+<td><b>Review every change.</b> Removed words are struck through next to their replacement. <kbd>n</kbd> and <kbd>p</kbd> move between changes, <kbd>y</kbd> keeps one, <kbd>x</kbd> undoes it, <kbd>?</kbd> asks the model why. The line above the text says what shaped the rewrite and why.</td>
+<td><b>One place to type.</b> <kbd>Space</kbd> opens the bar: what is on for this text, every instruction, profile and model, and free text as a request. <kbd>Enter</kbd> applies it now, <kbd>Shift</kbd>+<kbd>Enter</kbd> for this app, <kbd>Cmd</kbd>+<kbd>Enter</kbd> always.</td>
+</tr>
+<tr>
+<td><img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/screens/assistant_proposal.webp" alt="The assistant"></td>
+<td><img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/screens/compare.webp" alt="Two models compared"></td>
+</tr>
+<tr>
+<td><b>An assistant for your setup.</b> Ask for "friendlier Discord replies" and it proposes instructions and profiles, tested on your own text. Nothing changes until you review the proposal and press <kbd>Enter</kbd>.</td>
+<td><b>Compare two models.</b> <kbd>c</kbd> runs a second model next to the first; <kbd>Left</kbd> or <kbd>Right</kbd> keeps one.</td>
+</tr>
+<tr>
+<td><img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/screens/settings_profiles.webp" alt="Profiles in Settings"></td>
+<td><img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/screens/review_light.webp" alt="The light theme"></td>
+</tr>
+<tr>
+<td><b>Profiles per app.</b> Discord text gets Discord markdown and a casual tone, email gets short paragraphs and is pasted with formatting, code stays untouched. Profiles match the app, window title, URL, language, length or content.</td>
+<td><b>Light and dark</b>, following the system, on frosted glass.</td>
+</tr>
+</table>
 
-On macOS it behaves as a floating palette that hides when it loses focus. On Linux and Windows it stays in a normal window so it remains accessible even when a global shortcut is unavailable.
+<details>
+<summary>Motion</summary>
 
-![GrammarGuard in action](readme/showoff.png)
+Opening the bar, going back, the preview and Settings:
 
-## Features
+<img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/open_bar.webp" alt="Opening the bar" width="49%"> <img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/close_bar.webp" alt="Back to the text" width="49%">
+<img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/preview.webp" alt="The preview" width="49%"> <img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/open_settings.webp" alt="Opening Settings" width="49%">
 
-* **System-Wide Text Capture:** Grabs text from your clipboard when triggered
-* **Multi-Provider Support:** Choose between OpenAI, Google (Gemini), Anthropic (Claude), Ollama Local, and Ollama Cloud models.
-* **Model Selector:** Easily switch between different AI models and see their token pricing.
-* **Quick Provider Switching:** Seamlessly switch between local (Ollama Local) and cloud (Ollama Cloud) providers based on your needs.
-* **Background Operation:** Runs unobtrusively until needed
-* **Floating Window UI:** Appears on top of other windows for easy access upon activation
-* **Global Shortcut Activation:** Trigger GrammarGuard with `Alt+Shift+G` on macOS, Windows, and Linux X11
-* **Text Rewriting with Multiple Intensities:**
-    * *Fix Only:* Basic grammar and spelling corrections
-    * *Polish:* Minor tweaks and fluency improvements
-    * *Enhance:* Moderate improvements to clarity and style
-    * *Rewrite:* Significant rephrasing while preserving meaning
-* **Formatting Options:** Toggle Markdown or LaTeX syntax integration
-* **Diff View:** Toggle between original and rewritten text to see changes
-* **Keyboard Shortcuts:** Quick access to all features
-* **Beautiful UI:** Light and dark themes with Catppuccin color scheme
-* **Secure API Key Storage:** Safely stores your API keys for cloud providers (OpenAI, Gemini, Claude). Ollama runs locally and requires no API keys.
+</details>
 
-## How It Works
+## Keys
 
-1. **Background Listener:** On macOS, GrammarGuard listens for `Alt+Shift+G` while running in the background. Windows and Linux X11 use the shortcut to focus the window.
-2. **Text Capture:** When the shortcut is pressed, GrammarGuard retrieves text from your clipboard
-3. **Floating Window:** A floating window appears instantly on top of your current application, displaying the captured text
-4. **Processing:** The text is sent to your chosen AI provider and model for processing based on your selected intensity and formatting options
-5. **Refinement & Display:** GrammarGuard shows the original text and the AI-generated suggestions
-6. **Output:** Review the suggestions and press `Enter` to copy the desired version to your clipboard
-7. **Dismissal:** On macOS, the floating window can be dismissed by pressing `Esc` or clicking outside. On Linux and Windows, close the window normally.
+| Key | What it does |
+|---|---|
+| <kbd>Option</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> (<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>) | Rewrite the selected text. Change it in Settings. |
+| <kbd>Cmd</kbd>+<kbd>V</kbd> (<kbd>Ctrl</kbd>+<kbd>V</kbd>) in the window | Rewrite what is on the clipboard |
+| <kbd>n</kbd> <kbd>p</kbd> | Next and previous change |
+| <kbd>y</kbd> <kbd>x</kbd> <kbd>u</kbd> | Keep, undo, undo the last decision |
+| <kbd>?</kbd> | Why this change |
+| <kbd>Enter</kbd> | Paste back |
+| <kbd>Space</kbd>, <kbd>m</kbd> | The bar; the bar on models |
+| <kbd>1</kbd> to <kbd>9</kbd> | Turn a pinned instruction on or off |
+| <kbd>[</kbd> <kbd>]</kbd> | Change less or more (Fix only, Polish, Enhance, Rewrite) |
+| <kbd>c</kbd> | Compare with another model |
+| <kbd>s</kbd> | Keep what you picked for this app |
+| <kbd>r</kbd> | Try again |
+| <kbd>h</kbd> <kbd>v</kbd> | Side by side; preview the final text |
+| <kbd>Tab</kbd> | Edit in the Vim editor |
+| <kbd>Cmd</kbd>+<kbd>,</kbd> | Settings |
+| <kbd>Esc</kbd> | Back, stop, or hide |
 
-## Keyboard Shortcuts
+## Models
 
-* `Alt+Shift+G`: Show/hide on macOS; focus the window on Windows and Linux X11
-* `1-4`: Set rewrite intensity (1=fix only, 2=polish, 3=enhance, 4=rewrite)
-* `S`: Show model selector
-* `C`: Show provider configuration
-* `M`: Toggle Markdown formatting
-* `L`: Toggle LaTeX formatting
-* `H`: Toggle diff view
-* `R`: Toggle rendering mode
-* `↑/↓` or `J/K`: Scroll text
-* `U/D`: Scroll text by half page
-* `Enter`: Copy improved text to clipboard
-* `Esc`: Dismiss window
+Bring a key for Anthropic, OpenAI, Google Gemini, DeepSeek, xAI, Groq, Phind or OpenRouter, or run models
+yourself with Ollama or any OpenAI compatible server (LM Studio, llama.cpp). On a Mac with Apple Intelligence,
+the on-device model works without a key. Keys are kept in the system keychain. The footer shows what each
+rewrite cost.
+
+## Your setup
+
+Everything GrammarGuard does comes from one file, `library.yaml`, in the app's support folder. It starts as a
+copy of [the built-in setup](assets/library.yaml):
+
+* **Instructions** are a name and a sentence or two for the model, such as "Use a relaxed, friendly tone."
+  Groups keep choices exclusive, so only one tone is on at a time.
+* **Profiles** turn instructions on for some text: an app, a window title, a URL, a language, a length, or what
+  the text contains.
+* **Defaults** apply everywhere.
+
+Edit the file, use Settings, or ask the assistant. Changes apply at once; Settings lists every change in History, and the bar can undo the last one.
+
+## Install
+
+Download a build from [Releases](https://github.com/gabber235/GrammarGuard/releases).
+
+* **macOS:** paste back needs the Accessibility permission (System Settings, Privacy & Security,
+  Accessibility). Releases are signed with the same certificate every time, so the permission survives updates.
+* **Linux:** the global shortcut works in X11 sessions. On Wayland the app stays a normal window; copy text and
+  press <kbd>Ctrl</kbd>+<kbd>V</kbd> in it. A keyring service (GNOME Keyring or KWallet) stores the keys.
+* **Windows:** works as is.
 
 ## Building from source
 
-Install Flutter 3.47 or newer with Dart 3.13 or newer, then run `flutter pub get` in the project directory.
+Install Flutter 3.47 or newer, then run `flutter pub get`.
 
-### macOS
+* **macOS:** `flutter run -d macos`
+* **Linux:** install GTK 3, `libsecret-1-dev`, `libkeybinder-3.0-dev`, `libxtst-dev` and
+  `libayatana-appindicator3-dev`, then `flutter run -d linux`
+* **Windows:** Visual Studio with the Desktop development with C++ workload and the C++ ATL libraries, then
+  `flutter run -d windows`
 
-**Building from Source (Recommended for Development):**
+## Development
 
-1. Ensure you have Flutter installed for macOS development: [https://docs.flutter.dev/desktop#macos](https://docs.flutter.dev/desktop#macos)
-2. Clone the repository: `git clone https://github.com/gabber235/GrammarGuard.git`
-3. Navigate to the project directory: `cd GrammarGuard`
-4. Enable macOS desktop support if not already: `flutter config --enable-macos-desktop`
-5. Run the application: `flutter run -d macos`
+Common tasks are [just](https://github.com/casey/just) recipes:
 
-### Linux
+| Recipe | What it does |
+|---|---|
+| `just gen` | Regenerate Riverpod and Freezed code |
+| `just check` | Format, analyze and test |
+| `just demo` | Run the app with a fake model and a scripted scenario |
+| `just goldens` | Refresh the golden screenshots of every state |
+| `just media` | Render every screen and the motion films as WebP into `build/media/web` |
+| `just shots` | Screenshot the real macOS app on every screen |
+| `just it` | Run the real app with only the model faked |
+| `just eval <backend/model>` | Measure rewrite quality against a real model |
 
-Install the [Flutter Linux toolchain](https://docs.flutter.dev/platform-integration/linux/setup), GTK 3 development files, `libsecret-1-dev`, and `libkeybinder-3.0-dev`. A desktop keyring service such as GNOME Keyring or KWallet is needed to store API keys. Then run `flutter run -d linux` or `flutter build linux` on a Linux host.
-
-The global shortcut uses Keybinder and is available in X11 sessions. Wayland sessions keep the normal window accessible and do not register the global shortcut.
-
-### Windows
-
-Install the [Flutter Windows toolchain](https://docs.flutter.dev/platform-integration/windows/setup) with Visual Studio's Desktop development with C++ workload and the C++ ATL libraries required by `flutter_secure_storage`. Then run `flutter run -d windows` or `flutter build windows` on a Windows host.
-
-## First-Time Setup
-
-1. Launch GrammarGuard.
-2. The first time you open the app, or if no providers are configured, you'll be taken to the provider configuration screen.
-3. Press `C` at any time to open the configuration screen.
-4. Select a provider (e.g., OpenAI, Gemini, Claude, or Ollama) and enter your API key or configure your local server.
-5. You can configure multiple providers. The app will securely store your API keys. For Ollama, configure your local server URL (default: http://localhost:11434).
-6. Once at least one provider is configured, you're ready to go!
-
-## Ollama Setup
-
-GrammarGuard supports two Ollama providers:
-
-### Ollama Local (Default)
-
-Ollama Local allows you to run AI models directly on your machine, providing privacy and eliminating the need for API keys.
-
-**Installing Ollama**
-
-1. Download and install Ollama from [https://ollama.com](https://ollama.com)
-2. Start Ollama by running `ollama serve` in your terminal (or it may start automatically)
-3. Download a model, for example: `ollama pull llama3.2` or `ollama pull mistral`
-
-**Configuring Ollama Local in GrammarGuard**
-
-1. In GrammarGuard, press `C` to open the configuration screen
-2. Select "Ollama Local" from the provider list
-3. Configure your server URL (default: `http://localhost:11434`)
-4. Click "Test Connection" to verify Ollama is running
-5. Click "Refresh Models" to load available models from your Ollama installation
-6. Save your configuration
-
-**Benefits of Local Models**
-
-* **Privacy:** All processing happens locally on your machine
-* **No API costs:** No per-token charges or usage limits
-* **Offline capability:** Works without internet connection
-* **Model flexibility:** Choose from various open-source models
-
-### Ollama Cloud
-
-Ollama Cloud provides access to Ollama's cloud-hosted models. You can provide an API key when your endpoint requires authentication.
-
-**Configuring Ollama Cloud in GrammarGuard**
-
-1. In GrammarGuard, press `C` to open the configuration screen
-2. Select "Ollama Cloud" from the provider list
-3. Enter the server URL (default: `https://ollama.com`)
-4. Optionally enter your API key if you have one configured
-5. Click "Test Connection" to verify the connection
-6. Click "Refresh Models" to load available models
-7. Save your configuration
-
-**Note:** Local models may be slower than cloud providers depending on your hardware, but offer complete privacy and control.
-
-## Usage
-
-1. Launch GrammarGuard. It will run in the background
-2. Copy text from any application
-3. Press `Alt+Shift+G` on macOS, Windows, or Linux X11, or open the normal window on Linux Wayland
-4. The GrammarGuard window appears with your text
-5. Use keyboard shortcuts to:
-    * Press `S` to select your desired AI model.
-    * Adjust rewriting intensity (1-4)
-    * Toggle Markdown/LaTeX formatting (M/L)
-    * Toggle diff view (H)
-    * Toggle rendering mode (R)
-6. Review the improved text
-7. Press `Enter` to copy the refined text to your clipboard
-8. On macOS, press `Esc` or click outside the window to dismiss GrammarGuard; on Linux and Windows, close the window normally
-9. Paste the improved text into your original application
+Every pull request gets a comment with the screens it changed, before and after, plus the motion films. CI
+renders them and keeps them on the `ui-media` branch, which also serves the images on this page.
 
 ## Contributing
 
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository (`https://github.com/gabber235/GrammarGuard/fork`)
-2. Create a new branch (`git checkout -b feature/your-feature-name`)
-3. Make your changes
-4. Commit your changes (`git commit -m 'Add some feature'`)
-5. Push to the branch (`git push origin feature/your-feature-name`)
-6. Open a Pull Request against the `main` branch
-
-Please ensure your code adheres to the project's coding standards and includes tests where applicable. Report bugs or suggest features using the [GitHub Issues tab](https://github.com/gabber235/GrammarGuard/issues).
+Open an issue or a pull request against `main`. Please include tests for behavior changes, and refresh the
+goldens (`just goldens`) when the UI changes.
