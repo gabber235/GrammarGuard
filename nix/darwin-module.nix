@@ -2,7 +2,12 @@
 # starts it at login. launchd brings it back if it crashes, but not after
 # you quit it from the menu bar.
 self:
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.services.grammarguard;
 in

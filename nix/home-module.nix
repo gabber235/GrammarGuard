@@ -2,7 +2,12 @@
 # and starts it with your session, through launchd on macOS and a systemd
 # user service on Linux. It comes back after a crash, not after you quit it.
 self:
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.services.grammarguard;
   darwin = pkgs.stdenv.hostPlatform.isDarwin;
@@ -22,32 +27,34 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable (lib.mkMerge [
-    { home.packages = [ cfg.package ]; }
-    (lib.mkIf darwin {
-      launchd.agents.grammarguard = {
-        enable = true;
-        config = {
-          ProgramArguments = [ program ];
-          RunAtLoad = true;
-          KeepAlive.SuccessfulExit = false;
-          ProcessType = "Interactive";
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      { home.packages = [ cfg.package ]; }
+      (lib.mkIf darwin {
+        launchd.agents.grammarguard = {
+          enable = true;
+          config = {
+            ProgramArguments = [ program ];
+            RunAtLoad = true;
+            KeepAlive.SuccessfulExit = false;
+            ProcessType = "Interactive";
+          };
         };
-      };
-    })
-    (lib.mkIf (!darwin) {
-      systemd.user.services.grammarguard = {
-        Unit = {
-          Description = "GrammarGuard";
-          PartOf = [ "graphical-session.target" ];
-          After = [ "graphical-session.target" ];
+      })
+      (lib.mkIf (!darwin) {
+        systemd.user.services.grammarguard = {
+          Unit = {
+            Description = "GrammarGuard";
+            PartOf = [ "graphical-session.target" ];
+            After = [ "graphical-session.target" ];
+          };
+          Service = {
+            ExecStart = program;
+            Restart = "on-failure";
+          };
+          Install.WantedBy = [ "graphical-session.target" ];
         };
-        Service = {
-          ExecStart = program;
-          Restart = "on-failure";
-        };
-        Install.WantedBy = [ "graphical-session.target" ];
-      };
-    })
-  ]);
+      })
+    ]
+  );
 }
