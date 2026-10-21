@@ -90,6 +90,11 @@ class LibraryStore extends _$LibraryStore {
   Future<void> undo() => ref.read(libraryWritesProvider.notifier).undo();
 
   Future<void> restore(ChangeLogEntry entry) => apply(const [], author: ChangeAuthor.you, restoring: entry);
+
+  /// The way out of a file that does not load: puts the built-in setup in
+  /// place of library.yaml and keeps the old file next to it. Returns that
+  /// copy, or null when there was no file to keep.
+  Future<File?> useBuiltIn() => ref.read(libraryWritesProvider.notifier).useBuiltIn();
 }
 
 /// Whether a watch event on the library's folder concerns the library.
@@ -119,9 +124,29 @@ class LibraryWrites extends _$LibraryWrites {
     if (last != null) await _apply(const [], author: ChangeAuthor.you, restoring: last);
   });
 
-  Future<void> _queued(Future<void> Function() write) {
+  Future<File?> useBuiltIn() => _queued(() async {
+    final file = await ref.read(libraryFileProvider.future);
+    // Not a logged change: the old file may not load, so History could not
+    // restore it. The copy, named for the moment it was set aside, is the
+    // way back: library.yaml.broken-2026-10-21T12-30-00.
+    File? backup;
+    if (file.existsSync()) {
+      final stamp = clock.now().toIso8601String().substring(0, 19).replaceAll(":", "-");
+      final name = "${file.basename}.broken-$stamp";
+      var free = file.parent.childFile(name);
+      for (var n = 1; free.existsSync(); n++) {
+        free = file.parent.childFile("$name-$n");
+      }
+      backup = await file.copy(free.path);
+    }
+    await file.writeAsString(await ref.read(bundledAssetProvider("assets/library.yaml").future));
+    ref.invalidate(libraryStoreProvider);
+    return backup;
+  });
+
+  Future<T> _queued<T>(Future<T> Function() write) {
     final done = _last.then((_) => write());
-    _last = done.catchError((_) {});
+    _last = done.then((_) {}, onError: (Object _) {});
     return done;
   }
 

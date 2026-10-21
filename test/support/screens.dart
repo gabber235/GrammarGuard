@@ -146,6 +146,10 @@ final screens = <Screen>[
     await app.tester.tap(find.text("Discord").first);
     await app.settle();
   }),
+  Screen("settings library problem", (app) async {
+    await app.breakLibrary();
+    await _settings(app, "Instructions");
+  }),
   Screen("settings general", (app) => _settings(app, "General")),
   Screen("settings general light", (app) => _settings(app, "General"), brightness: Brightness.light),
   Screen("settings history", (app) async {

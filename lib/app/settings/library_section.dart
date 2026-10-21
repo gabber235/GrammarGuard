@@ -1,4 +1,5 @@
 // (profiles part)
+import "package:file/file.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:grammar_guard/app/library_writes.dart";
@@ -38,7 +39,7 @@ class ProfilesSection extends ConsumerWidget {
       title: "Profiles",
       description: "Instructions that switch on by themselves, for an app, a site, a language or a kind of text.",
       children: [
-        if (problem != null) _Problem(problem: "$problem"),
+        if (problem != null) _Problem(problem),
         Panel(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(
@@ -132,14 +133,16 @@ class ProfilesSection extends ConsumerWidget {
   }
 }
 
-/// library.yaml did not load: why, and that the built-in setup is used.
-class _Problem extends StatelessWidget {
-  const _Problem({required this.problem});
+/// library.yaml did not load: why, that the built-in setup is used, and
+/// the two ways out (fix the file by hand, or start over from the built-in
+/// setup).
+class _Problem extends ConsumerWidget {
+  const _Problem(this.problem);
 
-  final String problem;
+  final LibraryProblem problem;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final gg = context.gg;
     return Panel(
       child: Row(
@@ -147,8 +150,50 @@ class _Problem extends StatelessWidget {
         children: [
           Icon(Icons.error_outline, color: gg.removed),
           const SizedBox(width: 12),
-          Expanded(child: Text("library.yaml has a problem, so the built-in setup is used. $problem")),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "library.yaml has a problem, so the built-in setup is used.",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Text("$problem"),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton(
+                      onPressed: () => _useBuiltIn(context, ref),
+                      child: const Text("Use the built-in setup"),
+                    ),
+                    TextButton(onPressed: () => openLibraryFile(ref), child: const Text("Open library.yaml")),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _useBuiltIn(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    File? backup;
+    final written = await writeLibrary(messenger, () async {
+      backup = await ref.read(libraryStoreProvider.notifier).useBuiltIn();
+    });
+    if (!written) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          backup == null
+              ? "Now using the built-in setup."
+              : "Now using the built-in setup. Your old file is ${backup!.basename}.",
+        ),
       ),
     );
   }
@@ -179,7 +224,7 @@ class InstructionsSection extends ConsumerWidget {
       title: "Instructions",
       description: "What the model is told. Pinned ones are on the number keys; click one to edit it.",
       children: [
-        if (loaded.problem case final problem?) _Problem(problem: "$problem"),
+        if (loaded.problem case final problem?) _Problem(problem),
         for (final MapEntry(key: groupId, value: members) in groups.entries) ...[
           SectionLabel(groupId == null ? "Not in a group" : library.group(groupId)?.name ?? groupId.value),
           Panel(

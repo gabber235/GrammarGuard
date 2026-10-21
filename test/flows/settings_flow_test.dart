@@ -1,6 +1,7 @@
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:grammar_guard/app/settings/settings_page.dart";
+import "package:grammar_guard/instructions/library_store.dart";
 import "package:grammar_guard/settings/hotkey_setting.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
 
@@ -12,6 +13,14 @@ void main() {
     await app.press(LogicalKeyboardKey.comma);
     await app.tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
     await app.tester.tap(find.text("General"));
+    await app.settle();
+  }
+
+  Future<void> openInstructions(FlowApp app) async {
+    await app.tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await app.press(LogicalKeyboardKey.comma);
+    await app.tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await app.tester.tap(find.text("Instructions"));
     await app.settle();
   }
 
@@ -54,5 +63,21 @@ void main() {
 
     expect(find.text("Change"), findsOneWidget);
     expect(find.byType(SettingsPage), findsOneWidget);
+  });
+
+  testFlow("a setup file that does not load can be swapped for the built-in one in one click", (app) async {
+    await app.breakLibrary();
+    await openInstructions(app);
+    expect(find.textContaining("library.yaml has a problem"), findsOneWidget);
+    expect(find.textContaining("The text of `enhance` has a comma"), findsOneWidget);
+
+    await app.tester.tap(find.text("Use the built-in setup"));
+    await app.settle();
+
+    expect(find.textContaining("library.yaml has a problem"), findsNothing);
+    expect(find.textContaining("Your old file is library.yaml.broken-"), findsOneWidget);
+    expect(app.read(libraryStoreProvider).value!.problem, isNull);
+    final kept = app.files.directory("/support").listSync().where((f) => f.basename.contains(".broken-"));
+    expect(kept.single.basename, startsWith("library.yaml.broken-"));
   });
 }
