@@ -10,6 +10,9 @@ class MainFlutterWindow: NSWindow {
     self.setFrame(windowFrame, display: true)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    let messenger = flutterViewController.engine.binaryMessenger
+    TextBridge.register(with: messenger)
+    AppleModelChannel.register(with: messenger)
 
     super.awakeFromNib()
   }

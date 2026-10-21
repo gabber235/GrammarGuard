@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "text_bridge.h"
 #include "win32_window.h"
 
 // A window that does nothing but host a Flutter view.
@@ -28,6 +29,10 @@ class FlutterWindow : public Win32Window {
 
   // The Flutter instance hosted by this window.
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
+
+  // The "grammar_guard/text_bridge" channel. Reset before the controller,
+  // since it talks through the controller's messenger.
+  std::unique_ptr<TextBridge> text_bridge_;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_
