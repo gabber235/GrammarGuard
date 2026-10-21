@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '**'
+  pull_request:
 
 jobs:
   test-and-analyze:
@@ -21,11 +22,93 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Generated code is up to date
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          git diff --exit-code -- '*.g.dart' '*.freezed.dart'
+
+      - name: Formatting
+        run: dart format --set-exit-if-changed $(find lib test integration_test eval tool -name '*.dart' ! -name '*.g.dart' ! -name '*.freezed.dart')
+
       - name: Analyze project
         run: flutter analyze --no-fatal-infos
 
       - name: Run tests
         run: flutter test
+
+      - name: Upload golden failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-failures
+          path: test/**/failures/
+
+  # The real app on each OS with only the model faked. Linux runs on every
+  # push (its runner is cheap); macOS and Windows on pull requests only: their
+  # runners are slow and the unit and flow tests cover the logic.
+  integration-linux:
+    needs: test-and-analyze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev libsecret-1-dev libkeybinder-3.0-dev libxtst-dev libayatana-appindicator3-dev xvfb
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Integration test
+        run: xvfb-run -a flutter test integration_test -d linux
+
+  integration-macos:
+    if: github.event_name == 'pull_request'
+    needs: test-and-analyze
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Integration test
+        run: flutter test integration_test -d macos
+
+  integration-windows:
+    if: github.event_name == 'pull_request'
+    needs: test-and-analyze
+    runs-on: windows-2022
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Integration test
+        run: flutter test integration_test -d windows
 
   build-macos:
     needs: test-and-analyze
@@ -56,7 +139,7 @@ jobs:
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev libsecret-1-dev libkeybinder-3.0-dev
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev libsecret-1-dev libkeybinder-3.0-dev libxtst-dev libayatana-appindicator3-dev
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
