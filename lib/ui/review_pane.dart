@@ -67,8 +67,8 @@ class WritingPill extends HookWidget {
 
 /// The text with its changes, from the first written word to the end of
 /// the review. While the model writes, the diff grows word by word and the
-/// rail's pill breathes at the line being written; when it is done, the
-/// same view gains its highlighter and the pill glides to the first change.
+/// rail's pill breathes where the review will start; when it is done, the
+/// same view gains its highlighter and the pill settles on the first change.
 /// Nothing is swapped, so nothing jumps.
 class ReviewPane extends HookWidget {
   const ReviewPane({
@@ -135,7 +135,6 @@ class ReviewPane extends HookWidget {
         final painter = TextPainter(text: text, textDirection: TextDirection.ltr)..layout(maxWidth: width);
         final rects = _changeRects(painter, shown);
         final textHeight = painter.height;
-        final end = painter.getOffsetForCaret(TextPosition(offset: shown.join().length), Rect.zero).dy;
         painter.dispose();
         final at = current == null ? null : rects[current];
         // Room under the last line, so a note there is never cut off.
@@ -152,7 +151,10 @@ class ReviewPane extends HookWidget {
                 child: _Rail(
                   tops: {for (final e in rects.entries) e.key: e.value.top / height},
                   current: current,
-                  writingAt: writing && height > 0 ? end / height : null,
+                  // While writing, the pill waits where the review will
+                  // start (the first change, else the first line), so it
+                  // does not travel down with the text and back up after.
+                  writingAt: !writing || height == 0 ? null : (rects[0]?.top ?? 0) / height,
                 ),
               ),
               const SizedBox(width: railGap),
@@ -279,7 +281,7 @@ class _HighlightPainter extends CustomPainter {
 /// One dot per change at its height in the text; the current one is a
 /// pill that slides between them. Shows how many changes there are and
 /// where you are, without reading. While the model writes, the pill
-/// breathes at the line being written, then glides to the first change.
+/// breathes where the review will start.
 class _Rail extends HookWidget {
   const _Rail({required this.tops, required this.current, this.writingAt});
 
@@ -287,7 +289,8 @@ class _Rail extends HookWidget {
   final Map<int, double> tops;
   final int? current;
 
-  /// Top of the line being written, as a fraction; null when done.
+  /// Where the pill breathes while the model writes, as a fraction of the
+  /// text height; null when done.
   final double? writingAt;
 
   @override
