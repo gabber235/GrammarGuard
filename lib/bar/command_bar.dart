@@ -1,6 +1,5 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:grammar_guard/app/library_writes.dart";
@@ -89,7 +88,7 @@ class CommandBar extends HookConsumerWidget {
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final row = items.isEmpty ? null : rowKeys[items[index]]?.currentContext;
-        if (row != null && row.mounted) _reveal(row);
+        if (row != null && row.mounted) revealRow(row);
       });
       return null;
     }, [index, items.length]);
@@ -161,17 +160,9 @@ class CommandBar extends HookConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
                     child: Text("Nothing matches.", style: TextStyle(color: gg.muted)),
                   )
-                // The last rows fade out, so a cut off row reads as "more below".
-                : ShaderMask(
-                    blendMode: BlendMode.dstIn,
-                    shaderCallback: (rect) => LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: const [Colors.black, Colors.black, Colors.transparent],
-                      stops: [0, 1 - _fade / rect.height, 1],
-                    ).createShader(rect),
+                : BottomFade(
                     child: ListView(
-                      padding: const EdgeInsets.fromLTRB(0, 10, 0, _fade),
+                      padding: const EdgeInsets.fromLTRB(0, 10, 0, listFade),
                       children: [
                         for (final (i, item) in items.indexed) ...[
                           if (on > 0 && i == 0)
@@ -206,22 +197,6 @@ class CommandBar extends HookConsumerWidget {
       ),
     );
   }
-}
-
-/// How far the bottom of the list fades out.
-const _fade = 32.0;
-
-/// Scrolls just enough to show [row] whole, clear of the bottom fade.
-void _reveal(BuildContext row) {
-  final box = row.findRenderObject();
-  if (box == null) return;
-  final viewport = RenderAbstractViewport.of(box);
-  final position = Scrollable.of(row).position;
-  // The scroll offsets that put the row at the top edge, and just above the fade.
-  final atTop = viewport.getOffsetToReveal(box, 0).offset;
-  final atBottom = viewport.getOffsetToReveal(box, 1).offset + _fade;
-  final target = position.pixels.clamp(atBottom, atTop).clamp(position.minScrollExtent, position.maxScrollExtent);
-  if (target != position.pixels) position.jumpTo(target);
 }
 
 bool _isOn(BarItem item) => item is InstructionItem && item.active || item is WordsItem && item.active;

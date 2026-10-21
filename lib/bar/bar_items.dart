@@ -99,7 +99,7 @@ List<BarItem> barItems({
     if (kind == null || kind == ActionItem) ..._actions,
   ];
   final ranked = candidates
-      .map((item) => (item, _score(item.label, text)))
+      .map((item) => (item, matchScore(item.label, text)))
       .where((e) => e.$2 > 0)
       .sortedBy<num>((e) => -e.$2)
       .map((e) => e.$1)
@@ -110,9 +110,10 @@ List<BarItem> barItems({
   return ranked;
 }
 
-/// Word starts beat substrings, which beat letters in order ("pf" finds
+/// How well [query] finds [label], for every search that lists rows: word
+/// starts beat substrings, which beat letters in order ("pf" finds
 /// "Professional"). Zero means no match.
-double _score(String label, String query) {
+double matchScore(String label, String query) {
   final l = label.toLowerCase();
   final q = query.toLowerCase();
   if (q.isEmpty) return 1;
