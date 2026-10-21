@@ -8,37 +8,31 @@ on:
   pull_request:
 
 jobs:
+  # The same check as `devenv test` on a laptop: generated code, formatting,
+  # analysis, every test and the git hooks, with the Flutter pubspec.yaml pins.
   test-and-analyze:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
         with:
-          flutter-version: '3.47.5'
-          channel: 'stable'
+          name: devenv
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Install devenv
+        run: nix profile add nixpkgs#devenv
 
-      - name: Generated code is up to date
-        run: |
-          dart run build_runner build --delete-conflicting-outputs
-          # Generators wrap lines differently per Dart version; the formatter
-          # settles them on the project's own style before comparing.
-          dart format $(git ls-files '*.g.dart' '*.freezed.dart') >/dev/null
-          git diff --exit-code -- '*.g.dart' '*.freezed.dart'
+      # tool/flutter-sdk.sh installs the pinned Flutter here once.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/flutter-sdk
+          key: flutter-sdk-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+          restore-keys: flutter-sdk-${{ runner.os }}-
 
-      - name: Formatting
-        run: dart format --set-exit-if-changed $(find lib test integration_test eval tool -name '*.dart' ! -name '*.g.dart' ! -name '*.freezed.dart')
-
-      - name: Analyze project
-        run: flutter analyze --no-fatal-infos
-
-      - name: Run tests
-        run: flutter test
+      - name: Check
+        run: devenv test
 
       - name: Upload golden failures
         if: failure()
@@ -65,8 +59,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.5'
-          channel: 'stable'
+          flutter-version-file: pubspec.yaml
 
       - name: Install dependencies
         run: flutter pub get
@@ -85,8 +78,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.5'
-          channel: 'stable'
+          flutter-version-file: pubspec.yaml
 
       - name: Install dependencies
         run: flutter pub get
@@ -105,8 +97,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.5'
-          channel: 'stable'
+          flutter-version-file: pubspec.yaml
 
       - name: Install dependencies
         run: flutter pub get
@@ -127,8 +118,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.5'
-          channel: 'stable'
+          flutter-version-file: pubspec.yaml
 
       - name: Build
         run: |
@@ -157,8 +147,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.5'
-          channel: 'stable'
+          flutter-version-file: pubspec.yaml
 
       - name: Build
         run: |
@@ -185,8 +174,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.5'
-          channel: 'stable'
+          flutter-version-file: pubspec.yaml
 
       - name: Build
         run: |

@@ -22,7 +22,7 @@ class Screen {
 }
 
 /// Every screen and the states inside it. The goldens check each one; the
-/// media capture (`just media`) renders them with real fonts for pull
+/// media capture (`media` in devenv) renders them with real fonts for pull
 /// requests and the README.
 final screens = <Screen>[
   // The main window, from nothing to a finished review.

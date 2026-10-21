@@ -7,7 +7,7 @@ import "support/tolerant_comparator.dart";
 
 /// CI goldens use a block font, so they match on every OS and are the ones
 /// committed. Platform goldens use the real fonts and are for looking at the
-/// design locally (`just goldens`); they are git ignored. Every golden is
+/// design locally (`goldens` in devenv); they are git ignored. Every golden is
 /// compared with [TolerantComparator], since renderers round colors a little
 /// differently per OS.
 Future<void> testExecutable(FutureOr<void> Function() testMain) {

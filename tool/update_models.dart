@@ -1,4 +1,4 @@
-// Run by `just prices`. Writes assets/models.json.
+// Run by `prices` (devenv). Writes assets/models.json.
 import "dart:convert";
 import "dart:io";
 

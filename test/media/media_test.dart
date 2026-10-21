@@ -18,7 +18,7 @@ import "../support/test_flow.dart";
 /// build/media: every screen in [screens] as screens/<name>.png (end
 /// states, twice the resolution), and films/<name>/ as numbered frames plus
 /// a `delay` file (milliseconds per frame) for each view change and for the
-/// app in use. `just media` runs it and encodes WebP; CI publishes the
+/// app in use. `media` (devenv) runs it and encodes WebP; CI publishes the
 /// result to pull requests and the README.
 void main() {
   const out = "build/media";

@@ -57,3 +57,8 @@ macos/Runner/Configs/Signing.xcconfig
 
 # Release packages from tool/release.sh.
 /dist/
+
+# devenv: its state and the generated hook configuration.
+.devenv*
+devenv.local.nix
+.pre-commit-config.yaml

@@ -1,4 +1,4 @@
-# Real model checks, run on demand: `just eval anthropic/claude-haiku-4-5`.
+# Real model checks, run on demand: `eval-model anthropic/claude-haiku-4-5` (devenv).
 # Each case: name, text, optional app (bundle id) and use (instruction ids),
 # and what the output must satisfy:
 #   unchanged: true       the text comes back exactly

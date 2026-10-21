@@ -1,4 +1,4 @@
-// Real models, on demand: `just eval anthropic/claude-haiku-4-5`.
+// Real models, on demand: `eval-model anthropic/claude-haiku-4-5` (devenv).
 // Tagged so a plain `flutter test` skips it (dart_test.yaml).
 @Tags(["eval"])
 library;

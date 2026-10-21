@@ -11,7 +11,7 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 
 part "catalog.g.dart";
 
-/// Labels and prices from models.dev, bundled by `just prices`. Also the
+/// Labels and prices from models.dev, bundled by `prices` (devenv). Also the
 /// offline model list. Shape: {"anthropic": {"claude-haiku-4-5": {"label": ..., "in": 1, "out": 5}}}
 typedef Bundled = Map<Backend, Map<String, ModelInfo>>;
 

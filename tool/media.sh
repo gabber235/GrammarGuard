@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Screens and films of the app for people to look at. The frames come from
-# test/media/media_test.dart (`just media`); this turns them into WebP and,
+# test/media/media_test.dart (`media` in devenv); this turns them into WebP and,
 # in CI, publishes them to the `ui-media` branch for pull requests and the
 # README.
 #
