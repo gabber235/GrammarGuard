@@ -1,0 +1,5 @@
+{
+  "version": "0.0.0",
+  "macos": { "url": "https://github.com/gabber235/GrammarGuard/releases/download/v0.0.0/GrammarGuard-macos.zip", "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" },
+  "linux": { "url": "https://github.com/gabber235/GrammarGuard/releases/download/v0.0.0/GrammarGuard-linux-x64.tar.gz", "hash": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" }
+}

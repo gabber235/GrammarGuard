@@ -54,3 +54,6 @@ signing.key
 signing.crt
 signing.p12
 macos/Runner/Configs/Signing.xcconfig
+
+# Release packages from tool/release.sh.
+/dist/

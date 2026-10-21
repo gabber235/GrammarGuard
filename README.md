@@ -95,13 +95,53 @@ Edit the file, use Settings, or ask the assistant. Changes apply at once; Settin
 
 ## Install
 
-Download a build from [Releases](https://github.com/gabber235/GrammarGuard/releases).
+<p>
+<a href="https://github.com/gabber235/GrammarGuard/releases/latest/download/GrammarGuard-macos.zip"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-1D2330?style=for-the-badge&logo=apple&logoColor=white"></a>
+<a href="https://github.com/gabber235/GrammarGuard/releases/latest/download/GrammarGuard-windows-setup.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows-1D2330?style=for-the-badge&logo=windows&logoColor=white"></a>
+<a href="https://github.com/gabber235/GrammarGuard/releases/latest/download/GrammarGuard-linux-x86_64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux-1D2330?style=for-the-badge&logo=linux&logoColor=white"></a>
+<a href="https://github.com/gabber235/GrammarGuard/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/gabber235/GrammarGuard?style=for-the-badge&color=FFC94D&labelColor=1D2330"></a>
+</p>
 
-* **macOS:** paste back needs the Accessibility permission (System Settings, Privacy & Security,
-  Accessibility). Releases are signed with the same certificate every time, so the permission survives updates.
+Or with a package manager:
+
+| | Command |
+|---|---|
+| **Homebrew** (macOS) | `brew install gabber235/tap/grammarguard` |
+| **winget** (Windows) | `winget install Gabber235.GrammarGuard` |
+| **Scoop** (Windows) | `scoop bucket add gabber235 https://github.com/gabber235/scoop-bucket` then `scoop install grammarguard` |
+| **AUR** (Arch Linux) | `yay -S grammarguard-bin` |
+| **Debian, Ubuntu** | the [`.deb`](https://github.com/gabber235/GrammarGuard/releases/latest/download/GrammarGuard-linux-amd64.deb) from the latest release |
+| **Nix** | `nix run github:gabber235/GrammarGuard`, or the modules below |
+
+Every release lists all files, with the changes since the last one, on the [releases page](https://github.com/gabber235/GrammarGuard/releases).
+
+### First launch
+
+* **macOS:** GrammarGuard is signed with its own certificate, not notarized by Apple. The first time, open it,
+  then allow it under System Settings, Privacy & Security ("Open Anyway"). Paste back needs the Accessibility
+  permission (Privacy & Security, Accessibility). Every release is signed with the same certificate, so both
+  permissions survive updates.
+* **Windows:** SmartScreen may warn about an unknown publisher the first time; choose "More info", then "Run
+  anyway". The installer can start GrammarGuard when you sign in.
 * **Linux:** the global shortcut works in X11 sessions. On Wayland the app stays a normal window; copy text and
   press <kbd>Ctrl</kbd>+<kbd>V</kbd> in it. A keyring service (GNOME Keyring or KWallet) stores the keys.
-* **Windows:** works as is.
+
+### Nix
+
+The flake has the package and modules that install GrammarGuard and start it with your session:
+
+```nix
+# flake inputs
+grammarguard.url = "github:gabber235/GrammarGuard";
+
+# nix-darwin: installs it and starts it at login
+imports = [ grammarguard.darwinModules.default ];
+services.grammarguard.enable = true;
+
+# or home-manager, on macOS (launchd) and Linux (systemd user service)
+imports = [ grammarguard.homeManagerModules.default ];
+services.grammarguard.enable = true;
+```
 
 ## Building from source
 
@@ -129,7 +169,15 @@ Common tasks are [just](https://github.com/casey/just) recipes:
 | `just eval <backend/model>` | Measure rewrite quality against a real model |
 
 Every pull request gets a comment with the screens it changed, before and after, plus the motion films. CI
-renders them and keeps them on the `ui-media` branch, which also serves the images on this page.
+renders them and keeps them on the `ui-media` branch, which also serves the images on this page. Each pull
+request also builds the app for every platform, packaged like a release, to download from the workflow run.
+
+### Releases
+
+Releases follow [conventional commits](https://www.conventionalcommits.org): `fix:` makes a patch release,
+`feat:` a minor one, and a `!` (or `BREAKING CHANGE:`) a major one. [release-please](https://github.com/googleapis/release-please)
+keeps a release pull request open with the next version and its changelog. Merging it tags the release, and CI
+builds every platform, attaches the files, and updates Homebrew, Scoop, winget, the AUR and the Nix flake.
 
 ## Contributing
 

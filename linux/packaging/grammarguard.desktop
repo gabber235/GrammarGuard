@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=GrammarGuard
+Comment=Rewrite selected text anywhere and review every change
+Exec=grammarguard
+Icon=grammarguard
+Terminal=false
+Categories=Utility;TextTools;
+Keywords=grammar;rewrite;spelling;writing;AI;
+StartupWMClass=grammarguard
