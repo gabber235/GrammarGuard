@@ -1,2 +1,11 @@
 #include "../../Flutter/Flutter-Debug.xcconfig"
 #include "Warnings.xcconfig"
+
+// Ad hoc signing works on any machine, CI included; releases are signed
+// again with the GrammarGuard certificate. To sign local builds with your own
+// Apple team (a stable identity keeps the Accessibility permission across
+// rebuilds), put DEVELOPMENT_TEAM, CODE_SIGN_STYLE = Automatic and
+// CODE_SIGN_IDENTITY = Apple Development in Signing.xcconfig (git ignored).
+CODE_SIGN_IDENTITY = -
+CODE_SIGN_STYLE = Manual
+#include? "Signing.xcconfig"

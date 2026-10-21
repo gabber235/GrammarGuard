@@ -53,3 +53,4 @@ test/**/failures/
 signing.key
 signing.crt
 signing.p12
+macos/Runner/Configs/Signing.xcconfig
