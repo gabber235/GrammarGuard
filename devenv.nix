@@ -190,7 +190,14 @@ in
     dart-format = {
       enable = true;
       name = "dart format";
-      entry = "${pkgs.writeShellScript "dart-format" ''exec "$(tool/flutter-sdk.sh)/bin/dart" format --set-exit-if-changed "$@"''}";
+      # The page width (120) comes from analysis_options.yaml, which dart
+      # format only reads once packages are fetched; without them it falls
+      # back to 80 and rewraps everything (a fresh CI checkout).
+      entry = "${pkgs.writeShellScript "dart-format" ''
+        sdk="$(tool/flutter-sdk.sh)"
+        [[ -f .dart_tool/package_config.json ]] || "$sdk/bin/flutter" pub get >/dev/null
+        exec "$sdk/bin/dart" format --set-exit-if-changed "$@"
+      ''}";
       files = "\\.dart$";
       excludes = [
         "\\.g\\.dart$"
