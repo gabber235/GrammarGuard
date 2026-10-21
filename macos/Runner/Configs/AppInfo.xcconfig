@@ -12,3 +12,14 @@ PRODUCT_BUNDLE_IDENTIFIER = me.gabber235.grammarGuard
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 me.gabber235. All rights reserved.
+
+// Signing is set here, in the app target's own configuration, so it wins over
+// the project level settings. Ad hoc signing works on any machine, CI
+// included; releases are signed again with the GrammarGuard certificate. To
+// sign local builds with your own Apple team (a stable identity keeps the
+// Accessibility permission across rebuilds), put DEVELOPMENT_TEAM,
+// CODE_SIGN_STYLE = Automatic and CODE_SIGN_IDENTITY = Apple Development in
+// Signing.xcconfig (git ignored).
+CODE_SIGN_IDENTITY = -
+CODE_SIGN_STYLE = Manual
+#include? "Signing.xcconfig"
