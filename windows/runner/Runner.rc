@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "me.gabber235" "\0"
-            VALUE "FileDescription", "grammar_guard" "\0"
+            VALUE "FileDescription", "GrammarGuard" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "grammar_guard" "\0"
+            VALUE "InternalName", "GrammarGuard" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 me.gabber235. All rights reserved." "\0"
-            VALUE "OriginalFilename", "grammar_guard.exe" "\0"
-            VALUE "ProductName", "grammar_guard" "\0"
+            VALUE "OriginalFilename", "GrammarGuard.exe" "\0"
+            VALUE "ProductName", "GrammarGuard" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
