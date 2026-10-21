@@ -26,6 +26,35 @@ jobs:
           VERSION_TAG=${{ github.ref_name }}
           flutter build macos --release --build-name=${VERSION_TAG#v} --build-number=${{ github.run_id }}
 
+      # One self-signed certificate for every release. macOS ties the
+      # Accessibility permission to the signing identity, so with a stable
+      # certificate the permission survives updates. No Apple account needed.
+      - name: Sign with the GrammarGuard certificate
+        env:
+          CERT_P12: ${{ secrets.MACOS_SELF_SIGNED_P12 }}
+          CERT_PASSWORD: ${{ secrets.MACOS_SELF_SIGNED_PASSWORD }}
+        run: |
+          APP_PATH="build/macos/Build/Products/Release/grammar_guard.app"
+          IDENTITY="GrammarGuard Self Signed"
+          security create-keychain -p ci signing.keychain
+          security default-keychain -s signing.keychain
+          security list-keychains -d user -s signing.keychain login.keychain
+          security unlock-keychain -p ci signing.keychain
+          echo "$CERT_P12" | base64 --decode > cert.p12
+          security import cert.p12 -k signing.keychain -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          rm cert.p12
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci signing.keychain
+          # codesign only uses trusted identities, and a self-signed
+          # certificate is not trusted until marked so for code signing.
+          security find-certificate -c "$IDENTITY" -p signing.keychain > cert.pem
+          sudo security add-trusted-cert -d -r trustRoot -p codeSign \
+            -k /Library/Keychains/System.keychain cert.pem
+          # Nested frameworks first without entitlements, then the app with them.
+          codesign --force --deep --sign "$IDENTITY" "$APP_PATH"
+          codesign --force --sign "$IDENTITY" \
+            --entitlements macos/Runner/Release.entitlements "$APP_PATH"
+          codesign --verify --deep --strict --verbose "$APP_PATH"
+
       - name: Package Application
         id: package_app
         run: |
