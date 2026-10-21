@@ -145,28 +145,37 @@ services.grammarguard.enable = true;
 
 ## Building from source
 
-Install Flutter 3.47 or newer, then run `flutter pub get`.
+The quickest way is [devenv](https://devenv.sh): `devenv shell` installs the exact Flutter version this project
+pins (`environment: flutter:` in `pubspec.yaml`, the same one CI uses) and every other tool, then
+`flutter run`. Without devenv, install that Flutter version yourself and run `flutter pub get`.
 
-* **macOS:** `flutter run -d macos`
-* **Linux:** install GTK 3, `libsecret-1-dev`, `libkeybinder-3.0-dev`, `libxtst-dev` and
-  `libayatana-appindicator3-dev`, then `flutter run -d linux`
+* **macOS:** Xcode, then `flutter run -d macos`
+* **Linux:** inside devenv, `flutter run -d linux`. Without it, install GTK 3, `libsecret-1-dev`,
+  `libkeybinder-3.0-dev`, `libxtst-dev` and `libayatana-appindicator3-dev` first.
 * **Windows:** Visual Studio with the Desktop development with C++ workload and the C++ ATL libraries, then
   `flutter run -d windows`
 
 ## Development
 
-Common tasks are [just](https://github.com/casey/just) recipes:
+`devenv shell` lists these commands when it starts:
 
-| Recipe | What it does |
+| Command | What it does |
 |---|---|
-| `just gen` | Regenerate Riverpod and Freezed code |
-| `just check` | Format, analyze and test |
-| `just demo` | Run the app with a fake model and a scripted scenario |
-| `just goldens` | Refresh the golden screenshots of every state |
-| `just media` | Render every screen and the motion films as WebP into `build/media/web` |
-| `just shots` | Screenshot the real macOS app on every screen |
-| `just it` | Run the real app with only the model faked |
-| `just eval <backend/model>` | Measure rewrite quality against a real model |
+| `check` | What CI runs: generated code, formatting, analysis and every test (`devenv test` adds the git hooks) |
+| `gen` | Regenerate Riverpod, Freezed and JSON code |
+| `fmt` | Format the Dart code |
+| `demo [scenario]` | Run the app with a fake model and a scripted scenario |
+| `goldens` | Refresh the golden screenshots of every state |
+| `media` | Render every screen and the motion films as WebP into `build/media/web` |
+| `shots` | Screenshot the real macOS app on every screen |
+| `it [device]` | Run the real app with only the model faked |
+| `eval-model <backend/model>` | Measure rewrite quality against a real model |
+| `package` | Build this OS's release packages into `dist/`, as CI does |
+| `prices` | Refresh model names and prices from models.dev |
+
+Git hooks run on every commit: Dart formatting with the project's own Dart, conventional commit messages (they
+drive the version and changelog), a secrets scan, shellcheck, actionlint, nixfmt, and YAML and JSON checks.
+For editors, the pinned Flutter SDK is linked at `.devenv/flutter`.
 
 Every pull request gets a comment with the screens it changed, before and after, plus the motion films. CI
 renders them and keeps them on the `ui-media` branch, which also serves the images on this page. Each pull
@@ -182,4 +191,4 @@ builds every platform, attaches the files, and updates Homebrew, Scoop, winget, 
 ## Contributing
 
 Open an issue or a pull request against `main`. Please include tests for behavior changes, and refresh the
-goldens (`just goldens`) when the UI changes.
+goldens (`goldens` in devenv) when the UI changes.

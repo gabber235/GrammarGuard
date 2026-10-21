@@ -1,4 +1,4 @@
-// `just demo discord` runs the real app with a fake
+// `demo discord` (devenv) runs the real app with a fake
 // model and a fake source app: no key, no network, no permissions.
 import "package:flutter/widgets.dart";
 import "package:grammar_guard/app/app.dart";

@@ -42,7 +42,10 @@ if stdenv.hostPlatform.isDarwin then
       runHook postInstall
     '';
     meta = meta // {
-      platforms = [ "aarch64-darwin" "x86_64-darwin" ];
+      platforms = [
+        "aarch64-darwin"
+        "x86_64-darwin"
+      ];
     };
   }
 else
@@ -50,8 +53,17 @@ else
     pname = "grammarguard";
     inherit (release) version;
     src = fetchurl { inherit (release.linux) url hash; };
-    nativeBuildInputs = [ autoPatchelfHook wrapGAppsHook3 ];
-    buildInputs = [ gtk3 libsecret keybinder3 libxtst libayatana-appindicator ];
+    nativeBuildInputs = [
+      autoPatchelfHook
+      wrapGAppsHook3
+    ];
+    buildInputs = [
+      gtk3
+      libsecret
+      keybinder3
+      libxtst
+      libayatana-appindicator
+    ];
     installPhase = ''
       runHook preInstall
       mkdir -p $out/opt $out/bin

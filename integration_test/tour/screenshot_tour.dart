@@ -1,4 +1,4 @@
-// `just shots`: the real app in a real macOS window, with a fake model and
+// `shots` (devenv): the real app in a real macOS window, with a fake model and
 // a fake source app, stepped through every screen with real key events.
 // Each state is captured with `screencapture -l` (this window only, glass
 // and all) into SHOTS_DIR, then the app quits. Not a test (no _test suffix), so CI never runs

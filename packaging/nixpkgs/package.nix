@@ -61,8 +61,17 @@ else
       url = "${base}/GrammarGuard-linux-x64.tar.gz";
       hash = "sha256-xzpY8qAlKCOUDNtTRtMSYH7Z2n+/aHGXsNEaVwi/P5g=";
     };
-    nativeBuildInputs = [ autoPatchelfHook wrapGAppsHook3 ];
-    buildInputs = [ gtk3 libsecret keybinder3 libxtst libayatana-appindicator ];
+    nativeBuildInputs = [
+      autoPatchelfHook
+      wrapGAppsHook3
+    ];
+    buildInputs = [
+      gtk3
+      libsecret
+      keybinder3
+      libxtst
+      libayatana-appindicator
+    ];
     installPhase = ''
       runHook preInstall
       mkdir -p $out/opt $out/bin
