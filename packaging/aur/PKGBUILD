@@ -1,0 +1,23 @@
+# Maintainer: Gabber235 <gabber200@icloud.com>
+# Filled in by tool/release.sh and pushed to the AUR as grammarguard-bin.
+pkgname=grammarguard-bin
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc="Rewrite selected text anywhere and review every change"
+arch=('x86_64')
+url="https://github.com/gabber235/GrammarGuard"
+license=('MIT')
+depends=('gtk3' 'libsecret' 'libkeybinder3' 'libxtst' 'libayatana-appindicator')
+provides=('grammarguard')
+conflicts=('grammarguard')
+source=("GrammarGuard-linux-x64-${pkgver}.tar.gz::https://github.com/gabber235/GrammarGuard/releases/download/v${pkgver}/GrammarGuard-linux-x64.tar.gz")
+sha256sums=('@SHA256@')
+
+package() {
+  install -d "${pkgdir}/opt/grammarguard" "${pkgdir}/usr/bin"
+  cp -r grammarguard/. "${pkgdir}/opt/grammarguard/"
+  ln -s /opt/grammarguard/grammarguard "${pkgdir}/usr/bin/grammarguard"
+  install -Dm644 grammarguard/grammarguard.desktop "${pkgdir}/usr/share/applications/grammarguard.desktop"
+  install -Dm644 grammarguard/grammarguard.png "${pkgdir}/usr/share/icons/hicolor/512x512/apps/grammarguard.png"
+  install -Dm644 grammarguard/LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

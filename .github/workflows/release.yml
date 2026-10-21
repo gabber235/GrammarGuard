@@ -1,30 +1,76 @@
-name: Release GrammarGuard
+name: Release
 
+# release-please keeps a release pull request open with the next version and
+# its changelog, both derived from conventional commits. Merging it tags the
+# release; this workflow then builds every platform, attaches the files to
+# the GitHub release and publishes them to the package managers.
+#
+# Run it by hand with a tag to rebuild and republish an existing release.
 on:
   push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to rebuild and republish, for example v1.2.3
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: '3.47.5'
 
 jobs:
-  build-and-release:
-    runs-on: macos-latest
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.out.outputs.tag }}
+      version: ${{ steps.out.outputs.version }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Release pull request, or the release when it was merged
+        id: rp
+        if: github.event_name == 'push'
+        uses: googleapis/release-please-action@v5
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.47.5'
-          channel: 'stable'
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build macOS app
+      - name: What to build
+        id: out
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          CREATED: ${{ steps.rp.outputs.release_created }}
+          CREATED_TAG: ${{ steps.rp.outputs.tag_name }}
         run: |
-          VERSION_TAG=${{ github.ref_name }}
-          flutter build macos --release --build-name=${VERSION_TAG#v} --build-number=${{ github.run_id }}
+          tag=${INPUT_TAG:-}
+          if [[ -z $tag && $CREATED == true ]]; then tag=$CREATED_TAG; fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+  macos:
+    needs: release
+    if: needs.release.outputs.tag != ''
+    runs-on: macos-latest
+    env:
+      TAG: ${{ needs.release.outputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+
+      - name: Build
+        run: |
+          flutter pub get
+          flutter build macos --release
 
       # One self-signed certificate for every release. macOS ties the
       # Accessibility permission to the signing identity, so with a stable
@@ -34,7 +80,11 @@ jobs:
           CERT_P12: ${{ secrets.MACOS_SELF_SIGNED_P12 }}
           CERT_PASSWORD: ${{ secrets.MACOS_SELF_SIGNED_PASSWORD }}
         run: |
-          APP_PATH="build/macos/Build/Products/Release/grammar_guard.app"
+          if [[ -z $CERT_P12 ]]; then
+            echo "::warning::MACOS_SELF_SIGNED_P12 is not set; the app stays ad hoc signed."
+            exit 0
+          fi
+          APP_PATH="build/macos/Build/Products/Release/GrammarGuard.app"
           IDENTITY="GrammarGuard Self Signed"
           security create-keychain -p ci signing.keychain
           security default-keychain -s signing.keychain
@@ -55,16 +105,180 @@ jobs:
             --entitlements macos/Runner/Release.entitlements "$APP_PATH"
           codesign --verify --deep --strict --verbose "$APP_PATH"
 
-      - name: Package Application
-        id: package_app
+      - name: Package and upload
         run: |
-          APP_NAME=$(grep 'name:' pubspec.yaml | cut -d ' ' -f 2)
-          APP_PATH="build/macos/Build/Products/Release/$APP_NAME.app"
-          ZIP_PATH="build/macos/Build/Products/Release/$APP_NAME-${{ github.ref_name }}.zip"
-          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_PATH"
-          echo "zip_path=$ZIP_PATH" >> $GITHUB_OUTPUT
+          tool/release.sh macos
+          gh release upload "$TAG" dist/* --clobber
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+  linux:
+    needs: release
+    if: needs.release.outputs.tag != ''
+    # The oldest supported Ubuntu, so the binaries run on older glibc too.
+    runs-on: ubuntu-22.04
+    env:
+      TAG: ${{ needs.release.outputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
         with:
-          files: ${{ steps.package_app.outputs.zip_path }}
+          ref: ${{ needs.release.outputs.tag }}
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev \
+            libsecret-1-dev libkeybinder-3.0-dev libxtst-dev libayatana-appindicator3-dev
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+
+      - name: Build
+        run: |
+          flutter pub get
+          flutter build linux --release
+
+      - name: Package and upload
+        run: |
+          tool/release.sh linux "${{ needs.release.outputs.version }}"
+          gh release upload "$TAG" dist/* --clobber
+
+  windows:
+    needs: release
+    if: needs.release.outputs.tag != ''
+    runs-on: windows-2022
+    env:
+      TAG: ${{ needs.release.outputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+
+      - name: Build
+        run: |
+          flutter pub get
+          flutter build windows --release
+
+      - name: Package and upload
+        run: |
+          tool/release.sh windows "${{ needs.release.outputs.version }}"
+          gh release upload "$TAG" dist/* --clobber
+
+  # Package managers that we keep ourselves: the Nix flake in this
+  # repository, the Homebrew tap and the Scoop bucket.
+  publish:
+    needs: [release, macos, linux, windows]
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.release.outputs.tag }}
+      VERSION: ${{ needs.release.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+      TAP_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+      BUCKET_KEY: ${{ secrets.SCOOP_BUCKET_DEPLOY_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Checksums of the release files
+        run: |
+          gh release download "$TAG" -D dist -p 'GrammarGuard-macos.zip' -p 'GrammarGuard-windows-x64.zip'
+          echo "MACOS_SHA=$(sha256sum dist/GrammarGuard-macos.zip | cut -d' ' -f1)" >> "$GITHUB_ENV"
+          echo "WINDOWS_SHA=$(sha256sum dist/GrammarGuard-windows-x64.zip | cut -d' ' -f1)" >> "$GITHUB_ENV"
+
+      - name: Pin the Nix package to this release
+        run: |
+          tool/release.sh nix "$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add nix/release.json
+          git diff --cached --quiet || git commit -m "chore(nix): install GrammarGuard $VERSION"
+          git push origin HEAD:main
+
+      - name: Homebrew tap
+        if: env.TAP_KEY != ''
+        run: |
+          tool/release.sh fill packaging/homebrew/grammarguard.rb "$VERSION" "$MACOS_SHA" cask.rb
+          mkdir -p ~/.ssh && echo "$TAP_KEY" > ~/.ssh/tap && chmod 600 ~/.ssh/tap
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/tap -o StrictHostKeyChecking=accept-new"
+          git clone -q git@github.com:gabber235/homebrew-tap.git tap
+          mkdir -p tap/Casks
+          cp cask.rb tap/Casks/grammarguard.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "grammarguard $VERSION"
+          git push -q
+
+      - name: Scoop bucket
+        if: env.BUCKET_KEY != ''
+        run: |
+          tool/release.sh fill packaging/scoop/grammarguard.json "$VERSION" "$WINDOWS_SHA" manifest.json
+          mkdir -p ~/.ssh && echo "$BUCKET_KEY" > ~/.ssh/bucket && chmod 600 ~/.ssh/bucket
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/bucket -o StrictHostKeyChecking=accept-new"
+          git clone -q git@github.com:gabber235/scoop-bucket.git scoop
+          mkdir -p scoop/bucket
+          cp manifest.json scoop/bucket/grammarguard.json
+          cd scoop
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "grammarguard $VERSION"
+          git push -q
+
+  aur:
+    needs: [release, linux]
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.release.outputs.tag }}
+      VERSION: ${{ needs.release.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+      AUR_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.AUR_KEY != ''
+
+      - name: PKGBUILD for this release
+        if: env.AUR_KEY != ''
+        run: |
+          gh release download "$TAG" -D dist -p 'GrammarGuard-linux-x64.tar.gz'
+          tool/release.sh fill packaging/aur/PKGBUILD "$VERSION" "$(sha256sum dist/GrammarGuard-linux-x64.tar.gz | cut -d' ' -f1)" aur/PKGBUILD
+
+      - name: Publish grammarguard-bin
+        if: env.AUR_KEY != ''
+        uses: KSXGitHub/github-actions-deploy-aur@v4.2.0
+        with:
+          pkgname: grammarguard-bin
+          pkgbuild: aur/PKGBUILD
+          commit_username: Gabber235
+          commit_email: gabber200@icloud.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: grammarguard ${{ needs.release.outputs.version }}
+
+  winget:
+    needs: [release, windows]
+    # The first version was submitted by hand; this opens the pull request
+    # for each later one on microsoft/winget-pkgs.
+    runs-on: windows-latest
+    env:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+    steps:
+      - name: Submit to winget
+        if: env.WINGET_TOKEN != ''
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: Gabber235.GrammarGuard
+          installers-regex: '-setup\.exe$'
+          release-tag: ${{ needs.release.outputs.tag }}
+          token: ${{ secrets.WINGET_TOKEN }}
