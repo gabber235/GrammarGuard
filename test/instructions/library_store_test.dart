@@ -1,5 +1,6 @@
 import "dart:io" as io;
 
+import "package:clock/clock.dart";
 import "package:file/memory.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:grammar_guard/instructions/instruction.dart";
@@ -90,6 +91,32 @@ void main() {
     final loaded = await container.read(libraryStoreProvider.future);
     expect(loaded.problem, isNotNull);
     expect(loaded.library.instructions, isNotEmpty);
+  });
+
+  test("using the built-in setup keeps the broken file next to it and clears the problem", () async {
+    const broken = "instructions:\n  - {id: casual, name: Casual, text: Use a relaxed, friendly tone.}\n";
+    await start(broken);
+    expect((await container.read(libraryStoreProvider.future)).problem, isNotNull);
+
+    final backup = await withClock(Clock.fixed(DateTime(2026, 10, 21, 12, 30)), () => store().useBuiltIn());
+
+    expect(backup!.path, "/support/library.yaml.broken-2026-10-21T12-30-00");
+    expect(backup.readAsStringSync(), broken);
+    expect(file(), io.File("assets/library.yaml").readAsStringSync());
+    final loaded = await container.read(libraryStoreProvider.future);
+    expect(loaded.problem, isNull);
+    expect(loaded.library.instructions, isNotEmpty);
+  });
+
+  test("a second backup in the same second gets its own name", () async {
+    await start("instructions: [");
+    final at = Clock.fixed(DateTime(2026, 10, 21, 12, 30));
+    final first = await withClock(at, () => store().useBuiltIn());
+    files.file("/support/library.yaml").writeAsStringSync("instructions: [ again");
+    final second = await withClock(at, () => store().useBuiltIn());
+    expect(second!.path, "${first!.path}-1");
+    expect(second.readAsStringSync(), "instructions: [ again");
+    expect(first.readAsStringSync(), "instructions: [");
   });
 
   test("a wrong value or a bad pattern in the file falls back instead of failing the store", () async {

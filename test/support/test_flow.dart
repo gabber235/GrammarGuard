@@ -120,6 +120,18 @@ class FlowApp {
     await settle();
   }
 
+  /// Replaces the setup with an old copy of the bundled one, from before
+  /// texts with a comma were quoted: the file no longer loads, as a user
+  /// upgrading from it sees.
+  Future<void> breakLibrary() async {
+    final bundled = File("assets/library.yaml").readAsStringSync();
+    final old = bundled.replaceFirstMapped(RegExp(r'(\{id: enhance, .*text: )"(.*)"\}'), (m) => "${m[1]}${m[2]}}");
+    expect(old, isNot(bundled), reason: "The bundled `enhance` instruction changed shape.");
+    files.file("/support/library.yaml").writeAsStringSync(old);
+    container.invalidate(libraryStoreProvider);
+    await settle();
+  }
+
   /// Sends [text] and waits until the assistant has answered.
   Future<void> openAssistant(String text) async {
     unawaited(container.read(assistantProvider.notifier).open(text));

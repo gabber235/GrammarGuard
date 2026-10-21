@@ -83,7 +83,7 @@ final class LibraryStoreProvider extends $AsyncNotifierProvider<LibraryStore, Lo
   LibraryStore create() => LibraryStore();
 }
 
-String _$libraryStoreHash() => r'0a75eb618358cf9904cfc0325a6047aa33404d50';
+String _$libraryStoreHash() => r'24f8d485b93abe840760c2ef7fee2e7fbafde4d2';
 
 abstract class _$LibraryStore extends $AsyncNotifier<LoadedLibrary> {
   FutureOr<LoadedLibrary> build();
@@ -144,7 +144,7 @@ final class LibraryWritesProvider extends $NotifierProvider<LibraryWrites, void>
   }
 }
 
-String _$libraryWritesHash() => r'3de4bc6b2902a31c021b78b842f0202b9ba2deb8';
+String _$libraryWritesHash() => r'aa4b8cb59456ce7a7a829b20dd3b6a54101023f0';
 
 /// Runs every write to library.yaml one at a time, each against the file as
 /// it is on disk at that moment. It lives apart from [LibraryStore] because
