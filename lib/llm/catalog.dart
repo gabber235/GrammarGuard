@@ -29,18 +29,30 @@ Bundled parseBundledModels(String json) {
       if (Backend.values.asNameMap()[key] case final backend?)
         backend: {
           for (final MapEntry(key: id, value: m) in (value as Map<String, dynamic>).entries)
-            id: ModelInfo(
-              ref: ModelRef(backend, id),
-              label: m["label"] as String,
-              price: Price(
-                inputPerMillion: (m["in"] as num).toDouble(),
-                outputPerMillion: (m["out"] as num).toDouble(),
+            if (!isEmbeddingModel(id))
+              id: ModelInfo(
+                ref: ModelRef(backend, id),
+                label: m["label"] as String,
+                price: Price(
+                  inputPerMillion: (m["in"] as num).toDouble(),
+                  outputPerMillion: (m["out"] as num).toDouble(),
+                ),
+                tools: m["tools"] as bool?,
               ),
-              tools: m["tools"] as bool?,
-            ),
         },
   };
 }
+
+/// Whether a model only turns text into vectors (for search) and cannot
+/// write, so it must never be offered for a rewrite or the assistant.
+/// Embedding models say so in their id almost everywhere: OpenAI's
+/// "text-embedding-3-small", Google's "gemini-embedding-001", Ollama's
+/// "nomic-embed-text" and "qwen3-embedding", LM Studio's
+/// "text-embedding-nomic-embed-text-v1.5". The few that do not ("all-minilm",
+/// "bge-m3" on Ollama) are BERT models, which Ollama names in their [family]
+/// ("bert", "nomic-bert"). No chat model is either.
+bool isEmbeddingModel(String id, {String? family}) =>
+    id.toLowerCase().contains("embed") || (family?.toLowerCase().contains("bert") ?? false);
 
 /// Every model the user can pick. Starts from the bundled list so the window
 /// never waits on the network, then refreshes from each backend's own list
@@ -67,8 +79,10 @@ class ModelCatalog extends _$ModelCatalog {
           return [
             for (final m in await gateway.models(c))
               // The big lists also hold audio, image and embedding models;
-              // keep the ones we know prices for, or everything local.
-              if (local || known.containsKey(m.id))
+              // keep the ones we know prices for, or everything local that
+              // can write. Only Ollama's description is a model family.
+              if ((local || known.containsKey(m.id)) &&
+                  !isEmbeddingModel(m.id, family: c.backend == Backend.ollama ? m.description : null))
                 known[m.id] ?? ModelInfo(ref: ModelRef(c.backend, m.id), label: m.id, price: Price.free),
           ];
         } on llm.LLMError {
