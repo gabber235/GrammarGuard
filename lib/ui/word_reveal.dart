@@ -1,3 +1,4 @@
+import "package:clock/clock.dart";
 import "package:flutter/animation.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 
@@ -101,22 +102,23 @@ class WordReveal {
 /// A [WordReveal] that follows [text] and rebuilds the widget every frame
 /// while words fade in. Returns it with the time to draw it at.
 ({WordReveal reveal, Duration now}) useWordReveal(String text, {required bool animate}) {
-  final clock = useMemoized(() => Stopwatch()..start());
+  // From package:clock, so tests (and the media films) run on fake time.
+  final watch = useMemoized(() => clock.stopwatch()..start());
   final reveal = useMemoized(WordReveal.new);
   final frame = useState(Duration.zero);
   final vsync = useSingleTickerProvider();
   final ticker = useMemoized(
     () => vsync.createTicker((_) {
-      frame.value = clock.elapsed;
+      frame.value = watch.elapsed;
     }),
   );
   useEffect(() => ticker.dispose, const []);
   final built = useRef(false);
 
   // The first text is shown as it is; only what arrives later fades in.
-  reveal.update(text, clock.elapsed, animate: animate && built.value);
+  reveal.update(text, watch.elapsed, animate: animate && built.value);
   built.value = true;
-  final now = clock.elapsed;
+  final now = watch.elapsed;
   if (reveal.settled(now)) {
     if (ticker.isActive) ticker.stop();
   } else if (!ticker.isActive) {

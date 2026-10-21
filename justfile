@@ -25,10 +25,12 @@ demo scenario="discord":
 goldens:
     flutter test test/goldens --update-goldens
 
-# Frames of every view change (open/close the bar, preview, Settings) into
-# build/motion, for judging motion by eye.
-motion:
-    flutter test test/goldens/motion_test.dart --run-skipped
+# Every screen with real fonts, and films of each view change and of the
+# app in use, as WebP in build/media/web (needs cwebp and img2webp from
+# libwebp). CI publishes the same to pull requests and the README.
+media:
+    flutter test test/media --run-skipped
+    tool/media.sh encode
 
 # Real screenshots of every screen into build/screenshots (macOS only).
 # The window pops up for about a minute; leave it in front.
