@@ -38,9 +38,9 @@ The first version of a package is reviewed by a moderator; later versions are su
 2. Submit the first version from a Windows machine, with the manifests in `packaging/winget`:
 
    ```powershell
-   winget validate --manifest packaging\winget\manifests\g\Gabber235\GrammarGuard\1.0.0
-   winget install --manifest packaging\winget\manifests\g\Gabber235\GrammarGuard\1.0.0
-   wingetcreate submit --token <token> packaging\winget\manifests\g\Gabber235\GrammarGuard\1.0.0
+   winget validate --manifest packaging\winget\manifests\g\Gabber235\GrammarGuard\1.1.0
+   winget install --manifest packaging\winget\manifests\g\Gabber235\GrammarGuard\1.1.0
+   wingetcreate submit --token <token> packaging\winget\manifests\g\Gabber235\GrammarGuard\1.1.0
    ```
 
 3. On the pull request, sign Microsoft's Contributor License Agreement when the bot asks.
