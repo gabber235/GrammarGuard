@@ -31,7 +31,8 @@ in
     pkgs.libsecret
     pkgs.keybinder3
     pkgs.libxtst
-    pkgs.libayatana-appindicator
+    pkgs.libx11
+    pkgs.libxi
   ];
 
   # On macOS, Xcode builds everything native: its SDK, compiler and linker.
