@@ -7,7 +7,8 @@
 #   tool/release.sh windows <version>      dist/GrammarGuard-windows-x64.zip and -setup.exe
 #   tool/release.sh fill <template> <version> <sha256> <out>
 #                                          a package manifest from packaging/
-#   tool/release.sh nix <version>          nix/release.json from the release's assets
+#   tool/release.sh pins <version>         nix/release.json, packaging/winget and
+#                                          packaging/nixpkgs for the release
 set -euo pipefail
 
 dist=dist
@@ -88,18 +89,41 @@ fill() {
   sed -e "s/@VERSION@/$version/g" -e "s/@SHA256@/$sha/g" "$template" >"$out"
 }
 
-# The Nix package installs the released binaries; this pins them.
-nix_pins() {
+# Files in this repository that name one release: the Nix pin, the winget
+# manifests for a first submission by hand, and the nixpkgs draft.
+pins() {
   local version=$1
   local base="https://github.com/$repo/releases/download/v$version"
+  local mac linux setup
   sri() { echo "sha256-$(curl -fsSL "$1" | openssl dgst -sha256 -binary | base64)"; }
+  mac=$(sri "$base/GrammarGuard-macos.zip")
+  linux=$(sri "$base/GrammarGuard-linux-x64.tar.gz")
+  setup=$(curl -fsSL "$base/GrammarGuard-windows-setup.exe" | openssl dgst -sha256 -r | cut -d' ' -f1 | tr a-f A-F)
+
   cat >nix/release.json <<EOF
 {
   "version": "$version",
-  "macos": { "url": "$base/GrammarGuard-macos.zip", "hash": "$(sri "$base/GrammarGuard-macos.zip")" },
-  "linux": { "url": "$base/GrammarGuard-linux-x64.tar.gz", "hash": "$(sri "$base/GrammarGuard-linux-x64.tar.gz")" }
+  "macos": { "url": "$base/GrammarGuard-macos.zip", "hash": "$mac" },
+  "linux": { "url": "$base/GrammarGuard-linux-x64.tar.gz", "hash": "$linux" }
 }
 EOF
+
+  # perl -i, since GNU and BSD sed disagree on -i.
+  V=$version SETUP=$setup DATE=$(gh release view "v$version" --repo "$repo" --json publishedAt -q '.publishedAt[:10]') perl -pi -e '
+    s/^PackageVersion: .*/PackageVersion: $ENV{V}/;
+    s{/v\d[^/]*/}{/v$ENV{V}/};
+    s{/tag/v.*}{/tag/v$ENV{V}};
+    s/^ReleaseDate: .*/ReleaseDate: $ENV{DATE}/;
+    s/InstallerSha256: .*/InstallerSha256: $ENV{SETUP}/;
+  ' packaging/winget/*.yaml
+
+  # Each hash sits on the line after its file's url.
+  V=$version MAC=$mac LINUX=$linux perl -pi -e '
+    s/version = ".*";/version = "$ENV{V}";/;
+    $want = $ENV{MAC} if /GrammarGuard-macos\.zip/;
+    $want = $ENV{LINUX} if /GrammarGuard-linux-x64\.tar\.gz/;
+    $want = undef if $want && s/hash = ".*"/hash = "$want"/;
+  ' packaging/nixpkgs/package.nix
 }
 
 case ${1:-} in
@@ -107,9 +131,9 @@ case ${1:-} in
   linux) linux "$2" ;;
   windows) windows "$2" ;;
   fill) fill "$2" "$3" "$4" "$5" ;;
-  nix) nix_pins "$2" ;;
+  pins) pins "$2" ;;
   *)
-    sed -n '2,12p' "$0"
+    sed -n '2,13p' "$0"
     exit 1
     ;;
 esac
