@@ -192,16 +192,16 @@ jobs:
 
       # main only takes pull requests; this repository's deploy key may
       # push this one commit (see the "Protect Main" ruleset).
-      - name: Pin the Nix package to this release
+      - name: Pin this release in nix/release.json, packaging/winget and packaging/nixpkgs
         env:
           PIN_KEY: ${{ secrets.NIX_PIN_DEPLOY_KEY }}
         run: |
-          tool/release.sh nix "$VERSION"
+          tool/release.sh pins "$VERSION"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add nix/release.json
+          git add nix/release.json packaging/winget packaging/nixpkgs
           git diff --cached --quiet && exit 0
-          git commit -m "chore(nix): install GrammarGuard $VERSION"
+          git commit -m "chore: pin GrammarGuard $VERSION"
           mkdir -p ~/.ssh && echo "$PIN_KEY" > ~/.ssh/pin && chmod 600 ~/.ssh/pin
           GIT_SSH_COMMAND="ssh -i ~/.ssh/pin -o StrictHostKeyChecking=accept-new" \
             git push "git@github.com:${{ github.repository }}.git" HEAD:main
