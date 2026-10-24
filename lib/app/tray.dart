@@ -13,49 +13,42 @@ part "tray.g.dart";
 /// visible presence while the popup is hidden.
 @Riverpod(keepAlive: true)
 Future<void> tray(Ref ref) async {
-  await trayManager.setIcon(
+  final trayIcon = TrayIcon.create()!;
+  // The native icon goes away when this wrapper is garbage collected, so
+  // onDispose keeps the reference for as long as the provider lives.
+  ref.onDispose(trayIcon.dispose);
+  trayIcon
     // Windows loads tray icons with LoadImage, which only reads .ico.
-    Platform.isWindows ? "assets/tray_icon.ico" : "assets/tray_icon@2x.png",
-    isTemplate: true, // macOS tints it for light and dark menu bars
-  );
-  await trayManager.setToolTip("GrammarGuard");
-  await trayManager.setContextMenu(
-    Menu(
-      items: [
-        MenuItem(key: "clipboard", label: "Rewrite clipboard"),
-        MenuItem(key: "settings", label: "Settings…"),
-        MenuItem.separator(),
-        MenuItem(key: "quit", label: "Quit GrammarGuard"),
-      ],
-    ),
-  );
-  final listener = _TrayListener(ref);
-  trayManager.addListener(listener);
-  ref.onDispose(() => trayManager.removeListener(listener));
-}
+    ..icon = ImageAsset.fromAsset(Platform.isWindows ? "assets/tray_icon.ico" : "assets/tray_icon@2x.png")
+    // macOS tints it for light and dark menu bars
+    ..isIconTemplate = true
+    ..setTooltip("GrammarGuard");
 
-class _TrayListener with TrayListener {
-  _TrayListener(this.ref);
-
-  final Ref ref;
-
-  @override
-  void onTrayIconMouseDown() => unawaited(trayManager.popUpContextMenu());
-
-  @override
-  void onTrayMenuItemClick(MenuItem menuItem) => unawaited(_handle(menuItem.key));
-
-  Future<void> _handle(String? key) async {
-    final window = ref.read(desktopWindowProvider);
-    switch (key) {
-      case "clipboard":
+  final window = ref.read(desktopWindowProvider);
+  final menu = Menu.create()!
+    ..addItem(
+      _item("Rewrite clipboard", () async {
         await ref.read(sessionActionsProvider).useClipboard();
         await window.show();
-      case "settings":
+      }),
+    )
+    ..addItem(
+      _item("Settings…", () async {
         await window.show();
         await openSettings();
-      case "quit":
-        await window.close();
-    }
-  }
+      }),
+    )
+    ..addSeparator()
+    ..addItem(_item("Quit GrammarGuard", window.close));
+  trayIcon
+    ..setContextMenu(menu)
+    // Linux panels open the menu themselves and report no clicks.
+    ..setContextMenuTrigger(ContextMenuTrigger.clicked)
+    ..setVisible(true);
+}
+
+MenuItem _item(String label, Future<void> Function() onClick) {
+  return MenuItem.createWithLabelAndType(label, MenuItemType.normal)!..addListener((event) {
+    if (event is MenuItemClickedEvent) unawaited(onClick());
+  });
 }
