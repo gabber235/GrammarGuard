@@ -107,13 +107,34 @@ Or with a package manager:
 | | Command |
 |---|---|
 | **Homebrew** (macOS) | `brew install gabber235/tap/grammarguard` |
-| **winget** (Windows) | `winget install Gabber235.GrammarGuard` |
 | **Scoop** (Windows) | `scoop bucket add gabber235 https://github.com/gabber235/scoop-bucket` then `scoop install grammarguard` |
-| **AUR** (Arch Linux) | `yay -S grammarguard-bin` |
+| **Arch Linux** | build the package with `makepkg`, [below](#arch-linux) |
 | **Debian, Ubuntu** | the [`.deb`](https://github.com/gabber235/GrammarGuard/releases/latest/download/GrammarGuard-linux-amd64.deb) from the latest release |
 | **Nix** | `nix run github:gabber235/GrammarGuard`, or the modules below |
 
 Every release lists all files, with the changes since the last one, on the [releases page](https://github.com/gabber235/GrammarGuard/releases).
+
+> [!NOTE]
+> **Help wanted: winget.** The first winget version has to be submitted from a Windows machine, and the project
+> has none. If you have one and want to help, open an issue; the manifests are in
+> [`packaging/winget`](packaging/winget) and the steps in [docs/publishing.md](docs/publishing.md#winget).
+> After that first version, every release reaches winget automatically.
+
+### Arch Linux
+
+> [!NOTE]
+> **Not on the AUR yet.** AUR account registration is blocked right now, so `grammarguard-bin` cannot be
+> published. Once registration opens again it will be, and `yay -S grammarguard-bin` will work.
+
+Until then, build the same package from this repository; it fills in the latest release and installs it with
+pacman:
+
+```sh
+git clone https://github.com/gabber235/GrammarGuard && cd GrammarGuard/packaging/aur
+v=$(git describe --tags --abbrev=0)
+sed -i "s/@VERSION@/${v#v}/; s/@SHA256@/SKIP/" PKGBUILD
+makepkg -si
+```
 
 ### First launch
 
@@ -186,7 +207,8 @@ request also builds the app for every platform, packaged like a release, to down
 Releases follow [conventional commits](https://www.conventionalcommits.org): `fix:` makes a patch release,
 `feat:` a minor one, and a `!` (or `BREAKING CHANGE:`) a major one. [release-please](https://github.com/googleapis/release-please)
 keeps a release pull request open with the next version and its changelog. Merging it tags the release, and CI
-builds every platform, attaches the files, and updates Homebrew, Scoop, winget, the AUR and the Nix flake.
+builds every platform, attaches the files, and updates Homebrew, Scoop and the Nix flake. The AUR and winget
+follow once their accounts are set up (see [docs/publishing.md](docs/publishing.md)).
 
 ## Contributing
 
