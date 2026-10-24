@@ -28,7 +28,7 @@ dependencies:
   # Window management
   window_manager: ^0.5.0
   hotkey_manager: ^0.2.0
-  tray_manager: ^0.5.3
+  tray_manager: ^0.8.0
   flutter_acrylic: ^1.1.4
 
   # Look and motion

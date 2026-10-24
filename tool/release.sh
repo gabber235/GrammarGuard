@@ -46,7 +46,7 @@ Section: utils
 Priority: optional
 Architecture: amd64
 Maintainer: Gabber235 <gabber200@icloud.com>
-Depends: libgtk-3-0, libsecret-1-0, libkeybinder-3.0-0, libxtst6, libayatana-appindicator3-1
+Depends: libgtk-3-0, libsecret-1-0, libkeybinder-3.0-0, libxtst6, libx11-6, libxi6
 Homepage: https://github.com/$repo
 Description: Rewrite selected text anywhere and review every change
  Select text in any app, press a shortcut, review the rewrite word by word

@@ -31,7 +31,8 @@ in
     pkgs.libsecret
     pkgs.keybinder3
     pkgs.libxtst
-    pkgs.libayatana-appindicator
+    pkgs.libx11
+    pkgs.libxi
   ];
 
   # On macOS, Xcode builds everything native: its SDK, compiler and linker.
@@ -47,6 +48,15 @@ in
     unset MACOSX_DEPLOYMENT_TARGET
     export FLUTTER_ROOT="$("$DEVENV_ROOT/tool/flutter-sdk.sh")"
     export PATH="$FLUTTER_ROOT/bin:$HOME/.pub-cache/bin:$PATH"
+    ${lib.optionalString pkgs.stdenv.isLinux ''
+      # Dart build hooks get PATH but not PKG_CONFIG_PATH, and cnativeapi's
+      # hook (tray_manager) asks pkg-config for GTK, X11 and Xi. This
+      # pkg-config carries the shell's search path with it.
+      mkdir -p "$DEVENV_STATE/bin"
+      printf '#!${pkgs.runtimeShell}\nPKG_CONFIG_PATH=%q exec %q "$@"\n' "$PKG_CONFIG_PATH" "$(command -v pkg-config)" >"$DEVENV_STATE/bin/pkg-config"
+      chmod +x "$DEVENV_STATE/bin/pkg-config"
+      export PATH="$DEVENV_STATE/bin:$PATH"
+    ''}
     # A fixed path for editors: point the Flutter SDK setting at .devenv/flutter.
     ln -sfn "$FLUTTER_ROOT" "$DEVENV_ROOT/.devenv/flutter"
     if [[ $(uname) == Darwin ]] && ! xcode-select -p >/dev/null 2>&1; then

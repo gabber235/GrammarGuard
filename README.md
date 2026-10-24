@@ -172,7 +172,7 @@ pins (`environment: flutter:` in `pubspec.yaml`, the same one CI uses) and every
 
 * **macOS:** Xcode, then `flutter run -d macos`
 * **Linux:** inside devenv, `flutter run -d linux`. Without it, install GTK 3, `libsecret-1-dev`,
-  `libkeybinder-3.0-dev`, `libxtst-dev` and `libayatana-appindicator3-dev` first.
+  `libkeybinder-3.0-dev`, `libxtst-dev`, `libx11-dev` and `libxi-dev` first.
 * **Windows:** Visual Studio with the Desktop development with C++ workload and the C++ ATL libraries, then
   `flutter run -d windows`
 

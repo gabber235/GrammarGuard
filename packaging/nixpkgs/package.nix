@@ -15,6 +15,8 @@
   libsecret,
   keybinder3,
   libxtst,
+  libx11,
+  libxi,
   libayatana-appindicator,
 }:
 let
@@ -70,6 +72,9 @@ else
       libsecret
       keybinder3
       libxtst
+      libx11
+      libxi
+      # The pinned release still links it; drop once a release without it is out.
       libayatana-appindicator
     ];
     installPhase = ''
