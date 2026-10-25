@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/gabber235/GrammarGuard/compare/v1.1.1...v1.2.0) (2026-10-25)
+
+
+### Features
+
+* **linux:** support the global shortcut, selection reading and paste back on Wayland ([#14](https://github.com/gabber235/GrammarGuard/issues/14)) ([63799bf](https://github.com/gabber235/GrammarGuard/commit/63799bf554d8402485b207e7b035586e21633add))
+
 ## [1.1.1](https://github.com/gabber235/GrammarGuard/compare/v1.1.0...v1.1.1) (2026-10-25)
 
 
