@@ -11,6 +11,7 @@ add_executable(${BINARY_NAME}
   "global_shortcut.cc"
   "my_application.cc"
   "portal.cc"
+  "remote_desktop.cc"
   "text_bridge.cc"
   "wayland_keyboard.cc"
   "wayland_selection.cc"

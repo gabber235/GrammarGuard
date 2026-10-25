@@ -13,6 +13,7 @@
 
 #include <cstring>
 
+#include "remote_desktop.h"
 #include "wayland_keyboard.h"
 #include "wayland_selection.h"
 #include "wayland_toplevels.h"
@@ -143,19 +144,25 @@ gboolean restore_clipboard(gpointer user_data) {
   return G_SOURCE_REMOVE;
 }
 
+void on_remote_paste(const gchar* error_code, const gchar* message, gpointer user_data) {
+  auto* job = static_cast<PasteJob*>(user_data);
+  if (!error_code) {
+    g_timeout_add(400, restore_clipboard, job);
+    return;
+  }
+  fl_method_call_respond_error(job->call, error_code, message, nullptr, nullptr);
+  g_object_unref(job->call);
+  g_free(job->saved);
+  delete job;
+}
+
 gboolean type_paste_now(gpointer user_data) {
   auto* job = static_cast<PasteJob*>(user_data);
   if (wayland_type_paste(job->terminal)) {
     g_timeout_add(400, restore_clipboard, job);
     return G_SOURCE_REMOVE;
   }
-  // The result stays on the clipboard for the user to paste.
-  fl_method_call_respond_error(job->call, "unsupported",
-                               "This desktop cannot type into other apps. Press Ctrl+V.", nullptr,
-                               nullptr);
-  g_object_unref(job->call);
-  g_free(job->saved);
-  delete job;
+  remote_desktop_paste(on_remote_paste, job);
   return G_SOURCE_REMOVE;
 }
 
