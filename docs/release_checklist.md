@@ -42,7 +42,14 @@ After every row: paste somewhere else and check it still gives
   asks to confirm it, or (Hyprland and similar) a bind to
   `grammarguard:open` in the compositor configuration takes effect.
 - The shortcut takes the selected text, with the mouse anywhere, and
-  falls back to the clipboard when nothing is selected. Enter copies the
-  result; pressing the shortcut again closes the window.
+  falls back to the clipboard when nothing is selected. Enter pastes the
+  result back; pressing the shortcut again closes the window.
+- The result pastes into a text field and into a terminal. On GNOME and
+  KDE a terminal needs Ctrl+Shift+V by hand.
+- On compositors with data control (Hyprland, Sway, KDE) the clipboard is
+  restored after the paste.
+- On GNOME and KDE the permission dialog to type appears once and is
+  remembered after a restart.
+- On GNOME and KDE no remote control indicator stays after a paste.
 - Without the GlobalShortcuts portal the window opens at launch instead.
 - Cmd or Ctrl+V in the window takes the clipboard; Enter copies the result.
