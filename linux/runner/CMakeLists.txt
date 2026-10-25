@@ -12,6 +12,7 @@ add_executable(${BINARY_NAME}
   "my_application.cc"
   "portal.cc"
   "text_bridge.cc"
+  "wayland_keyboard.cc"
   "wayland_selection.cc"
   "wayland_toplevels.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
@@ -37,7 +38,8 @@ target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::X11DEPS)
 pkg_check_modules(WAYLAND REQUIRED IMPORTED_TARGET wayland-client)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::WAYLAND)
 find_program(WAYLAND_SCANNER wayland-scanner REQUIRED)
-foreach(PROTOCOL ext-data-control-v1 wlr-foreign-toplevel-management-unstable-v1)
+foreach(PROTOCOL ext-data-control-v1 virtual-keyboard-unstable-v1
+                 wlr-foreign-toplevel-management-unstable-v1)
   set(XML "${CMAKE_CURRENT_SOURCE_DIR}/protocols/${PROTOCOL}.xml")
   set(HEADER "${CMAKE_CURRENT_BINARY_DIR}/${PROTOCOL}-client-protocol.h")
   set(CODE "${CMAKE_CURRENT_BINARY_DIR}/${PROTOCOL}-protocol.c")
@@ -52,7 +54,8 @@ endforeach()
 enable_language(C)
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
-# xkbcommon names the shortcut's key for the GlobalShortcuts portal.
+# xkbcommon names the shortcut's key for the GlobalShortcuts portal and
+# builds the virtual keyboard's keymap.
 pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::XKBCOMMON)
 

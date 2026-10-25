@@ -54,17 +54,30 @@ void on_data_offer(void*, ext_data_control_device_v1*, ext_data_control_offer_v1
   ext_data_control_offer_v1_add_listener(offer, &kOfferListener, nullptr);
 }
 
-void on_selection(void*, ext_data_control_device_v1*, ext_data_control_offer_v1* offer) {
-  if (offer) ext_data_control_offer_v1_destroy(offer);
+// The offer of the selection being read; offers of the other one are dropped.
+struct Reading {
+  bool primary;
+  ext_data_control_offer_v1* offer = nullptr;
+};
+
+void keep_offer(Reading* reading, bool primary, ext_data_control_offer_v1* offer) {
+  if (reading->primary != primary) {
+    if (offer) ext_data_control_offer_v1_destroy(offer);
+    return;
+  }
+  if (reading->offer) ext_data_control_offer_v1_destroy(reading->offer);
+  reading->offer = offer;
+}
+
+void on_selection(void* data, ext_data_control_device_v1*, ext_data_control_offer_v1* offer) {
+  keep_offer(static_cast<Reading*>(data), false, offer);
 }
 
 void on_finished(void*, ext_data_control_device_v1*) {}
 
 void on_primary_selection(void* data, ext_data_control_device_v1*,
                           ext_data_control_offer_v1* offer) {
-  auto** primary = static_cast<ext_data_control_offer_v1**>(data);
-  if (*primary) ext_data_control_offer_v1_destroy(*primary);
-  *primary = offer;
+  keep_offer(static_cast<Reading*>(data), true, offer);
 }
 
 constexpr ext_data_control_device_v1_listener kDeviceListener = {on_data_offer, on_selection,
@@ -98,7 +111,7 @@ gchar* receive_text(wl_display* display, ext_data_control_offer_v1* offer) {
 
 }  // namespace
 
-gchar* wayland_read_primary_selection() {
+gchar* wayland_read_selection(bool primary) {
   // A connection of its own: GTK's belongs to the main thread.
   wl_display* display = wl_display_connect(nullptr);
   if (!display) return nullptr;
@@ -109,15 +122,15 @@ gchar* wayland_read_primary_selection() {
 
   gchar* text = nullptr;
   if (globals.seat && globals.manager) {
-    ext_data_control_offer_v1* primary = nullptr;
+    Reading reading = {primary};
     ext_data_control_device_v1* device =
         ext_data_control_manager_v1_get_data_device(globals.manager, globals.seat);
-    ext_data_control_device_v1_add_listener(device, &kDeviceListener, &primary);
+    ext_data_control_device_v1_add_listener(device, &kDeviceListener, &reading);
     // The current selections arrive right after the device is created.
     wl_display_roundtrip(display);
-    if (primary) {
-      text = receive_text(display, primary);
-      ext_data_control_offer_v1_destroy(primary);
+    if (reading.offer) {
+      text = receive_text(display, reading.offer);
+      ext_data_control_offer_v1_destroy(reading.offer);
     }
     ext_data_control_device_v1_destroy(device);
   }

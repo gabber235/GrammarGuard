@@ -1,7 +1,6 @@
-// The "grammar_guard/text_bridge" method channel on Linux. On Wayland only
-// waylandSelection works: no app can see or type into another, so capture
-// reads the selection without naming its app and delivery copies. Rich paste falls back to plain text here: GTK3 cannot
-// offer text/html and text together without a custom target table, which no
+// The "grammar_guard/text_bridge" method channel on Linux, on X11 and on
+// Wayland. Rich paste falls back to plain text here: GTK3 cannot offer
+// text/html and text together without a custom target table, which no
 // current Linux user has asked for.
 #include "text_bridge.h"
 
@@ -14,6 +13,7 @@
 
 #include <cstring>
 
+#include "wayland_keyboard.h"
 #include "wayland_selection.h"
 #include "wayland_toplevels.h"
 
@@ -67,23 +67,29 @@ gchar* window_title(Display* display, Window window) {
 }
 
 // Terminals paste with Ctrl+Shift+V, so a Ctrl+V would type nothing (or a
-// control character). Matched on WM_CLASS, which names the terminal app.
-bool is_terminal(Display* display, Window window) {
+// control character). Matched on WM_CLASS or the Wayland app id, which name
+// the terminal app.
+bool is_terminal_name(const gchar* name) {
   static const char* const kTerminals[] = {
       "terminal",  // gnome-terminal, xfce4-terminal, and most others
       "konsole", "xterm", "rxvt", "alacritty", "kitty", "wezterm",
       "tilix", "terminator", "foot", "ghostty",
   };
-  XClassHint hint = {};
-  if (!XGetClassHint(display, window, &hint)) return false;
-  g_autofree gchar* name = g_ascii_strdown(hint.res_name ? hint.res_name : "", -1);
-  g_autofree gchar* klass = g_ascii_strdown(hint.res_class ? hint.res_class : "", -1);
-  if (hint.res_name) XFree(hint.res_name);
-  if (hint.res_class) XFree(hint.res_class);
+  if (!name) return false;
+  g_autofree gchar* lower = g_ascii_strdown(name, -1);
   for (const char* terminal : kTerminals) {
-    if (strstr(name, terminal) || strstr(klass, terminal)) return true;
+    if (strstr(lower, terminal)) return true;
   }
   return false;
+}
+
+bool is_terminal(Display* display, Window window) {
+  XClassHint hint = {};
+  if (!XGetClassHint(display, window, &hint)) return false;
+  bool terminal = is_terminal_name(hint.res_name) || is_terminal_name(hint.res_class);
+  if (hint.res_name) XFree(hint.res_name);
+  if (hint.res_class) XFree(hint.res_class);
+  return terminal;
 }
 
 void send_ctrl_v(Display* display) {
@@ -98,6 +104,8 @@ void send_ctrl_v(Display* display) {
 
 // The window that was active at capture time, brought back before pasting.
 Window source_window = 0;
+// Its app id on Wayland, where the compositor keeps the window itself.
+gchar* source_app_id = nullptr;
 
 void activate(Display* display, Window window) {
   XEvent event = {};
@@ -115,6 +123,7 @@ void activate(Display* display, Window window) {
 struct PasteJob {
   FlMethodCall* call;
   gchar* saved;  // user's clipboard text, restored after the paste
+  bool terminal;
 };
 
 gboolean paste_now(gpointer) {
@@ -132,6 +141,46 @@ gboolean restore_clipboard(gpointer user_data) {
   g_free(job->saved);
   delete job;
   return G_SOURCE_REMOVE;
+}
+
+gboolean type_paste_now(gpointer user_data) {
+  auto* job = static_cast<PasteJob*>(user_data);
+  if (wayland_type_paste(job->terminal)) {
+    g_timeout_add(400, restore_clipboard, job);
+    return G_SOURCE_REMOVE;
+  }
+  // The result stays on the clipboard for the user to paste.
+  fl_method_call_respond_error(job->call, "unsupported",
+                               "This desktop cannot type into other apps. Press Ctrl+V.", nullptr,
+                               nullptr);
+  g_object_unref(job->call);
+  g_free(job->saved);
+  delete job;
+  return G_SOURCE_REMOVE;
+}
+
+void read_clipboard(GTask* task, gpointer, gpointer, GCancellable*) {
+  g_task_return_pointer(task, wayland_read_selection(false), g_free);
+}
+
+void on_clipboard_read(GObject*, GAsyncResult* result, gpointer user_data) {
+  auto* call = static_cast<FlMethodCall*>(user_data);
+  FlValue* args = fl_method_call_get_args(call);
+  const gchar* text = fl_value_get_string(fl_value_lookup_string(args, "text"));
+  auto* saved = static_cast<gchar*>(g_task_propagate_pointer(G_TASK(result), nullptr));
+  auto* job = new PasteJob{call, saved, is_terminal_name(source_app_id)};
+  gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), text, -1);
+  // Without a capture the compositor already refocused the window that was
+  // in front when the popup hid.
+  wayland_activate_captured_toplevel();
+  g_timeout_add(120, type_paste_now, job);
+}
+
+// The user's clipboard is read on a thread: when GrammarGuard owns it, the
+// main loop has to answer the read.
+void paste_wayland(FlMethodCall* call) {
+  g_autoptr(GTask) task = g_task_new(nullptr, nullptr, on_clipboard_read, g_object_ref(call));
+  g_task_run_in_thread(task, read_clipboard);
 }
 
 void on_primary_text(GtkClipboard*, const gchar* text, gpointer user_data) {
@@ -181,7 +230,7 @@ void read_selection_when_focused(GtkWindow* window, FlMethodCall* call) {
 }
 
 void read_with_data_control(GTask* task, gpointer, gpointer, GCancellable*) {
-  g_task_return_pointer(task, wayland_read_primary_selection(), g_free);
+  g_task_return_pointer(task, wayland_read_selection(true), g_free);
 }
 
 void on_data_control_read(GObject* window, GAsyncResult* result, gpointer user_data) {
@@ -223,13 +272,18 @@ static void handle(FlMethodChannel*, FlMethodCall* call, gpointer user_data) {
       // Wayland does not tell clients other apps' process ids.
       fl_value_set_string_take(info, "pid", fl_value_new_int(0));
       fl_value_set_string_take(info, "title", fl_value_new_string(active.title));
-      g_free(active.app_id);
+      g_free(source_app_id);
+      source_app_id = active.app_id;
       g_free(active.title);
       fl_method_call_respond_success(call, info, nullptr);
       return;
     }
     if (g_strcmp0(method, "copySelection") == 0 || g_strcmp0(method, "waylandSelection") == 0) {
       read_wayland_selection(own, call);
+      return;
+    }
+    if (g_strcmp0(method, "pasteInto") == 0) {
+      paste_wayland(call);
       return;
     }
     fl_method_call_respond_success(call, nullptr, nullptr);
@@ -290,7 +344,7 @@ static void handle(FlMethodChannel*, FlMethodCall* call, gpointer user_data) {
     FlValue* args = fl_method_call_get_args(call);
     const gchar* text = fl_value_get_string(fl_value_lookup_string(args, "text"));
     GtkClipboard* clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    auto* job = new PasteJob{FL_METHOD_CALL(g_object_ref(call)), gtk_clipboard_wait_for_text(clipboard)};
+    auto* job = new PasteJob{FL_METHOD_CALL(g_object_ref(call)), gtk_clipboard_wait_for_text(clipboard), false};
     gtk_clipboard_set_text(clipboard, text, -1);
     activate(display, source_window);
     g_timeout_add(120, paste_now, nullptr);         // let the focus change land

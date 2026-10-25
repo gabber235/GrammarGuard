@@ -31,10 +31,10 @@ class NativeTextBridge implements TextBridge {
   @override
   Future<Delivery> deliver(String text, Captured from, {required DeliveryMode mode, String? html}) async {
     final source = from.source;
-    if (from.via == CaptureMethod.selection && source != null && mode != DeliveryMode.copy) {
+    if (from.via == CaptureMethod.selection && mode != DeliveryMode.copy) {
       try {
         final pasted = await _channel.invokeMethod<bool>("pasteInto", {
-          "pid": source.processId,
+          "pid": source?.processId ?? 0,
           "text": text,
           // Rich paste puts HTML next to the plain text; apps that read
           // HTML (Mail, Word, Docs) use it, the rest use the text.
@@ -50,8 +50,7 @@ class NativeTextBridge implements TextBridge {
     return switch ((from.via, mode)) {
       (_, DeliveryMode.copy) => const Delivery.copied(),
       (CaptureMethod.clipboard, _) => Delivery.copied(from.fallbackReason),
-      _ when source == null => const Delivery.copied("Wayland does not let apps paste into others. Press Ctrl+V."),
-      _ => Delivery.copied("${source.name} could not be pasted into."),
+      _ => Delivery.copied("${source?.name ?? "The app"} could not be pasted into."),
     };
   }
 
