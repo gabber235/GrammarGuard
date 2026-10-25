@@ -147,9 +147,9 @@ makepkg -si
 * **Linux:** the global shortcut works in X11 and Wayland sessions. On Wayland GrammarGuard asks the desktop for
   it through the XDG GlobalShortcuts portal, and the desktop has the final say on the keys; most desktops ask you
   to confirm them. Some compositors, such as Hyprland, ignore the suggested keys and need a bind in their own
-  configuration to the shortcut `grammarguard:open`. Wayland gives no access to the selection in other apps, so
-  there the shortcut opens GrammarGuard with the clipboard; copy the text first. Without the portal the app stays
-  a normal window; copy text and press <kbd>Ctrl</kbd>+<kbd>V</kbd> in it. A keyring service (GNOME Keyring or
+  configuration to the shortcut `grammarguard:open`. Wayland lets GrammarGuard read the selected text but not
+  paste into other apps, so the result goes to the clipboard for <kbd>Ctrl</kbd>+<kbd>V</kbd>. Without the portal
+  the app stays a normal window; copy text and press <kbd>Ctrl</kbd>+<kbd>V</kbd> in it. A keyring service (GNOME Keyring or
   KWallet) stores the keys.
 
 ### Nix

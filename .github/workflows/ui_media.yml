@@ -44,7 +44,7 @@ jobs:
         if: github.event.action != 'closed'
         run: |
           sudo apt-get update
-          sudo apt-get install -y webp libgtk-3-dev libx11-dev libxi-dev libxkbcommon-dev
+          sudo apt-get install -y webp libgtk-3-dev libx11-dev libxi-dev libwayland-dev libxkbcommon-dev
           flutter pub get
 
       - name: Render screens and films

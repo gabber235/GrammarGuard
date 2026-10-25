@@ -41,6 +41,8 @@ After every row: paste somewhere else and check it still gives
 - The shortcut registers through the GlobalShortcuts portal: the desktop
   asks to confirm it, or (Hyprland and similar) a bind to
   `grammarguard:open` in the compositor configuration takes effect.
-- The shortcut opens the window with the clipboard and closes it again.
+- The shortcut takes the selected text, with the mouse anywhere, and
+  falls back to the clipboard when nothing is selected. Enter copies the
+  result; pressing the shortcut again closes the window.
 - Without the GlobalShortcuts portal the window opens at launch instead.
 - Cmd or Ctrl+V in the window takes the clipboard; Enter copies the result.

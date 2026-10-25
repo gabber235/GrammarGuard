@@ -1,6 +1,6 @@
-// The "grammar_guard/text_bridge" method channel on Linux. X11 only; on
-// Wayland every method answers null, so capture uses the clipboard and
-// delivery copies. Rich paste falls back to plain text here: GTK3 cannot
+// The "grammar_guard/text_bridge" method channel on Linux. On Wayland only
+// waylandSelection works: no app can see or type into another, so capture
+// reads the selection without naming its app and delivery copies. Rich paste falls back to plain text here: GTK3 cannot
 // offer text/html and text together without a custom target table, which no
 // current Linux user has asked for.
 #include "text_bridge.h"
@@ -13,6 +13,8 @@
 #include <gdk/gdkx.h>
 
 #include <cstring>
+
+#include "wayland_selection.h"
 
 namespace {
 
@@ -138,6 +140,69 @@ void on_primary_text(GtkClipboard*, const gchar* text, gpointer user_data) {
   g_object_unref(call);
 }
 
+// Without data-control (GNOME) the primary selection goes only to the
+// client with keyboard focus, so the window is presented first and the
+// selection read once it is active.
+struct FocusWait {
+  FlMethodCall* call;
+  GtkWindow* window;
+  gulong handler;
+  guint timeout;
+};
+
+void read_primary(FocusWait* wait) {
+  g_signal_handler_disconnect(wait->window, wait->handler);
+  if (wait->timeout) g_source_remove(wait->timeout);
+  gtk_clipboard_request_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY), on_primary_text, wait->call);
+  delete wait;
+}
+
+void on_active_changed(GtkWindow* window, GParamSpec*, gpointer user_data) {
+  if (gtk_window_is_active(window)) read_primary(static_cast<FocusWait*>(user_data));
+}
+
+gboolean on_focus_timeout(gpointer user_data) {
+  auto* wait = static_cast<FocusWait*>(user_data);
+  wait->timeout = 0;
+  read_primary(wait);
+  return G_SOURCE_REMOVE;
+}
+
+void read_selection_when_focused(GtkWindow* window, FlMethodCall* call) {
+  auto* wait = new FocusWait{FL_METHOD_CALL(g_object_ref(call)), window, 0, 0};
+  wait->handler = g_signal_connect(window, "notify::is-active", G_CALLBACK(on_active_changed), wait);
+  if (gtk_window_is_active(window)) {
+    read_primary(wait);
+    return;
+  }
+  wait->timeout = g_timeout_add(1000, on_focus_timeout, wait);
+  gtk_window_present(window);
+}
+
+void read_with_data_control(GTask* task, gpointer, gpointer, GCancellable*) {
+  g_task_return_pointer(task, wayland_read_primary_selection(), g_free);
+}
+
+void on_data_control_read(GObject* window, GAsyncResult* result, gpointer user_data) {
+  auto* call = static_cast<FlMethodCall*>(user_data);
+  g_autofree gchar* text = static_cast<gchar*>(g_task_propagate_pointer(G_TASK(result), nullptr));
+  if (!text) {
+    read_selection_when_focused(GTK_WINDOW(window), call);
+    g_object_unref(call);
+    return;
+  }
+  g_autoptr(FlValue) value = fl_value_new_string(text);
+  fl_method_call_respond_success(call, value, nullptr);
+  g_object_unref(call);
+}
+
+// Data-control reads the selection without focus, before the window shows,
+// as on X11. It blocks until the owning app answers, so it runs on a thread.
+void read_wayland_selection(GtkWindow* window, FlMethodCall* call) {
+  g_autoptr(GTask) task = g_task_new(window, nullptr, on_data_control_read, g_object_ref(call));
+  g_task_run_in_thread(task, read_with_data_control);
+}
+
 }  // namespace
 
 static void handle(FlMethodChannel*, FlMethodCall* call, gpointer user_data) {
@@ -145,7 +210,10 @@ static void handle(FlMethodChannel*, FlMethodCall* call, gpointer user_data) {
   GdkDisplay* gdk_display = gdk_display_get_default();
   const gchar* method = fl_method_call_get_name(call);
   if (!GDK_IS_X11_DISPLAY(gdk_display)) {
-    // Wayland: no access to other apps. Dart falls back to the clipboard.
+    if (g_strcmp0(method, "waylandSelection") == 0) {
+      read_wayland_selection(own, call);
+      return;
+    }
     fl_method_call_respond_success(call, nullptr, nullptr);
     return;
   }
@@ -178,6 +246,12 @@ static void handle(FlMethodChannel*, FlMethodCall* call, gpointer user_data) {
     // the user's clipboard is never touched.
     gtk_clipboard_request_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY), on_primary_text,
                                g_object_ref(call));
+    return;
+  }
+
+  if (g_strcmp0(method, "waylandSelection") == 0) {
+    // X11 reads the selection through copySelection, before taking focus.
+    fl_method_call_respond_success(call, nullptr, nullptr);
     return;
   }
 

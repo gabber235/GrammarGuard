@@ -33,7 +33,9 @@ in
     pkgs.libxtst
     pkgs.libx11
     pkgs.libxi
+    pkgs.wayland
     pkgs.libxkbcommon
+    pkgs.wayland-scanner
   ];
 
   # On macOS, Xcode builds everything native: its SDK, compiler and linker.

@@ -12,6 +12,7 @@ add_executable(${BINARY_NAME}
   "my_application.cc"
   "portal.cc"
   "text_bridge.cc"
+  "wayland_selection.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
 )
 
@@ -29,6 +30,24 @@ target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 # X11 and XTest let the text bridge read the active window and send Ctrl+V.
 pkg_check_modules(X11DEPS REQUIRED IMPORTED_TARGET x11 xtst)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::X11DEPS)
+
+# ext-data-control reads the selection on Wayland. The protocol is vendored:
+# older wayland-protocols releases (Ubuntu 22.04) do not have it yet.
+pkg_check_modules(WAYLAND REQUIRED IMPORTED_TARGET wayland-client)
+target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::WAYLAND)
+find_program(WAYLAND_SCANNER wayland-scanner REQUIRED)
+set(DATA_CONTROL_XML "${CMAKE_CURRENT_SOURCE_DIR}/protocols/ext-data-control-v1.xml")
+set(DATA_CONTROL_HEADER "${CMAKE_CURRENT_BINARY_DIR}/ext-data-control-v1-client-protocol.h")
+set(DATA_CONTROL_CODE "${CMAKE_CURRENT_BINARY_DIR}/ext-data-control-v1-protocol.c")
+add_custom_command(
+  OUTPUT "${DATA_CONTROL_HEADER}" "${DATA_CONTROL_CODE}"
+  COMMAND "${WAYLAND_SCANNER}" client-header "${DATA_CONTROL_XML}" "${DATA_CONTROL_HEADER}"
+  COMMAND "${WAYLAND_SCANNER}" private-code "${DATA_CONTROL_XML}" "${DATA_CONTROL_CODE}"
+  DEPENDS "${DATA_CONTROL_XML}"
+)
+enable_language(C)
+target_sources(${BINARY_NAME} PRIVATE "${DATA_CONTROL_HEADER}" "${DATA_CONTROL_CODE}")
+target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 # xkbcommon names the shortcut's key for the GlobalShortcuts portal.
 pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
