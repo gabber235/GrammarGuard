@@ -12,7 +12,7 @@ struct ActiveToplevel {
 
 // Remembers the active window unless its app id is |own_app_id|, and fills
 // |out| (caller frees both strings). False when there is none or the
-// compositor lacks the protocol.
+// compositor lacks the protocol; the previous capture is forgotten either way.
 bool wayland_capture_active_toplevel(const gchar* own_app_id, ActiveToplevel* out);
 
 // Focuses the window remembered by the last capture. False when it is gone.

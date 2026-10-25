@@ -90,9 +90,9 @@ bool wayland_type_paste(bool shift) {
         zwp_virtual_keyboard_manager_v1_create_virtual_keyboard(globals.manager, globals.seat);
     if (keymap && send_keymap(keyboard, keymap)) {
       type_paste(keyboard, keymap, shift);
-      typed = true;
+      // A compositor that refuses the keyboard answers with a protocol error.
+      typed = wl_display_roundtrip(display) >= 0;
     }
-    wl_display_roundtrip(display);
     zwp_virtual_keyboard_v1_destroy(keyboard);
     xkb_keymap_unref(keymap);
     xkb_context_unref(context);

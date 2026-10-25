@@ -263,6 +263,7 @@ static void handle(FlMethodChannel*, FlMethodCall* call, gpointer user_data) {
     if (g_strcmp0(method, "frontmostApp") == 0) {
       ActiveToplevel active;
       if (!wayland_capture_active_toplevel(APPLICATION_ID, &active)) {
+        g_clear_pointer(&source_app_id, g_free);
         fl_method_call_respond_success(call, nullptr, nullptr);
         return;
       }

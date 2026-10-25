@@ -162,6 +162,7 @@ bool connect_once() {
 }  // namespace
 
 bool wayland_capture_active_toplevel(const gchar* own_app_id, ActiveToplevel* out) {
+  connection.captured = nullptr;
   if (!connect_once()) return false;
   if (wl_display_roundtrip(connection.display) < 0 ||
       wl_display_roundtrip(connection.display) < 0) {
