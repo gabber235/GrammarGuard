@@ -316,7 +316,8 @@ as Uri?,
 /// @nodoc
 mixin _$Captured implements DiagnosticableTreeMixin {
 
- String get text; CaptureMethod get via;/// Null when GrammarGuard itself was in front, or on Wayland.
+ String get text; CaptureMethod get via;/// Null when GrammarGuard itself was in front, or when the desktop does not
+/// name windows (GNOME and KDE on Wayland).
  SourceApp? get source;/// Why the selection could not be read and the clipboard was used
 /// instead (no Accessibility permission). Shown when the clipboard is
 /// empty and again on delivery.
@@ -544,7 +545,8 @@ class _Captured with DiagnosticableTreeMixin implements Captured {
 
 @override final  String text;
 @override final  CaptureMethod via;
-/// Null when GrammarGuard itself was in front, or on Wayland.
+/// Null when GrammarGuard itself was in front, or when the desktop does not
+/// name windows (GNOME and KDE on Wayland).
 @override final  SourceApp? source;
 /// Why the selection could not be read and the clipboard was used
 /// instead (no Accessibility permission). Shown when the clipboard is
@@ -1023,10 +1025,10 @@ return unavailable(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  active,TResult Function( String reason)?  unavailable,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String? note)?  active,TResult Function( String reason)?  unavailable,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case HotkeyActive() when active != null:
-return active();case HotkeyUnavailable() when unavailable != null:
+return active(_that.note);case HotkeyUnavailable() when unavailable != null:
 return unavailable(_that.reason);case _:
   return orElse();
 
@@ -1045,10 +1047,10 @@ return unavailable(_that.reason);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  active,required TResult Function( String reason)  unavailable,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String? note)  active,required TResult Function( String reason)  unavailable,}) {final _that = this;
 switch (_that) {
 case HotkeyActive():
-return active();case HotkeyUnavailable():
+return active(_that.note);case HotkeyUnavailable():
 return unavailable(_that.reason);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -1063,10 +1065,10 @@ return unavailable(_that.reason);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  active,TResult? Function( String reason)?  unavailable,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String? note)?  active,TResult? Function( String reason)?  unavailable,}) {final _that = this;
 switch (_that) {
 case HotkeyActive() when active != null:
-return active();case HotkeyUnavailable() when unavailable != null:
+return active(_that.note);case HotkeyUnavailable() when unavailable != null:
 return unavailable(_that.reason);case _:
   return null;
 
@@ -1079,39 +1081,75 @@ return unavailable(_that.reason);case _:
 
 
 class HotkeyActive with DiagnosticableTreeMixin implements HotkeyStatus {
-  const HotkeyActive();
+  const HotkeyActive({this.note});
   
 
+ final  String? note;
 
-
+/// Create a copy of HotkeyStatus
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HotkeyActiveCopyWith<HotkeyActive> get copyWith => _$HotkeyActiveCopyWithImpl<HotkeyActive>(this, _$identity);
 
 
 @override
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     properties
     ..add(DiagnosticsProperty('type', 'HotkeyStatus.active'))
-    ;
+    ..add(DiagnosticsProperty('note', note));
 }
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is HotkeyActive);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is HotkeyActive&&(identical(other.note, note) || other.note == note));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode {
+    return Object.hash(runtimeType,note);
+}
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-    return 'HotkeyStatus.active()';
+    return 'HotkeyStatus.active(note: $note)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $HotkeyActiveCopyWith<$Res> implements $HotkeyStatusCopyWith<$Res> {
+  factory $HotkeyActiveCopyWith(HotkeyActive value, $Res Function(HotkeyActive) _then) = _$HotkeyActiveCopyWithImpl;
+@useResult
+$Res call({
+ String? note
+});
 
 
+
+
+}
+/// @nodoc
+class _$HotkeyActiveCopyWithImpl<$Res>
+    implements $HotkeyActiveCopyWith<$Res> {
+  _$HotkeyActiveCopyWithImpl(this._self, this._then);
+
+  final HotkeyActive _self;
+  final $Res Function(HotkeyActive) _then;
+
+/// Create a copy of HotkeyStatus
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? note = freezed,}) {
+  return _then(HotkeyActive(
+note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 

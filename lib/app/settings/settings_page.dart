@@ -194,6 +194,10 @@ class _GeneralSection extends ConsumerWidget {
               Text("Opens GrammarGuard from any app.", style: TextStyle(fontSize: 13, color: gg.muted)),
               const SizedBox(height: 12),
               _ShortcutRecorder(current: hotkey, mac: mac),
+              if (status case HotkeyActive(:final note?)) ...[
+                const SizedBox(height: 10),
+                Text(note, style: TextStyle(fontSize: 13, color: gg.muted)),
+              ],
               if (status case HotkeyUnavailable(:final reason)) ...[
                 const SizedBox(height: 10),
                 Text(reason, style: TextStyle(color: gg.removed)),

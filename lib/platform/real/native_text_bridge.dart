@@ -1,8 +1,10 @@
+import "dart:io";
+
 import "package:flutter/services.dart";
 import "package:grammar_guard/platform/ports.dart";
 
 /// Talks to the runner code on each OS over one method channel:
-/// frontmostApp, copySelection, pasteInto.
+/// frontmostApp, copySelection, pasteInto, and on Linux waylandSelection.
 class NativeTextBridge implements TextBridge {
   const NativeTextBridge(this._channel);
 
@@ -11,9 +13,8 @@ class NativeTextBridge implements TextBridge {
   @override
   Future<Captured> capture() async {
     final source = await _frontmostApp();
-    // GrammarGuard itself in front (or Wayland): there is no other app to
-    // read from, so use the clipboard.
-    if (source == null) return captureClipboard();
+    // GrammarGuard itself in front, or Wayland, which names no app.
+    if (source == null) return _waylandSelection();
     final String? selected;
     try {
       selected = await _channel.invokeMethod<String>("copySelection");
@@ -30,10 +31,10 @@ class NativeTextBridge implements TextBridge {
   @override
   Future<Delivery> deliver(String text, Captured from, {required DeliveryMode mode, String? html}) async {
     final source = from.source;
-    if (from.via == CaptureMethod.selection && source != null && mode != DeliveryMode.copy) {
+    if (from.via == CaptureMethod.selection && mode != DeliveryMode.copy) {
       try {
         final pasted = await _channel.invokeMethod<bool>("pasteInto", {
-          "pid": source.processId,
+          "pid": source?.processId ?? 0,
           "text": text,
           // Rich paste puts HTML next to the plain text; apps that read
           // HTML (Mail, Word, Docs) use it, the rest use the text.
@@ -63,6 +64,15 @@ class NativeTextBridge implements TextBridge {
       windowTitle: app["title"] as String?,
       url: app["url"] is String ? Uri.tryParse(app["url"]! as String) : null,
     );
+  }
+
+  /// Wayland names no app, but the runner can still read its selection.
+  /// X11 answers null: copySelection covers it.
+  Future<Captured> _waylandSelection() async {
+    if (!Platform.isLinux) return captureClipboard();
+    final selected = await _channel.invokeMethod<String>("waylandSelection");
+    if (selected == null || selected.trim().isEmpty) return captureClipboard();
+    return Captured(text: selected, via: CaptureMethod.selection);
   }
 
   Future<Captured> _clipboard(SourceApp? source) async {

@@ -8,6 +8,7 @@ import "package:flutter/services.dart";
 import "package:flutter_secure_storage/flutter_secure_storage.dart";
 import "package:grammar_guard/platform/ports.dart";
 import "package:grammar_guard/platform/real/native_text_bridge.dart";
+import "package:grammar_guard/platform/real/portal_hotkey.dart";
 import "package:grammar_guard/platform/real/system_hotkey.dart";
 import "package:grammar_guard/platform/real/window_manager_window.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
@@ -30,7 +31,8 @@ GlobalHotkey globalHotkey(Ref ref) {
   final environment = Platform.environment;
   final wayland =
       Platform.isLinux && (environment["XDG_SESSION_TYPE"] == "wayland" || environment.containsKey("WAYLAND_DISPLAY"));
-  return SystemHotkey(hotKeyManager, isWayland: wayland);
+  if (!wayland) return SystemHotkey(hotKeyManager);
+  return PortalHotkey(const MethodChannel("grammar_guard/global_shortcut"));
 }
 
 @Riverpod(keepAlive: true)

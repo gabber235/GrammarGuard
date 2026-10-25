@@ -60,4 +60,52 @@ void main() {
     );
     expect((await Clipboard.getData(Clipboard.kTextPlain))?.text, "the text");
   });
+
+  test("a selection without a named app is still pasted", () async {
+    final pastes = <Object?>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(_channel, (call) async {
+      switch (call.method) {
+        case "frontmostApp":
+          return null;
+        case "waylandSelection":
+          return "Selected";
+        case "pasteInto":
+          pastes.add(call.arguments);
+          return true;
+      }
+      return null;
+    });
+
+    final captured = await bridge.capture();
+    expect(captured, const Captured(text: "Selected", via: CaptureMethod.selection));
+    expect(await bridge.deliver("Fixed", captured, mode: DeliveryMode.paste), const Delivery.pasted());
+    expect(pastes.single, {"pid": 0, "text": "Fixed"});
+  }, testOn: "linux");
+
+  test("a paste the desktop refuses is copied with its reason", () async {
+    String? clipboard;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      ..setMockMethodCallHandler(_channel, (call) async {
+        switch (call.method) {
+          case "frontmostApp":
+            return null;
+          case "waylandSelection":
+            return "Selected";
+          case "pasteInto":
+            throw PlatformException(code: "unsupported", message: "This desktop cannot type into other apps.");
+        }
+        return null;
+      })
+      ..setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == "Clipboard.setData") clipboard = (call.arguments as Map)["text"] as String;
+        return null;
+      });
+
+    final captured = await bridge.capture();
+    expect(
+      await bridge.deliver("Fixed", captured, mode: DeliveryMode.paste),
+      const Delivery.copied("This desktop cannot type into other apps."),
+    );
+    expect(clipboard, "Fixed");
+  }, testOn: "linux");
 }

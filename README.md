@@ -144,8 +144,15 @@ makepkg -si
   permissions survive updates.
 * **Windows:** SmartScreen may warn about an unknown publisher the first time; choose "More info", then "Run
   anyway". The installer can start GrammarGuard when you sign in.
-* **Linux:** the global shortcut works in X11 sessions. On Wayland the app stays a normal window; copy text and
-  press <kbd>Ctrl</kbd>+<kbd>V</kbd> in it. A keyring service (GNOME Keyring or KWallet) stores the keys.
+* **Linux:** the global shortcut works in X11 and Wayland sessions. On Wayland GrammarGuard asks the desktop for it
+  through the XDG GlobalShortcuts portal, and the desktop has the final say on the keys; most desktops ask you to
+  confirm them. Some compositors, such as Hyprland, ignore the suggested keys and need a bind in their own
+  configuration to the shortcut `grammarguard:open`. X11 and Wayland both read the selected text and paste the
+  result back. On Wayland, compositors such as Hyprland and Sway paste directly; GNOME and KDE ask once for
+  permission to type and remember the answer; there, terminals need <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>
+  by hand, and GNOME leaves the result on the clipboard instead of restoring it. Where pasting is not possible, the
+  result is copied for <kbd>Ctrl</kbd>+<kbd>V</kbd>. Without the portal the app stays a normal window; copy text
+  and press <kbd>Ctrl</kbd>+<kbd>V</kbd> in it. A keyring service (GNOME Keyring or KWallet) stores the keys.
 
 ### Nix
 

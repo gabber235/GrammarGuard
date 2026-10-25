@@ -3,6 +3,7 @@
 #include <flutter_linux/flutter_linux.h>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "global_shortcut.h"
 #include "text_bridge.h"
 
 struct _MyApplication {
@@ -51,7 +52,10 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_realize(GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
+  // flutter_acrylic shows the window when it registers.
+  gtk_widget_hide(GTK_WIDGET(window));
   text_bridge_register(view, window);
+  global_shortcut_register(view);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }

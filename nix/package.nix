@@ -14,6 +14,8 @@
   libxtst,
   libx11,
   libxi,
+  wayland,
+  libxkbcommon,
   libayatana-appindicator,
 }:
 let
@@ -66,6 +68,8 @@ else
       libxtst
       libx11
       libxi
+      wayland
+      libxkbcommon
       # The pinned release still links it; drop once a release without it is out.
       libayatana-appindicator
     ];

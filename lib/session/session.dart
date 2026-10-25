@@ -59,7 +59,7 @@ abstract class BarRequest with _$BarRequest {
   const factory BarRequest({@Default("") String query, @Default(BarMode.act) BarMode mode}) = _BarRequest;
 }
 
-/// Popup when a global hotkey works, a normal window otherwise (Wayland).
+/// Popup when a global hotkey works, a normal window otherwise.
 @Riverpod(keepAlive: true)
 bool isPopup(Ref ref) => ref.watch(hotkeyBindingProvider).value is HotkeyActive;
 
