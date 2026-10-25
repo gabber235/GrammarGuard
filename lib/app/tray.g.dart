@@ -45,4 +45,4 @@ final class TrayProvider extends $FunctionalProvider<AsyncValue<void>, void, Fut
   }
 }
 
-String _$trayHash() => r'7cf72223381bfdaa5549bd19a83169989c1ed252';
+String _$trayHash() => r'eeee976d3a76d02e2c824c7c18c8532d9a6a257b';

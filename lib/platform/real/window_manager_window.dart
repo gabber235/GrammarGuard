@@ -70,6 +70,10 @@ class WindowManagerWindow with WindowListener, WidgetsBindingObserver implements
   /// mode uses the popover material, which is light. Linux has no compositor
   /// blur through flutter_acrylic, so it gets the solid theme surface.
   Future<void> _applyGlass() async {
+    // On Linux, setEffect hides and reshows the window and the Flutter view.
+    // GTK drops the view's keyboard focus on hide and never gives it back,
+    // so every key after that is lost.
+    if (Platform.isLinux) return;
     final dark = WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
     if (Platform.isMacOS) await Window.overrideMacOSBrightness(dark: dark);
     await Window.setEffect(
@@ -77,9 +81,7 @@ class WindowManagerWindow with WindowListener, WidgetsBindingObserver implements
           ? WindowEffect.disabled
           : Platform.isMacOS
           ? (dark ? WindowEffect.hudWindow : WindowEffect.popover)
-          : Platform.isWindows
-          ? WindowEffect.acrylic
-          : WindowEffect.disabled,
+          : WindowEffect.acrylic,
       dark: dark,
     );
   }
