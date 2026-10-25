@@ -33,6 +33,7 @@ in
     pkgs.libxtst
     pkgs.libx11
     pkgs.libxi
+    pkgs.libxkbcommon
   ];
 
   # On macOS, Xcode builds everything native: its SDK, compiler and linker.

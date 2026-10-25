@@ -8,15 +8,15 @@ part of 'session.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Popup when a global hotkey works, a normal window otherwise (Wayland).
+/// Popup when a global hotkey works, a normal window otherwise.
 
 @ProviderFor(isPopup)
 final isPopupProvider = IsPopupProvider._();
 
-/// Popup when a global hotkey works, a normal window otherwise (Wayland).
+/// Popup when a global hotkey works, a normal window otherwise.
 
 final class IsPopupProvider extends $FunctionalProvider<bool, bool, bool> with $Provider<bool> {
-  /// Popup when a global hotkey works, a normal window otherwise (Wayland).
+  /// Popup when a global hotkey works, a normal window otherwise.
   IsPopupProvider._()
     : super(
         from: null,

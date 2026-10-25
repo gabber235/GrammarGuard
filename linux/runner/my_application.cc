@@ -3,6 +3,7 @@
 #include <flutter_linux/flutter_linux.h>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "global_shortcut.h"
 #include "text_bridge.h"
 
 struct _MyApplication {
@@ -52,6 +53,7 @@ static void my_application_activate(GApplication* application) {
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
   text_bridge_register(view, window);
+  global_shortcut_register(view);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }

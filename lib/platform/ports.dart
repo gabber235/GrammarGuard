@@ -108,7 +108,8 @@ abstract interface class DesktopWindow {
 
 @freezed
 sealed class HotkeyStatus with _$HotkeyStatus {
-  const factory HotkeyStatus.active() = HotkeyActive;
+  /// [note] explains keys the desktop, not GrammarGuard, decides.
+  const factory HotkeyStatus.active({String? note}) = HotkeyActive;
   const factory HotkeyStatus.unavailable(String reason) = HotkeyUnavailable;
 }
 

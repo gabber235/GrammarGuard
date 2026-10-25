@@ -79,7 +79,7 @@ final class GlobalHotkeyProvider extends $FunctionalProvider<GlobalHotkey, Globa
   }
 }
 
-String _$globalHotkeyHash() => r'be83ece597d9762f1cde571fb1b591550418cf55';
+String _$globalHotkeyHash() => r'e0dad22811c5101bfc87be206d642f5f61b477de';
 
 @ProviderFor(textBridge)
 final textBridgeProvider = TextBridgeProvider._();

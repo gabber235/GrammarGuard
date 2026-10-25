@@ -8,7 +8,9 @@ project(runner LANGUAGES CXX)
 # Any new source files that you add to the application should be added here.
 add_executable(${BINARY_NAME}
   "main.cc"
+  "global_shortcut.cc"
   "my_application.cc"
+  "portal.cc"
   "text_bridge.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
 )
@@ -27,5 +29,9 @@ target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 # X11 and XTest let the text bridge read the active window and send Ctrl+V.
 pkg_check_modules(X11DEPS REQUIRED IMPORTED_TARGET x11 xtst)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::X11DEPS)
+
+# xkbcommon names the shortcut's key for the GlobalShortcuts portal.
+pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
+target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::XKBCOMMON)
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
