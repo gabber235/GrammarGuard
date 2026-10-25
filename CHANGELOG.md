@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/gabber235/GrammarGuard/compare/v1.1.0...v1.1.1) (2026-10-25)
+
+
+### Bug fixes
+
+* **linux:** restore keyboard input and the tray on Wayland ([#12](https://github.com/gabber235/GrammarGuard/issues/12)) ([9e4bc32](https://github.com/gabber235/GrammarGuard/commit/9e4bc32841be9d9335e0c6952b3b56d5d4bc0eae))
+
 ## [1.1.0](https://github.com/gabber235/GrammarGuard/compare/v1.0.0...v1.1.0) (2026-10-21)
 
 
