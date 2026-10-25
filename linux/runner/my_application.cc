@@ -52,6 +52,8 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_realize(GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
+  // flutter_acrylic shows the window when it registers.
+  gtk_widget_hide(GTK_WIDGET(window));
   text_bridge_register(view, window);
   global_shortcut_register(view);
 

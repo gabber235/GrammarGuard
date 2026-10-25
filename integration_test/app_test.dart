@@ -18,12 +18,16 @@ import "package:grammar_guard/platform/scripted_llm.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:integration_test/integration_test.dart";
 import "package:shared_preferences/shared_preferences.dart";
+import "package:window_manager/window_manager.dart";
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets("clipboard in, review, Enter copies the result", (tester) async {
     await prepareWindow();
+    // The runner starts the window hidden, and on X11 a hidden window gets no
+    // frames, so the first pump would wait forever.
+    await windowManager.show();
     // Never touch the developer's own setup, keys or preferences.
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({"claude_api_key": "test-key"});
