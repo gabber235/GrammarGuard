@@ -15,6 +15,7 @@
 #include <cstring>
 
 #include "wayland_selection.h"
+#include "wayland_toplevels.h"
 
 namespace {
 
@@ -210,7 +211,24 @@ static void handle(FlMethodChannel*, FlMethodCall* call, gpointer user_data) {
   GdkDisplay* gdk_display = gdk_display_get_default();
   const gchar* method = fl_method_call_get_name(call);
   if (!GDK_IS_X11_DISPLAY(gdk_display)) {
-    if (g_strcmp0(method, "waylandSelection") == 0) {
+    if (g_strcmp0(method, "frontmostApp") == 0) {
+      ActiveToplevel active;
+      if (!wayland_capture_active_toplevel(APPLICATION_ID, &active)) {
+        fl_method_call_respond_success(call, nullptr, nullptr);
+        return;
+      }
+      g_autoptr(FlValue) info = fl_value_new_map();
+      fl_value_set_string_take(info, "id", fl_value_new_string(active.app_id));
+      fl_value_set_string_take(info, "name", fl_value_new_string(active.app_id));
+      // Wayland does not tell clients other apps' process ids.
+      fl_value_set_string_take(info, "pid", fl_value_new_int(0));
+      fl_value_set_string_take(info, "title", fl_value_new_string(active.title));
+      g_free(active.app_id);
+      g_free(active.title);
+      fl_method_call_respond_success(call, info, nullptr);
+      return;
+    }
+    if (g_strcmp0(method, "copySelection") == 0 || g_strcmp0(method, "waylandSelection") == 0) {
       read_wayland_selection(own, call);
       return;
     }

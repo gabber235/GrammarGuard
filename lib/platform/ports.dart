@@ -41,7 +41,8 @@ abstract class Captured with _$Captured {
     required String text,
     required CaptureMethod via,
 
-    /// Null when GrammarGuard itself was in front, or on Wayland.
+    /// Null when GrammarGuard itself was in front, or when the desktop does not
+    /// name windows (GNOME and KDE on Wayland).
     SourceApp? source,
 
     /// Why the selection could not be read and the clipboard was used

@@ -316,7 +316,8 @@ as Uri?,
 /// @nodoc
 mixin _$Captured implements DiagnosticableTreeMixin {
 
- String get text; CaptureMethod get via;/// Null when GrammarGuard itself was in front, or on Wayland.
+ String get text; CaptureMethod get via;/// Null when GrammarGuard itself was in front, or when the desktop does not
+/// name windows (GNOME and KDE on Wayland).
  SourceApp? get source;/// Why the selection could not be read and the clipboard was used
 /// instead (no Accessibility permission). Shown when the clipboard is
 /// empty and again on delivery.
@@ -544,7 +545,8 @@ class _Captured with DiagnosticableTreeMixin implements Captured {
 
 @override final  String text;
 @override final  CaptureMethod via;
-/// Null when GrammarGuard itself was in front, or on Wayland.
+/// Null when GrammarGuard itself was in front, or when the desktop does not
+/// name windows (GNOME and KDE on Wayland).
 @override final  SourceApp? source;
 /// Why the selection could not be read and the clipboard was used
 /// instead (no Accessibility permission). Shown when the clipboard is
