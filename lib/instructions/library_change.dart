@@ -54,6 +54,15 @@ sealed class LibraryChange with _$LibraryChange {
   };
 }
 
+/// Whether [change] adds something [library] does not have yet, so a review
+/// can tell a new profile from a change to an existing one.
+bool addsTo(Library library, LibraryChange change) => switch (change) {
+  PutInstruction(:final instruction) => library[instruction.id] == null,
+  PutProfile(:final profile) => library.profiles.every((p) => p.name != profile.name),
+  PutGroup(:final group) => library.groups.every((g) => g.id != group.id),
+  RemoveInstruction() || RemoveProfile() || RemoveGroup() || SetDefaults() => false,
+};
+
 /// What the setup becomes after [changes]. Pure; used for the proposal
 /// preview, for validating the assistant's tool calls, and before writing.
 /// Throws [LibraryProblem] when the result would be invalid.

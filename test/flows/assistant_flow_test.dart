@@ -41,6 +41,84 @@ void main() {
     expect((await app.read(changeLogProvider.future)).first.author, ChangeAuthor.assistant);
   });
 
+  testFlow("adding an instruction to a profile changes that profile, not a new one", (app) async {
+    await app.chooseAssistantModel();
+    app.model
+      ..callsTool("put_profile", {
+        "name": "discord",
+        "add_use": ["shorter"],
+        "remove_use": ["casual"],
+      })
+      ..says("Discord replies are shorter now.");
+
+    await app.openAssistant("make my Discord replies shorter");
+    expect(find.text("Change profile Discord"), findsOneWidget);
+    await app.press(LogicalKeyboardKey.enter);
+
+    final discord = app.library.profiles.where((p) => p.name.toLowerCase() == "discord").single;
+    expect(discord.use, [const InstructionId("discord"), const InstructionId("shorter")]);
+    expect(discord.when.apps, {"com.hnc.discord", "discord.exe", "discord"});
+    expect(discord.when.title?.pattern, r"\| Discord");
+  });
+
+  testFlow("an empty value clears a profile field", (app) async {
+    await app.chooseAssistantModel();
+    app.model
+      ..callsTool("put_profile", {"name": "Email", "url": "", "deliver": ""})
+      ..says("Done.");
+
+    await app.openAssistant("email in apps only, and plain paste");
+    await app.press(LogicalKeyboardKey.enter);
+    final email = app.library.profiles.singleWhere((p) => p.name == "Email");
+    expect(email.when.url, isNull);
+    expect(email.deliver, isNull);
+    expect(email.when.apps, contains("com.apple.mail"));
+  });
+
+  testFlow("a new profile for an app that has one goes back to the model", (app) async {
+    await app.chooseAssistantModel();
+    app.model
+      ..callsTool("put_profile", {
+        "name": "Discord markdown links",
+        "apps": ["discord"],
+        "use": ["shorter"],
+      })
+      ..says("Let me change Discord instead.");
+
+    await app.openAssistant("use shorter in Discord");
+    expect(app.read(assistantProvider).proposal, isEmpty);
+    final result = app.model.calls.last.messages.last.messageType as llm.ToolResultMessage;
+    expect(result.results.single.function.arguments, contains("name Discord"));
+  });
+
+  testFlow("a separate profile for an app that has one is proposed when asked for", (app) async {
+    await app.chooseAssistantModel();
+    app.model
+      ..callsTool("put_profile", {
+        "name": "Discord long",
+        "apps": ["discord"],
+        "min_words": 100,
+        "use": ["shorter"],
+        "separate": true,
+      })
+      ..says("Added a second profile for long Discord texts.");
+
+    await app.openAssistant("a second Discord profile for long messages");
+    expect(find.text("New profile Discord long"), findsOneWidget);
+  });
+
+  testFlow("read_setup shows what is proposed so far", (app) async {
+    await app.chooseAssistantModel();
+    app.model
+      ..callsTool("put_instruction", {"id": "british", "name": "British spelling", "text": "Use British spelling."})
+      ..callsTool("read_setup", {})
+      ..says("Proposed.");
+
+    await app.openAssistant("british spelling");
+    final result = app.model.calls.last.messages.last.messageType as llm.ToolResultMessage;
+    expect(result.results.single.function.arguments, contains("Use British spelling."));
+  });
+
   testFlow("an invalid proposal goes back to the model, not to the user", (app) async {
     await app.chooseAssistantModel();
     app.model
