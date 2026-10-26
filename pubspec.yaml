@@ -5,6 +5,9 @@ version: 1.2.0+5
 
 environment:
   sdk: ^3.13.0
+  # TODO: move to Flutter 3.50 once nativeapi (through tray_manager) compiles
+  # on Dart 3.14, which moved Isolate.create into the private dart:_vm. Then
+  # drop the rsync workaround in devenv.nix. https://github.com/libnativeapi/nativeapi
   flutter: 3.47.8
 
 dependencies:

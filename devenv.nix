@@ -39,6 +39,9 @@ in
     # the rsync on PATH. macOS's own (openrsync) ignores --chmod, so the copy
     # stays read only and lipo cannot thin it (flutter/flutter#195257, fixed
     # in Flutter 3.50).
+    # TODO: remove this rsync once pubspec.yaml pins Flutter 3.50 or later,
+    # then check that `flutter build macos --debug` still builds in the shell.
+    # https://github.com/flutter/flutter/issues/195257
     pkgs.rsync
   ]
   ++ lib.optionals pkgs.stdenv.isLinux [
