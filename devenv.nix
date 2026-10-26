@@ -5,14 +5,29 @@
   pkgs,
   lib,
   config,
+  inputs,
   ...
 }:
 let
+  # The Flutter release pubspec.yaml pins (`environment: flutter:`), the one
+  # place the version is set: CI reads the same line (flutter-version-file).
+  flutterVersion =
+    let
+      pinned = builtins.match ".*\n  flutter: \"?([^\"\n ]+)\"? *\n.*" (builtins.readFile ./pubspec.yaml);
+    in
+    if pinned == null then
+      throw "pubspec.yaml needs an exact Flutter version, for example `  flutter: 3.47.8` under environment."
+    else
+      builtins.head pinned;
+  flutter =
+    inputs.flutter-overlay.legacyPackages.${pkgs.stdenv.hostPlatform.system}.versions.${flutterVersion}
+      or (throw "flutter-overlay has no Flutter ${flutterVersion}; update it with `devenv update flutter-overlay`.");
   # Generated code is formatted with the project, but never by hand.
   dartFiles = ''$(git ls-files 'lib/*.dart' 'test/*.dart' 'integration_test/*.dart' 'eval/*.dart' 'tool/*.dart' | grep -v -e '\.g\.dart$' -e '\.freezed\.dart$')'';
 in
 {
   packages = [
+    flutter
     pkgs.git
     pkgs.gh # pull requests, release checks
     pkgs.libwebp # cwebp and img2webp for `media`
@@ -20,6 +35,14 @@ in
   ]
   ++ lib.optionals pkgs.stdenv.isDarwin [
     pkgs.cocoapods # the macOS build's plugins
+    # flutter_tools copies the engine framework out of the read only store with
+    # the rsync on PATH. macOS's own (openrsync) ignores --chmod, so the copy
+    # stays read only and lipo cannot thin it (flutter/flutter#195257, fixed
+    # in Flutter 3.50).
+    # TODO: remove this rsync once pubspec.yaml pins Flutter 3.50 or later,
+    # then check that `flutter build macos --debug` still builds in the shell.
+    # https://github.com/flutter/flutter/issues/195257
+    pkgs.rsync
   ]
   ++ lib.optionals pkgs.stdenv.isLinux [
     # What `flutter build linux` links against, as in CI and the AUR package.
@@ -44,13 +67,17 @@ in
   apple.sdk = null;
   stdenv = if pkgs.stdenv.isDarwin then pkgs.stdenvNoCC else pkgs.stdenv;
 
-  # Flutter itself comes from tool/flutter-sdk.sh: the version pubspec.yaml
-  # pins, installed once into ~/.cache/flutter-sdk. Xcode stays the system's.
+  # Prebuilt Flutter releases from flutter-overlay's CI.
+  cachix.pull = [ "gabber235" ];
+
+  # Tools started outside the flutter command (dart run build_runner, editors)
+  # find the SDK through FLUTTER_ROOT. Xcode stays the system's.
+  env.FLUTTER_ROOT = "${flutter.sdk}";
+
   enterShell = ''
     # The Xcode project sets its own minimum macOS; Nix's would override it.
     unset MACOSX_DEPLOYMENT_TARGET
-    export FLUTTER_ROOT="$("$DEVENV_ROOT/tool/flutter-sdk.sh")"
-    export PATH="$FLUTTER_ROOT/bin:$HOME/.pub-cache/bin:$PATH"
+    export PATH="$HOME/.pub-cache/bin:$PATH"
     ${lib.optionalString pkgs.stdenv.isLinux ''
       # Dart build hooks get PATH but not PKG_CONFIG_PATH, and cnativeapi's
       # hook (tray_manager) asks pkg-config for GTK, X11 and Xi. This
@@ -65,7 +92,7 @@ in
     if [[ $(uname) == Darwin ]] && ! xcode-select -p >/dev/null 2>&1; then
       echo "Xcode is not set up; macOS builds need it (xcode-select --install, or Xcode from the App Store)." >&2
     fi
-    echo "GrammarGuard, Flutter $(basename "$FLUTTER_ROOT"). Commands:"
+    echo "GrammarGuard, Flutter ${flutterVersion}. Commands:"
     ${lib.concatStringsSep "\n" (
       lib.mapAttrsToList (
         name: script:
@@ -199,7 +226,7 @@ in
 
   # Runs before every commit (and in `devenv test`, so CI checks them too).
   git-hooks.hooks = {
-    # The project's own Dart: Dart from Nix can format differently.
+    # The pinned Flutter's Dart: nixpkgs' Dart can format differently.
     dart-format = {
       enable = true;
       name = "dart format";
@@ -207,9 +234,8 @@ in
       # format only reads once packages are fetched; without them it falls
       # back to 80 and rewraps everything (a fresh CI checkout).
       entry = "${pkgs.writeShellScript "dart-format" ''
-        sdk="$(tool/flutter-sdk.sh)"
-        [[ -f .dart_tool/package_config.json ]] || "$sdk/bin/flutter" pub get >/dev/null
-        exec "$sdk/bin/dart" format --set-exit-if-changed "$@"
+        [[ -f .dart_tool/package_config.json ]] || ${flutter}/bin/flutter pub get >/dev/null
+        exec ${flutter}/bin/dart format --set-exit-if-changed "$@"
       ''}";
       files = "\\.dart$";
       excludes = [
