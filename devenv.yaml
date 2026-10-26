@@ -6,3 +6,7 @@ inputs:
     inputs:
       nixpkgs:
         follows: nixpkgs
+  # Flutter, by the exact version pubspec.yaml pins. Its own nixpkgs, not
+  # ours: the gabber235 cache only holds builds against that one.
+  flutter-overlay:
+    url: github:gabber235/flutter-overlay

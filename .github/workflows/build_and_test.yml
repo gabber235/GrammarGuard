@@ -20,16 +20,11 @@ jobs:
       - uses: cachix/cachix-action@v17
         with:
           name: devenv
+          # Prebuilt Flutter from flutter-overlay.
+          extraPullNames: gabber235
 
       - name: Install devenv
         run: nix profile add nixpkgs#devenv
-
-      # tool/flutter-sdk.sh installs the pinned Flutter here once.
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/flutter-sdk
-          key: flutter-sdk-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
-          restore-keys: flutter-sdk-${{ runner.os }}-
 
       - name: Check
         run: devenv test
