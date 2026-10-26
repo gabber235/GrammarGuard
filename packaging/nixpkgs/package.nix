@@ -23,7 +23,7 @@
 }:
 let
   pname = "grammarguard";
-  version = "1.1.1";
+  version = "1.2.0";
   base = "https://github.com/gabber235/GrammarGuard/releases/download/v${version}";
   meta = {
     description = "Rewrite selected text anywhere and review every change";
@@ -40,7 +40,7 @@ if stdenv.hostPlatform.isDarwin then
     inherit pname version;
     src = fetchurl {
       url = "${base}/GrammarGuard-macos.zip";
-      hash = "sha256-2N6ha7yq+rrUILxMFjSiZeFIAvwhyj5j1La+LinYw+s=";
+      hash = "sha256-N9RdiH/c7mxWQ7uQIRyVOmH12q0LgyJyAs631t66/tw=";
     };
     nativeBuildInputs = [ unzip ];
     sourceRoot = ".";
@@ -63,7 +63,7 @@ else
     inherit pname version;
     src = fetchurl {
       url = "${base}/GrammarGuard-linux-x64.tar.gz";
-      hash = "sha256-iZntN04+HJI+qJY7SVlxD/M41c0wvy82LEbFg/AkTNg=";
+      hash = "sha256-51/PcsBRUmRZb16IZ0xkXtzYJIL1dhucXDD/QYwmxrE=";
     };
     nativeBuildInputs = [
       autoPatchelfHook

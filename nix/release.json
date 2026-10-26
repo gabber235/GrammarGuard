@@ -1,5 +1,5 @@
 {
-  "version": "1.1.1",
-  "macos": { "url": "https://github.com/gabber235/GrammarGuard/releases/download/v1.1.1/GrammarGuard-macos.zip", "hash": "sha256-2N6ha7yq+rrUILxMFjSiZeFIAvwhyj5j1La+LinYw+s=" },
-  "linux": { "url": "https://github.com/gabber235/GrammarGuard/releases/download/v1.1.1/GrammarGuard-linux-x64.tar.gz", "hash": "sha256-iZntN04+HJI+qJY7SVlxD/M41c0wvy82LEbFg/AkTNg=" }
+  "version": "1.2.0",
+  "macos": { "url": "https://github.com/gabber235/GrammarGuard/releases/download/v1.2.0/GrammarGuard-macos.zip", "hash": "sha256-N9RdiH/c7mxWQ7uQIRyVOmH12q0LgyJyAs631t66/tw=" },
+  "linux": { "url": "https://github.com/gabber235/GrammarGuard/releases/download/v1.2.0/GrammarGuard-linux-x64.tar.gz", "hash": "sha256-51/PcsBRUmRZb16IZ0xkXtzYJIL1dhucXDD/QYwmxrE=" }
 }
