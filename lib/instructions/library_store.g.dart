@@ -144,7 +144,7 @@ final class LibraryWritesProvider extends $NotifierProvider<LibraryWrites, void>
   }
 }
 
-String _$libraryWritesHash() => r'aa4b8cb59456ce7a7a829b20dd3b6a54101023f0';
+String _$libraryWritesHash() => r'b8ba62b2945d40bc369d88207844c2092835c0df';
 
 /// Runs every write to library.yaml one at a time, each against the file as
 /// it is on disk at that moment. It lives apart from [LibraryStore] because

@@ -157,17 +157,14 @@ class LibraryWrites extends _$LibraryWrites {
     // The edits are computed against the very text they are applied to, not
     // against the loaded library, which may lag behind a hand edit.
     final base = restoring == null ? current : await _snapshotText(file, restoring);
-    final Library was;
     try {
-      was = parseLibrary(base);
+      parseLibrary(base);
     } on LibraryProblem catch (problem) {
       throw LibraryProblem(
         restoring == null ? "Fix library.yaml first: $problem" : "That version does not load: $problem",
       );
     }
-    final editor = YamlEditor(base);
-    _sync(editor, was, applyChanges(was, changes));
-    await _write(file, current, editor.toString(), author, [
+    await _write(file, current, editLibraryText(base, changes), author, [
       if (restoring != null) "Restored the setup from before: ${restoring.summary.join(", ")}",
       for (final c in changes) c.summary,
     ]);
@@ -205,53 +202,57 @@ class LibraryWrites extends _$LibraryWrites {
       ..invalidate(libraryStoreProvider)
       ..invalidate(changeLogProvider);
   }
+}
 
-  /// Brings the YAML in line with [next] using the smallest edits, so the
-  /// user's comments and order stay where they were. [before] must be parsed
-  /// from the editor's own text, so list positions line up.
-  void _sync(YamlEditor editor, Library before, Library next) {
-    void syncList<T>(
-      String key,
-      List<T> was,
-      List<T> now,
-      String Function(T) id,
-      Map<String, Object?> Function(T) yaml,
-    ) {
-      // A missing or empty key (`profiles:`) has no list to edit yet.
-      if (editor.parseAt([key], orElse: () => YamlScalar.wrap(null)) is! YamlList) {
-        if (now.isNotEmpty) editor.update([key], [for (final item in now) yaml(item)]);
-        return;
-      }
-      final eq = const DeepCollectionEquality();
-      for (final item in now) {
-        final at = was.indexWhere((w) => id(w) == id(item));
-        if (at < 0) {
-          editor.appendToList([key], yaml(item));
-        } else if (!eq.equals(yaml(was[at]), yaml(item))) {
-          editor.update([key, at], yaml(item));
-        }
-      }
-      // Remove from the end so earlier indexes stay valid.
-      for (final (at, item) in was.indexed.toList().reversed) {
-        if (!now.any((n) => id(n) == id(item))) editor.remove([key, at]);
-      }
-    }
+/// [text] with [changes] applied as the smallest YAML edits, so the user's
+/// comments and order stay. Throws [LibraryProblem] when [text] does not
+/// load or the result would be invalid.
+String editLibraryText(String text, List<LibraryChange> changes) {
+  final was = parseLibrary(text);
+  final editor = YamlEditor(text);
+  _sync(editor, was, applyChanges(was, changes));
+  return editor.toString();
+}
 
-    syncList("groups", before.groups, next.groups, (g) => g.id.value, groupToYaml);
-    syncList("instructions", before.instructions, next.instructions, (i) => i.id.value, instructionToYaml);
-    syncList("profiles", before.profiles, next.profiles, (p) => p.name, profileToYaml);
-    if (!const ListEquality<InstructionId>().equals(before.defaults, next.defaults)) {
-      editor.update(["defaults"], [for (final id in next.defaults) id.value]);
+/// Brings the YAML in line with [next] using the smallest edits, so the
+/// user's comments and order stay where they were. [before] must be parsed
+/// from the editor's own text, so list positions line up.
+void _sync(YamlEditor editor, Library before, Library next) {
+  void syncList<T>(String key, List<T> was, List<T> now, String Function(T) id, Map<String, Object?> Function(T) yaml) {
+    // A missing or empty key (`profiles:`) has no list to edit yet.
+    if (editor.parseAt([key], orElse: () => YamlScalar.wrap(null)) is! YamlList) {
+      if (now.isNotEmpty) editor.update([key], [for (final item in now) yaml(item)]);
+      return;
     }
-    if (before.defaultModel != next.defaultModel) {
-      editor.update(["default_model"], next.defaultModel?.toString());
+    final eq = const DeepCollectionEquality();
+    for (final item in now) {
+      final at = was.indexWhere((w) => id(w) == id(item));
+      if (at < 0) {
+        editor.appendToList([key], yaml(item));
+      } else if (!eq.equals(yaml(was[at]), yaml(item))) {
+        editor.update([key, at], yaml(item));
+      }
     }
-    if (before.assistantModel != next.assistantModel) {
-      editor.update(["assistant_model"], next.assistantModel?.toString());
+    // Remove from the end so earlier indexes stay valid.
+    for (final (at, item) in was.indexed.toList().reversed) {
+      if (!now.any((n) => id(n) == id(item))) editor.remove([key, at]);
     }
-    if (!const ListEquality<String>().equals(before.keepWords, next.keepWords)) {
-      editor.update(["keep_words"], next.keepWords);
-    }
+  }
+
+  syncList("groups", before.groups, next.groups, (g) => g.id.value, groupToYaml);
+  syncList("instructions", before.instructions, next.instructions, (i) => i.id.value, instructionToYaml);
+  syncList("profiles", before.profiles, next.profiles, (p) => p.name, profileToYaml);
+  if (!const ListEquality<InstructionId>().equals(before.defaults, next.defaults)) {
+    editor.update(["defaults"], [for (final id in next.defaults) id.value]);
+  }
+  if (before.defaultModel != next.defaultModel) {
+    editor.update(["default_model"], next.defaultModel?.toString());
+  }
+  if (before.assistantModel != next.assistantModel) {
+    editor.update(["assistant_model"], next.assistantModel?.toString());
+  }
+  if (!const ListEquality<String>().equals(before.keepWords, next.keepWords)) {
+    editor.update(["keep_words"], next.keepWords);
   }
 }
 

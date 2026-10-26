@@ -81,15 +81,20 @@ ToolOutcome _json(Object value) => ToolOutcome(jsonEncode(value));
 
 Future<Library> _library(Ref ref) async => (await ref.read(libraryStoreProvider.future)).library;
 
+List<LibraryChange> _changes(List<ProposalItem> proposal) => [
+  for (final p in proposal)
+    if (p case ProposedChange(:final change)) change,
+];
+
+/// The setup as it would be with everything proposed so far.
+Future<Library> _proposed(Ref ref, List<ProposalItem> proposal) async =>
+    applyChanges(await _library(ref), _changes(proposal));
+
 /// Applies [item] on top of the proposal so far and validates the result,
 /// so a mistake goes back to the model instead of to the user.
 Future<ToolOutcome> _propose(Ref ref, List<ProposalItem> proposal, LibraryChange change) async {
   try {
-    applyChanges(await _library(ref), [
-      for (final p in proposal)
-        if (p case ProposedChange(:final change)) change,
-      change,
-    ]);
+    applyChanges(await _library(ref), [..._changes(proposal), change]);
     return ToolOutcome(
       "Proposed: ${change.summary}. The user reviews it before anything is saved.",
       propose: ProposalItem.change(change),
@@ -113,7 +118,10 @@ final assistantTools = <AssistantTool>[
     cancel,
   ) async {
     final file = await ref.read(libraryFileProvider.future);
-    return ToolOutcome(await file.readAsString());
+    final text = await file.readAsString();
+    final changes = _changes(proposal);
+    // The file as is when nothing is proposed, so a broken one can still be read.
+    return ToolOutcome(changes.isEmpty ? text : editLibraryText(text, changes));
   }),
   AssistantTool("list_models", "Models the user can use, with price per million tokens and whether web search works.", (
     ref,
@@ -285,9 +293,11 @@ final assistantTools = <AssistantTool>[
   ),
   AssistantTool(
     "put_profile",
-    "Propose adding or changing a profile. All matching profiles apply, top to bottom. Set at least one condition.",
+    "Propose adding a profile, or changing one by passing its name and only the fields to change. "
+        "All matching profiles apply, top to bottom, so to add an instruction where a profile already "
+        "applies, use add_use on that profile instead of adding another. An empty text or list clears a field.",
     parameters: {
-      "name": _text,
+      "name": _s("An existing profile's name changes that profile."),
       "apps": _list("App ids from current_context or list_apps."),
       "title": _s("Regex on the window title."),
       "url": _s("Regex on the browser URL."),
@@ -295,34 +305,64 @@ final assistantTools = <AssistantTool>[
       "min_words": _n("Only texts with at least this many words."),
       "max_words": _n("Only texts with at most this many words."),
       "contains": _list("Any of code, markdown, latex, link, list."),
-      "use": _list("Instruction ids, existing or proposed."),
+      "use": _list("All instruction ids, existing or proposed, replacing the current ones."),
+      "add_use": _list("Instruction ids to add to the current ones."),
+      "remove_use": _list("Instruction ids to take out."),
       "model": _s("backend/id from list_models."),
       "keep_words": _list("Words to never change in this profile."),
       "deliver": _s("paste, paste_rich or copy."),
+      "separate": llm.ParameterProperty(
+        propertyType: "boolean",
+        description: "Only when the user wants a second profile for an app that already has one.",
+      ),
     },
-    required: ["name", "use"],
+    required: ["name"],
     (ref, args, proposal, cancel) async {
       final models = await ref.read(modelCatalogProvider.future);
-      if (args["model"] != null && _model(models, args["model"]) == null) {
-        return ToolOutcome("Not proposed: ${args["model"]} is not in list_models.");
+      if (args["model"] case final String model when model.isNotEmpty && _model(models, model) == null) {
+        return ToolOutcome("Not proposed: $model is not in list_models.");
       }
+      final library = await _proposed(ref, proposal);
+      final name = (args["name"]! as String).trim();
+      final existing = library.profiles.firstWhereOrNull((p) => p.name.toLowerCase() == name.toLowerCase());
       List<String> list(String key) => ((args[key] as List?) ?? const []).cast<String>();
-      final yaml = {
-        "name": args["name"],
-        "when": {
-          "apps": list("apps"),
-          if (args["title"] != null) "title": args["title"],
-          if (args["url"] != null) "url": args["url"],
-          "languages": list("languages"),
-          if (args["min_words"] != null) "min_words": args["min_words"],
-          if (args["max_words"] != null) "max_words": args["max_words"],
-          "contains": list("contains"),
-        },
-        "use": list("use"),
-        if (args["model"] != null) "model": args["model"],
-        "keep_words": list("keep_words"),
-        if (args["deliver"] != null) "deliver": args["deliver"],
-      };
+      if (existing == null && args["separate"] != true) {
+        final apps = {for (final a in list("apps")) a.toLowerCase()};
+        if (library.profiles.firstWhereOrNull((p) => p.when.apps.any(apps.contains)) case final other?) {
+          return ToolOutcome(
+            "Not proposed: the ${other.name} profile already applies in ${other.when.apps.intersection(apps).join(", ")}. "
+            "To change it, call put_profile with name ${other.name} and only the fields to change, such as add_use. "
+            "Set separate to true only if the user asked for a second profile.",
+          );
+        }
+      }
+
+      // Starts from the profile as it is, so a change only names what changes.
+      final base = existing == null ? {"name": name} : profileToYaml(existing);
+      void set(Map<String, Object?> map, String key) {
+        switch (args[key]) {
+          case null:
+            break;
+          case "" || []:
+            map.remove(key);
+          case final value:
+            map[key] = value;
+        }
+      }
+
+      final when = {...?(base["when"] as Map?)?.cast<String, Object?>()};
+      for (final key in const ["apps", "title", "url", "languages", "min_words", "max_words", "contains"]) {
+        set(when, key);
+      }
+      final yaml = {...base, "when": when};
+      for (final key in const ["use", "model", "keep_words", "deliver"]) {
+        set(yaml, key);
+      }
+      final remove = list("remove_use").toSet();
+      yaml["use"] = {
+        ...((yaml["use"] as List?) ?? const []).cast<String>(),
+        ...list("add_use"),
+      }.where((id) => !remove.contains(id)).toList();
       try {
         // Reuses the file reader, so the assistant can never write a shape
         // the file could not hold.
@@ -517,10 +557,7 @@ final assistantTools = <AssistantTool>[
       "model": _s("backend/id. Defaults to the current model."),
     },
     (ref, args, proposal, cancel) async {
-      final library = applyChanges(await _library(ref), [
-        for (final p in proposal)
-          if (p case ProposedChange(:final change)) change,
-      ]);
+      final library = await _proposed(ref, proposal);
       final input = args["text"] as String? ?? ref.read(sessionProvider).input?.text ?? "";
       if (input.isEmpty) return const ToolOutcome("No text to try.");
       final models = await ref.read(modelCatalogProvider.future);

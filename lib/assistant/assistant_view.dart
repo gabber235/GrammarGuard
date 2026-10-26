@@ -3,7 +3,9 @@ import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:grammar_guard/assistant/assistant.dart";
 import "package:grammar_guard/assistant/tools.dart";
+import "package:grammar_guard/instructions/instruction.dart";
 import "package:grammar_guard/instructions/library_change.dart";
+import "package:grammar_guard/instructions/library_store.dart";
 import "package:grammar_guard/ui/motion.dart";
 import "package:grammar_guard/ui/surfaces.dart";
 import "package:grammar_guard/ui/theme.dart";
@@ -101,7 +103,7 @@ class AssistantView extends HookConsumerWidget {
               focusNode: reviewFocus,
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _ProposalCard(state: state),
+                child: _ProposalCard(state: state, library: ref.watch(libraryStoreProvider).value?.library),
               ),
             ),
           ),
@@ -135,8 +137,11 @@ class AssistantView extends HookConsumerWidget {
 /// What the assistant wants to change, reviewed like a rewrite: the pill
 /// marks the current line, y and x keep or drop it, Enter applies.
 class _ProposalCard extends StatelessWidget {
-  const _ProposalCard({required this.state});
+  const _ProposalCard({required this.state, required this.library});
   final AssistantState state;
+
+  /// The saved setup, to tell new things from changed ones.
+  final Library? library;
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +168,14 @@ class _ProposalCard extends StatelessWidget {
             PillRow(
               key: ValueKey(i),
               current: i == state.current,
-              child: _ProposalLine(item: p.item, dropped: p.keep == false),
+              child: _ProposalLine(
+                item: p.item,
+                dropped: p.keep == false,
+                adds: switch ((library, p.item)) {
+                  (final library?, ProposedChange(:final change)) => addsTo(library, change),
+                  _ => true,
+                },
+              ),
             ).stagger(context, i), // proposal lines stack in
         ],
       ),
@@ -172,10 +184,13 @@ class _ProposalCard extends StatelessWidget {
 }
 
 class _ProposalLine extends StatelessWidget {
-  const _ProposalLine({required this.item, required this.dropped});
+  const _ProposalLine({required this.item, required this.dropped, required this.adds});
 
   final ProposalItem item;
   final bool dropped;
+
+  /// False when the change replaces something already in the setup.
+  final bool adds;
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +198,7 @@ class _ProposalLine extends StatelessWidget {
     final (icon, color) = switch (item) {
       ProposedChange(change: RemoveInstruction() || RemoveProfile() || RemoveGroup()) => (Icons.remove, gg.removed),
       ProposedRestore() => (Icons.history, gg.model),
+      ProposedChange() when !adds => (Icons.edit, gg.added),
       ProposedChange() => (Icons.add, gg.added),
     };
     final detail = switch (item) {
@@ -212,7 +228,7 @@ class _ProposalLine extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(switch (item) {
-                  ProposedChange(:final change) => change.summary,
+                  ProposedChange(:final change) => _title(change),
                   ProposedRestore(:final entry) => "Restore the setup from before: ${entry.summary.join(", ")}",
                 }, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, decoration: strike)),
                 if (detail != null && detail.isNotEmpty)
@@ -227,6 +243,16 @@ class _ProposalLine extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _title(LibraryChange change) {
+    final verb = adds ? "New" : "Change";
+    return switch (change) {
+      PutInstruction(:final instruction) => "$verb instruction ${instruction.name}",
+      PutProfile(:final profile) => "$verb profile ${profile.name}",
+      PutGroup(:final group) => "$verb group ${group.name}",
+      _ => change.summary,
+    };
   }
 }
 
