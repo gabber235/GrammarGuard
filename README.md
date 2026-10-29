@@ -171,6 +171,10 @@ imports = [ grammarguard.homeManagerModules.default ];
 services.grammarguard.enable = true;
 ```
 
+Opening GrammarGuard shows its window, also when it already runs. A login item you add yourself (macOS Login
+Items, a Linux autostart entry) can pass `--background` to start hidden until the shortcut, as the Windows
+installer and these modules do.
+
 ## Building from source
 
 The quickest way is [devenv](https://devenv.sh): `devenv shell` installs the exact Flutter version this project

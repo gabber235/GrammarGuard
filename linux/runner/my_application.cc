@@ -9,6 +9,9 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  // The "grammar_guard/app" channel: reopen to Dart. Set once the window
+  // exists.
+  FlMethodChannel* app_channel;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -16,6 +19,15 @@ G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
+
+  // Opening the app again (a launcher, a desktop entry) activates this,
+  // the running instance. The window may be hidden with no other way back
+  // (a broken hotkey), so Dart shows it.
+  if (self->app_channel != nullptr) {
+    fl_method_channel_invoke_method(self->app_channel, "reopen", nullptr,
+                                    nullptr, nullptr, nullptr);
+    return;
+  }
 
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
@@ -46,9 +58,8 @@ static void my_application_activate(GApplication* application) {
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
 
   // The window starts hidden: the Dart session shows it through
-  // window_manager, at once when no hotkey is available, otherwise on the
-  // first hotkey press. Realizing the view (and so the window) lets Flutter
-  // render before then.
+  // window_manager once the hotkey decides popup or normal window.
+  // Realizing the view (and so the window) lets Flutter render before then.
   gtk_widget_realize(GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
@@ -56,6 +67,10 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_hide(GTK_WIDGET(window));
   text_bridge_register(view, window);
   global_shortcut_register(view);
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  self->app_channel = fl_method_channel_new(
+      fl_engine_get_binary_messenger(fl_view_get_engine(view)),
+      "grammar_guard/app", FL_METHOD_CODEC(codec));
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
@@ -72,6 +87,15 @@ static gboolean my_application_local_command_line(GApplication* application,
   if (!g_application_register(application, nullptr, &error)) {
     g_warning("Failed to register: %s", error->message);
     *exit_status = 1;
+    return TRUE;
+  }
+
+  // A login start finding GrammarGuard already running leaves it hidden.
+  if (g_application_get_is_remote(application) &&
+      g_strv_contains(
+          const_cast<const gchar* const*>(self->dart_entrypoint_arguments),
+          "--background")) {
+    *exit_status = 0;
     return TRUE;
   }
 
@@ -103,6 +127,7 @@ static void my_application_shutdown(GApplication* application) {
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
+  g_clear_object(&self->app_channel);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 
@@ -124,7 +149,14 @@ MyApplication* my_application_new() {
   // the application to be recognized beyond its binary name.
   g_set_prgname(APPLICATION_ID);
 
+  // Unique, so opening the app again activates the running one. Debug runs
+  // stay separate from an installed GrammarGuard.
+#ifdef NDEBUG
+  GApplicationFlags flags = static_cast<GApplicationFlags>(0);
+#else
+  GApplicationFlags flags = G_APPLICATION_NON_UNIQUE;
+#endif
   return MY_APPLICATION(g_object_new(my_application_get_type(),
                                      "application-id", APPLICATION_ID, "flags",
-                                     G_APPLICATION_NON_UNIQUE, nullptr));
+                                     flags, nullptr));
 }

@@ -46,7 +46,7 @@ Name: "{group}\GrammarGuard"; Filename: "{app}\GrammarGuard.exe"
 Name: "{autodesktop}\GrammarGuard"; Filename: "{app}\GrammarGuard.exe"; Tasks: desktopicon
 
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "GrammarGuard"; ValueData: """{app}\GrammarGuard.exe"""; Flags: uninsdeletevalue; Tasks: startup
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "GrammarGuard"; ValueData: """{app}\GrammarGuard.exe"" --background"; Flags: uninsdeletevalue; Tasks: startup
 
 [Run]
 Filename: "{app}\GrammarGuard.exe"; Description: "{cm:LaunchProgram,GrammarGuard}"; Flags: nowait postinstall skipifsilent

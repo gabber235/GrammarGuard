@@ -26,6 +26,12 @@ DesktopWindow desktopWindow(Ref ref) {
   return window;
 }
 
+/// Started by a login item with `--background` (the Windows installer, the
+/// nix modules): the window stays hidden until the hotkey or the OS opens
+/// it. main.dart sets it from the launch arguments.
+@Riverpod(keepAlive: true)
+bool launchedInBackground(Ref ref) => false;
+
 @Riverpod(keepAlive: true)
 GlobalHotkey globalHotkey(Ref ref) {
   final environment = Platform.environment;

@@ -1,8 +1,15 @@
 #include "flutter_window.h"
 
+#include <flutter/standard_method_codec.h>
+
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
+
+UINT ReopenMessage() {
+  static const UINT message = ::RegisterWindowMessageW(L"GrammarGuard.Reopen");
+  return message;
+}
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -27,17 +34,21 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   text_bridge_ = std::make_unique<TextBridge>(
       flutter_controller_->engine()->messenger(), GetHandle());
+  app_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          flutter_controller_->engine()->messenger(), "grammar_guard/app",
+          &flutter::StandardMethodCodec::GetInstance());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   // The window starts hidden: the Dart session shows it through
-  // window_manager, at once when no hotkey is available, otherwise on the
-  // first hotkey press.
+  // window_manager once the hotkey decides popup or normal window.
 
   return true;
 }
 
 void FlutterWindow::OnDestroy() {
   text_bridge_ = nullptr;
+  app_channel_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -57,6 +68,11 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     if (result) {
       return *result;
     }
+  }
+
+  if (message == ReopenMessage()) {
+    if (app_channel_) app_channel_->InvokeMethod("reopen", nullptr);
+    return 0;
   }
 
   switch (message) {

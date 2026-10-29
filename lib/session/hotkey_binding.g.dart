@@ -38,7 +38,7 @@ final class HotkeyBindingProvider extends $AsyncNotifierProvider<HotkeyBinding, 
   HotkeyBinding create() => HotkeyBinding();
 }
 
-String _$hotkeyBindingHash() => r'f22123e40f0d32fc7b538b6d69e561f32fade819';
+String _$hotkeyBindingHash() => r'f7984591f9d35b6622da449429a7a9a75861c0ec';
 
 /// Registers the user's shortcut and re-registers when it changes in
 /// Settings. Its status decides popup or normal window.

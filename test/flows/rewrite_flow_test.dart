@@ -61,6 +61,38 @@ void main() {
     expect(app.model.calls, isEmpty);
   });
 
+  testFlow("launching or opening the app again shows the popup without the hotkey", (app) async {
+    expect(app.window.popup, isTrue);
+    expect(app.shownAtLaunch, isTrue, reason: "a launch shows the window although the hotkey works");
+    expect(app.visible, isFalse, reason: "going back to the other app hid it");
+
+    app.window.emit(WindowEvent.reopened);
+    await app.settle();
+    expect(app.visible, isTrue, reason: "Finder, Explorer or a launcher opened the app again");
+    expect(app.model.calls, isEmpty);
+  });
+
+  testFlow("a login start stays hidden until the hotkey", background: true, (app) async {
+    expect(app.window.popup, isTrue);
+    expect(app.shownAtLaunch, isFalse);
+
+    app.selection = "helo";
+    app.model.reply(["hello"]);
+    await app.pressHotkey();
+    expect(app.visible, isTrue);
+  });
+
+  testFlow("the hotkey closes the popup the OS opened, and sends nothing", (app) async {
+    // The popup is in front, so the clipboard would be the only text to take.
+    app.clipboard = "my password";
+    app.window.emit(WindowEvent.reopened);
+    await app.settle();
+
+    await app.pressHotkey();
+    expect(app.visible, isFalse);
+    expect(app.model.calls, isEmpty);
+  });
+
   testFlow("rejecting a replacement keeps the original word (B2)", (app) async {
     app
       ..frontApp = notes
