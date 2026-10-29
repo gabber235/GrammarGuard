@@ -49,6 +49,16 @@ final screens = <Screen>[
     await review(app);
     await _keys(app, [LogicalKeyboardKey.keyN]);
   }, brightness: Brightness.light),
+  // A change that wraps: marked from where it starts to where it ends, not
+  // over the full lines around it.
+  Screen("review wrapped", (app) async {
+    app
+      ..frontApp = discord
+      ..selection = _wrappedInput;
+    app.model.reply([_wrappedOutput]);
+    await app.pressHotkey();
+    await _keys(app, [LogicalKeyboardKey.keyN, LogicalKeyboardKey.keyN, LogicalKeyboardKey.keyN]);
+  }),
   Screen("review decided", (app) async {
     await review(app);
     await _keys(app, [LogicalKeyboardKey.keyY, LogicalKeyboardKey.keyX, LogicalKeyboardKey.keyY]);
@@ -179,6 +189,17 @@ const _input =
 const _output =
     "Hey team, I think we should have shipped this Friday, but the tests weren't ready. "
     "Let's aim for Monday. If anyone has concerns, let me know.";
+
+const _wrappedInput =
+    "There is a reason this no longer works. Paper removed several enum variants, which makes "
+    "supporting multiple versions frustrating. 1.21.1 is now well over 2 years old, if you still "
+    "have plugins that block you from upgrading you can safely consider them abandond and should "
+    "move a way from them. Our v1 rewrite will drop 1.21.3 as well.";
+const _wrappedOutput =
+    "There is a reason this no longer works. Paper removed several enum variants, which makes "
+    "supporting multiple versions frustrating. If plugins block your upgrade, keep in mind that "
+    "1.21.1 is now over two years old: you can safely consider those plugins abandoned and find "
+    "alternatives. Our v1 rewrite will drop 1.21.3 as well.";
 
 /// A Discord message rewritten and ready for review.
 Future<void> review(FlowApp app) async {
