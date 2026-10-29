@@ -51,7 +51,7 @@ void main() {
     await app.settle();
 
     await app.press(LogicalKeyboardKey.keyK);
-    expect(find.text("Hold Cmd, Option, Ctrl or Shift too."), findsOneWidget);
+    expect(find.text("Hold Cmd, Option, Ctrl or Shift too, or use an F key."), findsOneWidget);
 
     await app.tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
     await app.press(LogicalKeyboardKey.keyK);
@@ -60,6 +60,18 @@ void main() {
     final saved = await hotkey(app);
     expect(saved.logicalKey, LogicalKeyboardKey.keyK);
     expect(saved.modifiers, [HotKeyModifier.control]);
+  });
+
+  testFlow("Change records a function key on its own", (app) async {
+    await openGeneral(app);
+    await app.tester.tap(find.text("Change"));
+    await app.settle();
+
+    await app.press(LogicalKeyboardKey.f1);
+
+    final saved = await hotkey(app);
+    expect(saved.physicalKey, PhysicalKeyboardKey.f1);
+    expect(saved.modifiers, isEmpty);
   });
 
   testFlow("Esc while recording cancels and stays in Settings", (app) async {

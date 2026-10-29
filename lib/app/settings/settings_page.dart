@@ -282,9 +282,41 @@ class _AssistantModelPicker extends ConsumerWidget {
   }
 }
 
+/// Keys nobody types with, so they may be the shortcut on their own.
+final _bareKeys = {
+  PhysicalKeyboardKey.f1,
+  PhysicalKeyboardKey.f2,
+  PhysicalKeyboardKey.f3,
+  PhysicalKeyboardKey.f4,
+  PhysicalKeyboardKey.f5,
+  PhysicalKeyboardKey.f6,
+  PhysicalKeyboardKey.f7,
+  PhysicalKeyboardKey.f8,
+  PhysicalKeyboardKey.f9,
+  PhysicalKeyboardKey.f10,
+  PhysicalKeyboardKey.f11,
+  PhysicalKeyboardKey.f12,
+  PhysicalKeyboardKey.f13,
+  PhysicalKeyboardKey.f14,
+  PhysicalKeyboardKey.f15,
+  PhysicalKeyboardKey.f16,
+  PhysicalKeyboardKey.f17,
+  PhysicalKeyboardKey.f18,
+  PhysicalKeyboardKey.f19,
+  PhysicalKeyboardKey.f20,
+  PhysicalKeyboardKey.f21,
+  PhysicalKeyboardKey.f22,
+  PhysicalKeyboardKey.f23,
+  PhysicalKeyboardKey.f24,
+  PhysicalKeyboardKey.pause,
+  PhysicalKeyboardKey.scrollLock,
+  PhysicalKeyboardKey.insert,
+};
+
 /// Shows the shortcut; Change listens for exactly one new one. Only while
-/// recording are keys taken, a modifier is required (a bare letter would
-/// steal that letter in every app), and Esc cancels.
+/// recording are keys taken, a modifier is required unless the key is in
+/// [_bareKeys] (a bare letter would steal that letter in every app), and Esc
+/// cancels.
 class _ShortcutRecorder extends HookConsumerWidget {
   const _ShortcutRecorder({required this.current, required this.mac});
 
@@ -313,8 +345,8 @@ class _ShortcutRecorder extends HookConsumerWidget {
         for (final m in HotKeyModifier.values)
           if (m != HotKeyModifier.capsLock && m.physicalKeys.any(pressed.contains)) m,
       ];
-      if (modifiers.isEmpty) {
-        hint.value = "Hold Cmd, Option, Ctrl or Shift too.";
+      if (modifiers.isEmpty && !_bareKeys.contains(key)) {
+        hint.value = "Hold Cmd, Option, Ctrl or Shift too, or use an F key.";
         return KeyEventResult.handled;
       }
       recording.value = false;
