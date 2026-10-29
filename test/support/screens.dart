@@ -57,7 +57,6 @@ final screens = <Screen>[
       ..selection = _wrappedInput;
     app.model.reply([_wrappedOutput]);
     await app.pressHotkey();
-    await _keys(app, [LogicalKeyboardKey.keyN, LogicalKeyboardKey.keyN, LogicalKeyboardKey.keyN]);
   }),
   Screen("review decided", (app) async {
     await review(app);
@@ -190,16 +189,15 @@ const _output =
     "Hey team, I think we should have shipped this Friday, but the tests weren't ready. "
     "Let's aim for Monday. If anyone has concerns, let me know.";
 
+// One change that starts halfway the first line and ends halfway the third.
 const _wrappedInput =
-    "There is a reason this no longer works. Paper removed several enum variants, which makes "
-    "supporting multiple versions frustrating. 1.21.1 is now well over 2 years old, if you still "
-    "have plugins that block you from upgrading you can safely consider them abandond and should "
-    "move a way from them. Our v1 rewrite will drop 1.21.3 as well.";
+    "There is a reason this compatibility is gone. 1.21.1 is well over 2 years old, if you still "
+    "have plugins that block you from upgrading you can consider them abandond. Our v1 rewrite "
+    "will drop 1.21.3 as well, so plan the move now.";
 const _wrappedOutput =
-    "There is a reason this no longer works. Paper removed several enum variants, which makes "
-    "supporting multiple versions frustrating. If plugins block your upgrade, keep in mind that "
-    "1.21.1 is now over two years old: you can safely consider those plugins abandoned and find "
-    "alternatives. Our v1 rewrite will drop 1.21.3 as well.";
+    "There is a reason this compatibility is gone. Anything stuck on that release counts as "
+    "abandoned; swap it for something maintained. Our v1 rewrite will drop 1.21.3 as well, so "
+    "plan the move now.";
 
 /// A Discord message rewritten and ready for review.
 Future<void> review(FlowApp app) async {
