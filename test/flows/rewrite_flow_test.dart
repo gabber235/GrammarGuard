@@ -74,6 +74,18 @@ void main() {
     expect(app.pastedInto(notes), "the food is good");
   });
 
+  testFlow("a result without changes still shows the review", (app) async {
+    app
+      ..frontApp = notes
+      ..selection = "the food is good";
+    app.model.reply(["the food is good"]);
+
+    await app.pressHotkey();
+    expect(find.textContaining("the food is good", findRichText: true), findsOneWidget);
+    await app.press(LogicalKeyboardKey.enter);
+    expect(app.pastedInto(notes), "the food is good");
+  });
+
   testFlow("] steps the edit level and [ comes back from the cache", (app) async {
     app
       ..frontApp = notes
