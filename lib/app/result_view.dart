@@ -162,7 +162,9 @@ class _ReviewText extends ConsumerWidget {
       current: current,
       output: run.text,
       scroll: scroll,
-      note: _reason(ref, document.pendingChanges.elementAtOrNull(current ?? -1)),
+      // elementAtOrNull throws on a negative index, so no current change
+      // must not become -1.
+      note: _reason(ref, current == null ? null : document.pendingChanges.elementAtOrNull(current)),
     );
   }
 
