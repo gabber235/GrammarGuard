@@ -1,6 +1,7 @@
 // The Rail: change map on the left, the text on
 // the right, a highlighter that glides to the current change.
 
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:grammar_guard/review/review_spans.dart";
@@ -133,7 +134,8 @@ class ReviewPane extends HookWidget {
         // Laid out once per build to find where each change sits. The same
         // TextSpan is painted below, so the rects line up exactly.
         final painter = TextPainter(text: text, textDirection: TextDirection.ltr)..layout(maxWidth: width);
-        final rects = _changeRects(painter, shown);
+        final lines = _changeLines(painter, shown);
+        final rects = {for (final MapEntry(:key, :value) in lines.entries) key: _bounds(value)};
         final textHeight = painter.height;
         painter.dispose();
         final at = current == null ? null : rects[current];
@@ -164,7 +166,7 @@ class ReviewPane extends HookWidget {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    _Highlighter(rect: at, color: gg.highlighter),
+                    _Highlighter(lines: current == null ? null : lines[current], color: gg.highlighter),
                     RichText(text: text),
                     if ((note, at) case (final note?, final at?))
                       Positioned(
@@ -213,69 +215,119 @@ class ReviewPane extends HookWidget {
     };
   }
 
-  /// One rect per change: the union of its removed and added text boxes.
-  Map<int, Rect> _changeRects(TextPainter painter, List<String> shown) {
-    final rects = <int, Rect>{};
+  /// The lines each change covers, top to bottom: per visual line, the
+  /// union of its removed and added text boxes on that line. A change that
+  /// wraps from the end of one line to the start of the next is two short
+  /// rects, not one box over both full lines.
+  Map<int, List<Rect>> _changeLines(TextPainter painter, List<String> shown) {
+    final lines = <int, List<Rect>>{};
     var offset = 0;
     for (final (i, span) in spans.indexed) {
       final end = offset + shown[i].length;
       if (span.change case final change?) {
+        final rects = lines.putIfAbsent(change, () => []);
         for (final box in painter.getBoxesForSelection(TextSelection(baseOffset: offset, extentOffset: end))) {
           final rect = box.toRect();
-          rects[change] = rects[change]?.expandToInclude(rect) ?? rect;
+          final line = rects.indexWhere((r) => r.top < rect.bottom && rect.top < r.bottom);
+          if (line == -1) {
+            rects.add(rect);
+          } else {
+            rects[line] = rects[line].expandToInclude(rect);
+          }
         }
       }
       offset = end;
     }
-    return rects;
+    // A removed line break is an empty box on an otherwise empty line; it
+    // has nothing to mark. Keep it only when the change is nothing else.
+    return {
+      for (final MapEntry(:key, :value) in lines.entries)
+        if (value.isNotEmpty)
+          key: switch (value.where((r) => r.width > 0).toList()) {
+            [] => value,
+            final wide => wide..sort((a, b) => a.top.compareTo(b.top)),
+          },
+    };
   }
+
+  static Rect _bounds(List<Rect> lines) => lines.reduce((a, b) => a.expandToInclude(b));
 }
 
-/// Glides from the last change to the new one, then sweeps its width in
-/// from the left, like running a highlighter pen over the words.
+/// Glides from the last change to the new one, then sweeps over its lines
+/// from the left, one line after the other, like running a highlighter pen
+/// over the words.
 class _Highlighter extends StatelessWidget {
-  const _Highlighter({required this.rect, required this.color});
+  const _Highlighter({required this.lines, required this.color});
 
-  final Rect? rect;
+  /// The current change's lines, top to bottom.
+  final List<Rect>? lines;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final target = rect;
+    final target = lines?.map((line) => line.inflate(3)).toList();
     if (target == null) return const SizedBox.shrink();
+    final bounds = ReviewPane._bounds(target);
+    // The glide moves the change's bounds; its lines ride along inside them
+    // and land exactly on the text when the bounds arrive.
     return TweenAnimationBuilder<Rect?>(
-      tween: RectTween(end: target.inflate(3)),
+      tween: RectTween(end: bounds),
       duration: context.motion(Motion.slow),
       curve: Motion.glide,
       builder: (context, value, _) => TweenAnimationBuilder<double>(
-        key: ValueKey(target), // restart the sweep for each new change
+        key: ValueKey(bounds), // restart the sweep for each new change
         tween: Tween(begin: context.reduceMotion ? 1 : 0, end: 1),
         duration: context.motion(Motion.medium),
         curve: Motion.out,
         builder: (context, sweep, _) => CustomPaint(
-          painter: _HighlightPainter(rect: value!, sweep: sweep, color: color.withValues(alpha: 0.32)),
+          painter: _HighlightPainter(
+            lines: [for (final line in target) _within(line, bounds, value!)],
+            sweep: sweep,
+            color: color.withValues(alpha: 0.32),
+          ),
           size: Size.infinite,
         ),
       ),
     );
   }
+
+  /// [line], placed in [to] as it sits in [from].
+  static Rect _within(Rect line, Rect from, Rect to) {
+    final sx = from.width == 0 ? 1.0 : to.width / from.width;
+    final sy = from.height == 0 ? 1.0 : to.height / from.height;
+    return Rect.fromLTRB(
+      to.left + (line.left - from.left) * sx,
+      to.top + (line.top - from.top) * sy,
+      to.left + (line.right - from.left) * sx,
+      to.top + (line.bottom - from.top) * sy,
+    );
+  }
 }
 
 class _HighlightPainter extends CustomPainter {
-  const _HighlightPainter({required this.rect, required this.sweep, required this.color});
+  const _HighlightPainter({required this.lines, required this.sweep, required this.color});
 
-  final Rect rect;
+  final List<Rect> lines;
   final double sweep;
   final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final swept = Rect.fromLTWH(rect.left, rect.top, rect.width * sweep, rect.height);
-    canvas.drawRRect(RRect.fromRectAndRadius(swept, const Radius.circular(5)), Paint()..color = color);
+    final paint = Paint()..color = color;
+    // The sweep runs over the lines in reading order, as one long stroke.
+    var left = sweep * lines.fold(0.0, (total, line) => total + line.width);
+    for (final line in lines) {
+      if (left <= 0) break;
+      final width = left < line.width ? left : line.width;
+      final swept = Rect.fromLTWH(line.left, line.top, width, line.height);
+      canvas.drawRRect(RRect.fromRectAndRadius(swept, const Radius.circular(5)), paint);
+      left -= line.width;
+    }
   }
 
   @override
-  bool shouldRepaint(_HighlightPainter old) => old.rect != rect || old.sweep != sweep || old.color != color;
+  bool shouldRepaint(_HighlightPainter old) =>
+      !listEquals(old.lines, lines) || old.sweep != sweep || old.color != color;
 }
 
 /// One dot per change at its height in the text; the current one is a
