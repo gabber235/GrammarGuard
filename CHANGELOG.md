@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/gabber235/GrammarGuard/compare/v1.2.2...v1.2.3) (2026-10-30)
+
+
+### Bug fixes
+
+* **footer:** count a new rewrite's time from its start ([6dcc9ca](https://github.com/gabber235/GrammarGuard/commit/6dcc9caaa40f127aba911808415b6bbf9e068e80))
+
 ## [1.2.2](https://github.com/gabber235/GrammarGuard/compare/v1.2.1...v1.2.2) (2026-10-30)
 
 
