@@ -1,6 +1,6 @@
 # Publishing
 
-A release starts when the release pull request that release-please keeps open is merged (see the README).
+A release starts when the release pull request that release-please keeps open is merged (see CONTRIBUTING.md).
 `.github/workflows/release.yml` then builds every platform, attaches the files to the GitHub release, and
 publishes them:
 
