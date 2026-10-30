@@ -33,7 +33,7 @@ encode() {
     last=${frames[${#frames[@]}-1]}
     unset "frames[${#frames[@]}-1]"
     # The last frame holds, so each loop shows the result before starting over.
-    img2webp -loop 0 -lossy -q 80 -m 4 -d "$delay" "${frames[@]}" -d 1500 "$last" -o "$web/films/$name.webp" >/dev/null
+    img2webp -loop 0 -lossless -m 4 -d "$delay" "${frames[@]}" -d 1500 "$last" -o "$web/films/$name.webp" >/dev/null
   done
 }
 
@@ -61,9 +61,10 @@ replace() {
   git worktree remove --force "$tree"
 }
 
-# The pull request's comment: changed screens before and after, every film,
-# then every screen. "Changed" means the committed CI golden changed; the
-# "before" image is the one published from main.
+# The pull request's comment: the films of the app in use, then the
+# screens this pull request changed, before and after. "Changed" means the
+# committed CI golden changed; the "before" image is the one published from
+# main.
 comment() {
   local pr=$1 base=$2 sha
   sha=$(git rev-parse --short HEAD)
@@ -74,7 +75,17 @@ comment() {
 
   {
     echo "$marker"
-    echo "## How it looks now"
+    echo "## The app in use"
+    echo
+    for film in "$web"/films/*.webp; do
+      local name
+      name=$(basename "${film%.webp}")
+      echo "**${name//_/ }**"
+      echo
+      echo "<img src=\"$after/films/$name.webp?v=$sha\" width=\"720\">"
+      echo
+    done
+    echo "## Screens this changes"
     echo
     if [[ -z $changed ]]; then
       echo "No screen changed in this pull request."
@@ -85,30 +96,6 @@ comment() {
         echo "| ${name//_/ } | <img src=\"$before/screens/$name.webp?v=$sha\" width=\"360\"> | <img src=\"$after/screens/$name.webp?v=$sha\" width=\"360\"> |"
       done
     fi
-    echo
-    echo "<details><summary>Motion</summary>"
-    echo
-    for film in "$web"/films/*.webp; do
-      local name
-      name=$(basename "${film%.webp}")
-      echo "**${name//_/ }**"
-      echo
-      echo "<img src=\"$after/films/$name.webp?v=$sha\" width=\"720\">"
-      echo
-    done
-    echo "</details>"
-    echo
-    echo "<details><summary>Every screen</summary>"
-    echo
-    for screen in "$web"/screens/*.webp; do
-      local name
-      name=$(basename "${screen%.webp}")
-      echo "**${name//_/ }**"
-      echo
-      echo "<img src=\"$after/screens/$name.webp?v=$sha\" width=\"720\">"
-      echo
-    done
-    echo "</details>"
     echo
     echo "<sub>Rendered from $sha by the UI media workflow.</sub>"
   } >"$media/comment.md"
