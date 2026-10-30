@@ -10,7 +10,8 @@
 }:
 let
   # The Flutter release pubspec.yaml pins (`environment: flutter:`), the one
-  # place the version is set: CI reads the same line (flutter-version-file).
+  # place the version is set. CI jobs that cannot use devenv (Windows, and
+  # the Linux release builds) read the same line.
   flutterVersion =
     let
       pinned = builtins.match ".*\n  flutter: \"?([^\"\n ]+)\"? *\n.*" (builtins.readFile ./pubspec.yaml);
@@ -59,6 +60,7 @@ in
     pkgs.wayland
     pkgs.libxkbcommon
     pkgs.wayland-scanner
+    pkgs.xvfb-run # `it linux` without a display, as in CI
   ];
 
   # On macOS, Xcode builds everything native: its SDK, compiler and linker.
@@ -86,6 +88,14 @@ in
       printf '#!${pkgs.runtimeShell}\nPKG_CONFIG_PATH=%q exec %q "$@"\n' "$PKG_CONFIG_PATH" "$(command -v pkg-config)" >"$DEVENV_STATE/bin/pkg-config"
       chmod +x "$DEVENV_STATE/bin/pkg-config"
       export PATH="$DEVENV_STATE/bin:$PATH"
+      # Nix's GL libraries look for drivers in /run/opengl-driver, which only
+      # NixOS has. Elsewhere (Ubuntu in CI) the app finds no OpenGL and exits
+      # at start; Mesa's software drivers from Nix stand in.
+      if [[ ! -e /run/opengl-driver ]]; then
+        export LD_LIBRARY_PATH="${pkgs.mesa}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+        export LIBGL_DRIVERS_PATH="${pkgs.mesa}/lib/dri"
+        export __EGL_VENDOR_LIBRARY_FILENAMES="${pkgs.mesa}/share/glvnd/egl_vendor.d/50_mesa.json"
+      fi
     ''}
     # A fixed path for editors: point the Flutter SDK setting at .devenv/flutter.
     ln -sfn "$FLUTTER_ROOT" "$DEVENV_ROOT/.devenv/flutter"
