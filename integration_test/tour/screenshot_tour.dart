@@ -123,7 +123,7 @@ void main() {
         "apps": ["com.hnc.discord", "discord.exe", "discord"],
         "use": ["discord", "friendly-short"],
       })
-      ..says("I added a Friendly and short instruction and switched the Discord profile to it.");
+      ..says("I added a **Friendly and short** instruction and switched the **Discord** profile to it.");
 
     final container = ProviderContainer(
       overrides: [

@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gpt_markdown/gpt_markdown.dart";
 import "package:grammar_guard/assistant/assistant.dart";
 import "package:grammar_guard/assistant/tools.dart";
 import "package:grammar_guard/instructions/instruction.dart";
@@ -11,6 +12,7 @@ import "package:grammar_guard/ui/surfaces.dart";
 import "package:grammar_guard/ui/theme.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:llm_dart/llm_dart.dart" as llm;
+import "package:url_launcher/url_launcher.dart";
 
 /// The conversation and its proposal. Two focus spots, one meaning per key:
 /// on the proposal n p y x Enter review it like a rewrite; Tab goes to the
@@ -279,8 +281,11 @@ class _Mine extends StatelessWidget {
   }
 }
 
-/// The assistant's answer: plain text at reading width, no bubble, so long
-/// answers read like a note rather than a chat.
+/// The assistant's answer: Markdown at reading width, no bubble, so long
+/// answers read like a note rather than a chat. Web links open in the
+/// browser. Images are left out: the answer can echo text the assistant read
+/// from a selection or a page, and loading an image URL would send data out
+/// without a click.
 class _Answer extends StatelessWidget {
   const _Answer({required this.text});
   final String text;
@@ -288,7 +293,17 @@ class _Answer extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(right: 120, top: 6, bottom: 6),
-    child: SelectableText(text, style: const TextStyle(fontSize: 16, height: 1.5)),
+    child: SelectionArea(
+      child: GptMarkdown(
+        text,
+        style: TextStyle(fontSize: 16, height: 1.5, color: context.gg.ink),
+        onLinkTap: (url, _) {
+          final uri = Uri.tryParse(url);
+          if (uri != null && (uri.scheme == "https" || uri.scheme == "http")) launchUrl(uri);
+        },
+        imageBuilder: (_, _, _, _) => const SizedBox.shrink(),
+      ),
+    ),
   );
 }
 
