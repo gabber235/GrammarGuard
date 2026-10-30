@@ -56,6 +56,17 @@ void main() {
     expect(app.bridge.pasted, isEmpty);
   });
 
+  testFlow("a rewrite started after a quiet while counts its time from its start", (app) async {
+    app
+      ..frontApp = notes
+      ..selection = "helo";
+    app.model.hang();
+
+    await app.tester.pump(const Duration(minutes: 1));
+    await app.pressHotkey();
+    expect(find.textContaining(RegExp(r"^-\d")), findsNothing);
+  });
+
   testFlow("nothing is sent to a model at launch", (app) async {
     app.clipboard = "my password";
     expect(app.model.calls, isEmpty);

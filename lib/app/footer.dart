@@ -26,15 +26,17 @@ class Footer extends HookConsumerWidget {
     final bar = ref.watch(sessionProvider.select((s) => s.bar?.mode));
     final session = ref.read(sessionActionsProvider);
     final assistant = ref.watch(assistantProvider.select((a) => (open: a.open, proposal: a.proposal.isNotEmpty)));
-    final now = useState(clock.now());
+    // Ticks redraw the running time; the time itself is read now, so a run
+    // that starts after a quiet while does not count from the last tick.
+    final ticks = useState(0);
     final active = run?.isActive ?? false;
     useTimer(const Duration(milliseconds: 500), (_) {
-      if (active) now.value = clock.now();
+      if (active) ticks.value++;
     }, keys: [active]);
 
     final timing = switch (run) {
       Done(:final took) => _duration(took),
-      Waiting(:final startedAt) || Streaming(:final startedAt) => _duration(now.value.difference(startedAt)),
+      Waiting(:final startedAt) || Streaming(:final startedAt) => _duration(clock.now().difference(startedAt)),
       _ => "",
     };
     final speed = switch (run) {
