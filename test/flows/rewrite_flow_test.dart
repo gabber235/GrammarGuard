@@ -65,6 +65,7 @@ void main() {
     await app.tester.pump(const Duration(minutes: 1));
     await app.pressHotkey();
     expect(find.textContaining(RegExp(r"^-\d")), findsNothing);
+    expect(find.textContaining(RegExp(r"^0\.\ds$")), findsOneWidget);
   });
 
   testFlow("nothing is sent to a model at launch", (app) async {
