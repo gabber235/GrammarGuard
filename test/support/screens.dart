@@ -3,6 +3,7 @@ import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:grammar_guard/assistant/assistant.dart";
 import "package:grammar_guard/llm/llm.dart";
+import "package:grammar_guard/platform/scripted_llm.dart";
 import "package:grammar_guard/session/session.dart";
 import "package:llm_dart/llm_dart.dart" as llm;
 
@@ -30,14 +31,14 @@ final screens = <Screen>[
   Screen("thinking", (app) async {
     app
       ..frontApp = notes
-      ..selection = _input;
+      ..selection = discordMessage;
     app.model.midStream([], thinking: "The user wants a light polish. Fix capitalization and the of/have mistake, ");
     await app.pressHotkey();
   }),
   Screen("streaming", (app) async {
     app
       ..frontApp = discord
-      ..selection = _input;
+      ..selection = discordMessage;
     app.model.midStream(["Hey team, I think we should ", "have shipped this Friday, but the tests"]);
     await app.pressHotkey();
   }),
@@ -182,7 +183,8 @@ final screens = <Screen>[
   }),
 ];
 
-const _input =
+/// A Discord message with the mistakes people make when they type fast.
+const discordMessage =
     "hey team, i think we should of shipped this friday but the tests wasnt ready. "
     "lets aim for monday, if anyone has concerns lmk";
 const _output =
@@ -203,7 +205,7 @@ const _wrappedOutput =
 Future<void> review(FlowApp app) async {
   app
     ..frontApp = discord
-    ..selection = _input;
+    ..selection = discordMessage;
   app.model.reply([_output]);
   await app.pressHotkey();
 }
@@ -226,19 +228,23 @@ Future<void> _settings(FlowApp app, [String? section]) async {
 
 Future<void> _proposal(FlowApp app) async {
   await review(app);
-  app.model
-    ..callsTool("put_instruction", {
-      "id": "friendly-short",
-      "name": "Friendly and short",
-      "text": "Keep it warm and casual, cut filler, at most three sentences.",
-    })
-    ..callsTool("put_profile", {
-      "name": "Discord",
-      "apps": ["com.hnc.discord"],
-      "use": ["friendly-short", "discord"],
-    })
-    ..says("I added a **Friendly and short** instruction and switched the **Discord** profile to it.");
+  proposeFriendlierDiscord(app.model);
   await app.chooseAssistantModel();
   await app.openAssistant("make my Discord replies friendlier and shorter");
   expect(app.read(assistantProvider).proposal, hasLength(2));
 }
+
+/// The assistant's answer to "make my Discord replies friendlier": a new
+/// instruction and the Discord profile switched to it.
+void proposeFriendlierDiscord(ScriptedLlm model) => model
+  ..callsTool("put_instruction", {
+    "id": "friendly-short",
+    "name": "Friendly and short",
+    "text": "Keep it warm and casual, cut filler, at most three sentences.",
+  })
+  ..callsTool("put_profile", {
+    "name": "Discord",
+    "apps": ["com.hnc.discord"],
+    "use": ["friendly-short", "discord"],
+  })
+  ..says("I added a **Friendly and short** instruction and switched the **Discord** profile to it.");

@@ -2,6 +2,8 @@ import "dart:ui";
 
 import "package:flutter/material.dart";
 
+import "../support/desktop.dart";
+
 /// What a film shows around the app: a chat app where the text is written,
 /// selected and pasted back, the app's window over it while it shows, and
 /// the keys being pressed, so a viewer sees the whole story and not only
@@ -90,9 +92,7 @@ class StageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final light = stage.light;
-    final blobs = light
-        ? const [Color(0xFFB7CBE6), Color(0xFFE6D3C6), Color(0xFFC9DED6), Color(0xFFD6CFE4)]
-        : const [Color(0xFF274B8F), Color(0xFF8A3B5C), Color(0xFF1F6E63), Color(0xFF5A3A8C)];
+    final colors = wallpaper(light: light);
     // The app is built once and stays mounted; only the frame around it
     // follows the stage.
     final window = MediaQuery(
@@ -102,8 +102,8 @@ class StageView extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        ColoredBox(color: light ? const Color(0xFFDDE2EA) : const Color(0xFF101521)),
-        for (final (i, color) in blobs.indexed)
+        ColoredBox(color: colors.base),
+        for (final (i, color) in colors.blobs.indexed)
           Positioned(
             left: [-80.0, 700.0, 220.0, 960.0][i],
             top: [-80.0, -140.0, 420.0, 360.0][i],

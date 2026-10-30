@@ -133,7 +133,7 @@ void main() {
         brightness: brightness,
         before: (app, stage) async => app.model.reply(_chunks),
         timeline: {
-          300: (app, stage) async => stage.type(_input),
+          300: (app, stage) async => stage.type(discordMessage),
           2600: (app, stage) async {
             stage
               ..show(["Cmd", "A"])
@@ -208,18 +208,7 @@ void main() {
       before: (app, stage) async {
         await _ready(app, stage);
         await app.chooseAssistantModel();
-        app.model
-          ..callsTool("put_instruction", {
-            "id": "friendly-short",
-            "name": "Friendly and short",
-            "text": "Keep it warm and casual, cut filler, at most three sentences.",
-          })
-          ..callsTool("put_profile", {
-            "name": "Discord",
-            "apps": ["com.hnc.discord"],
-            "use": ["friendly-short", "discord"],
-          })
-          ..says("I added a **Friendly and short** instruction and switched the **Discord** profile to it.");
+        proposeFriendlierDiscord(app.model);
       },
       timeline: {
         400: _press(LogicalKeyboardKey.space),
@@ -277,17 +266,13 @@ String _label(LogicalKeyboardKey key) => switch (key) {
 /// The message written, selected and rewritten, ready for review.
 Future<void> _ready(FlowApp app, Stage stage) async {
   stage
-    ..draft = _input
+    ..draft = discordMessage
     ..selected = true;
-  app.selection = _input;
+  app.selection = discordMessage;
   app.model.reply(_chunks);
   await app.pressHotkey();
   await app.tester.pump(const Duration(seconds: 2));
 }
-
-const _input =
-    "hey team, i think we should of shipped this friday but the tests wasnt ready. "
-    "lets aim for monday, if anyone has concerns lmk";
 
 /// Why each change was made, as the model answers ? in the review.
 const _reasons = r"""
