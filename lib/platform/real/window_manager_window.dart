@@ -1,6 +1,7 @@
 import "dart:async";
 import "dart:io";
 
+import "package:flutter/services.dart";
 import "package:flutter/widgets.dart";
 import "package:flutter_acrylic/flutter_acrylic.dart";
 
@@ -10,12 +11,19 @@ import "package:window_manager/window_manager.dart";
 class WindowManagerWindow with WindowListener, WidgetsBindingObserver implements DesktopWindow {
   WindowManagerWindow(this._manager) {
     _manager.addListener(this);
+    // The runner reports the OS opening the app again (macOS reopen, a
+    // second launch on Windows and Linux), which window_manager does not.
+    _app.setMethodCallHandler((call) async {
+      if (call.method != "reopen") throw MissingPluginException();
+      _events.add(WindowEvent.reopened);
+    });
     WidgetsBinding.instance.addObserver(this);
     // Closing goes through onWindowClose so a running rewrite is cancelled first.
     unawaited(_manager.setPreventClose(true));
   }
 
   final WindowManager _manager;
+  static const _app = MethodChannel("grammar_guard/app");
   final _events = StreamController<WindowEvent>.broadcast();
   var _popup = false;
 
@@ -91,6 +99,7 @@ class WindowManagerWindow with WindowListener, WidgetsBindingObserver implements
 
   void dispose() {
     _manager.removeListener(this);
+    _app.setMethodCallHandler(null);
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_events.close());
   }

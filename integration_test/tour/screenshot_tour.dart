@@ -133,6 +133,8 @@ void main() {
         fileSystemProvider.overrideWithValue(files),
         appSupportDirProvider.overrideWith((ref) async => files.directory("/support")..createSync()),
         trayProvider.overrideWith((ref) async {}),
+        // Started like a login item: hidden until the hotkey shows it.
+        launchedInBackgroundProvider.overrideWithValue(true),
         desktopWindowProvider.overrideWith((ref) {
           final window = WindowManagerWindow(windowManager);
           ref.onDispose(window.dispose);
@@ -141,9 +143,9 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    // Started like main.dart does. pumpWidget would wait for a frame, and
-    // the popup draws none until the hotkey shows it; showing it early to
-    // get one is not what the app does and upsets Metal.
+    // Started like main.dart does at login. pumpWidget would wait for a
+    // frame, and the popup draws none until the hotkey shows it; showing
+    // it early to get one is not what the app does and upsets Metal.
     runApp(UncontrolledProviderScope(container: container, child: const GrammarGuardApp()));
     await _wait(tester, 2000);
 

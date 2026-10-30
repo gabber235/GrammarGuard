@@ -2,6 +2,8 @@
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
 
+#include <cwchar>
+
 #include "flutter_window.h"
 #include "utils.h"
 
@@ -11,6 +13,34 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // new console when running with a debugger.
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {
     CreateAndAttachConsole();
+  }
+
+  // One GrammarGuard at a time. Opening it again (Explorer, the Start menu,
+  // a shortcut) asks the running one to show its window, which may be
+  // hidden with no other way back, then quits. The lock is released when
+  // the process ends. Debug runs stay separate from an installed one.
+#ifdef _DEBUG
+  ::CreateMutexW(nullptr, FALSE, L"Local\\GrammarGuard.debug");
+#else
+  ::CreateMutexW(nullptr, FALSE, L"Local\\GrammarGuard");
+#endif
+  if (::GetLastError() == ERROR_ALREADY_EXISTS) {
+    // A login start finding GrammarGuard already running leaves it hidden.
+    if (wcsstr(command_line, L"--background")) return EXIT_SUCCESS;
+    // Right after the running one starts, its window may not exist yet.
+    HWND running = nullptr;
+    for (int tries = 0; !running && tries < 20; ++tries) {
+      running = ::FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"GrammarGuard");
+      if (!running) ::Sleep(100);
+    }
+    if (running) {
+      DWORD process = 0;
+      ::GetWindowThreadProcessId(running, &process);
+      // This launch may take the foreground; let the running app have it.
+      ::AllowSetForegroundWindow(process);
+      ::PostMessageW(running, ReopenMessage(), 0, 0);
+    }
+    return EXIT_SUCCESS;
   }
 
   // Initialize COM, so that it is available for use in the library and/or

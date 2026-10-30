@@ -312,6 +312,10 @@ class SessionActions {
       case WindowEvent.closeRequested:
         state = state.copyWith(cancelled: true);
         await window.close();
+      case WindowEvent.reopened:
+        // Opening the app is a way in that needs no hotkey, so a broken
+        // shortcut never locks anyone out.
+        await window.show();
     }
   }
 }

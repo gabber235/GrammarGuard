@@ -88,7 +88,14 @@ abstract interface class TextBridge {
   Future<Delivery> deliver(String text, Captured from, {required DeliveryMode mode, String? html});
 }
 
-enum WindowEvent { blurred, closeRequested }
+enum WindowEvent {
+  blurred,
+  closeRequested,
+
+  /// The OS opened the running app again: Finder, the Dock, Raycast,
+  /// Explorer, the Start menu or a desktop shortcut.
+  reopened,
+}
 
 /// GrammarGuard's own window.
 abstract interface class DesktopWindow {

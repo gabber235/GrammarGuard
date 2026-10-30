@@ -45,6 +45,52 @@ final class DesktopWindowProvider extends $FunctionalProvider<DesktopWindow, Des
 
 String _$desktopWindowHash() => r'58121b1cd6b1655373c1e5ca32898841bc00e088';
 
+/// Started by a login item with `--background` (the Windows installer, the
+/// nix modules): the window stays hidden until the hotkey or the OS opens
+/// it. main.dart sets it from the launch arguments.
+
+@ProviderFor(launchedInBackground)
+final launchedInBackgroundProvider = LaunchedInBackgroundProvider._();
+
+/// Started by a login item with `--background` (the Windows installer, the
+/// nix modules): the window stays hidden until the hotkey or the OS opens
+/// it. main.dart sets it from the launch arguments.
+
+final class LaunchedInBackgroundProvider extends $FunctionalProvider<bool, bool, bool> with $Provider<bool> {
+  /// Started by a login item with `--background` (the Windows installer, the
+  /// nix modules): the window stays hidden until the hotkey or the OS opens
+  /// it. main.dart sets it from the launch arguments.
+  LaunchedInBackgroundProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'launchedInBackgroundProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$launchedInBackgroundHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return launchedInBackground(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<bool>(value));
+  }
+}
+
+String _$launchedInBackgroundHash() => r'937be1329c8e95d9ab0cc27ab4dae28134a2f0de';
+
 @ProviderFor(globalHotkey)
 final globalHotkeyProvider = GlobalHotkeyProvider._();
 

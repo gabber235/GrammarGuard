@@ -24,7 +24,10 @@ in
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [ cfg.package ];
     launchd.user.agents.grammarguard.serviceConfig = {
-      ProgramArguments = [ "${cfg.package}/Applications/GrammarGuard.app/Contents/MacOS/GrammarGuard" ];
+      ProgramArguments = [
+        "${cfg.package}/Applications/GrammarGuard.app/Contents/MacOS/GrammarGuard"
+        "--background"
+      ];
       RunAtLoad = true;
       KeepAlive.SuccessfulExit = false;
       ProcessType = "Interactive";

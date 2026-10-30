@@ -29,9 +29,11 @@ import "replay_adapter.dart";
 
 /// The whole app with the OS and the model replaced. Reads like the story.
 class FlowApp {
-  FlowApp() {
+  /// [background]: started by a login item.
+  FlowApp({bool background = false}) {
     container = ProviderContainer(
       overrides: [
+        launchedInBackgroundProvider.overrideWithValue(background),
         desktopWindowProvider.overrideWithValue(window),
         globalHotkeyProvider.overrideWithValue(hotkey),
         textBridgeProvider.overrideWithValue(bridge),
@@ -59,9 +61,13 @@ class FlowApp {
   /// The app, as the test pumps it.
   Widget get widget => UncontrolledProviderScope(container: container, child: const GrammarGuardApp());
 
+  /// Whether launching showed the window, before [start] left it.
+  late final bool shownAtLaunch;
+
   /// Window size, reduced motion (unless [motion], for filming
   /// transitions), mocked storage; then waits until the setup file is read
-  /// and the model list is known, as a user would before pressing the hotkey.
+  /// and the model list is known, as a user would before pressing the hotkey,
+  /// and goes back to the other app, which hides the popup.
   Future<void> start(WidgetTester tester, {bool pump = true, bool motion = false}) async {
     this.tester = tester;
     tester.view.physicalSize = const Size(1000, 600);
@@ -79,6 +85,9 @@ class FlowApp {
       await settle();
     }
     expect(ready, isTrue, reason: "The app did not load its setup and models.");
+    shownAtLaunch = window.visible;
+    window.emit(WindowEvent.blurred);
+    await settle();
   }
 
   SourceApp? get frontApp => bridge.source;
@@ -156,13 +165,18 @@ void mockStorage() {
 /// A widget test with fakes for every port, the bundled library, and an
 /// Anthropic key so the catalog is not empty. [platform] runs it as that
 /// OS, for behavior that differs per platform (text field keys, labels).
-void testFlow(String description, Future<void> Function(FlowApp app) body, {TargetPlatform? platform}) {
+void testFlow(
+  String description,
+  Future<void> Function(FlowApp app) body, {
+  TargetPlatform? platform,
+  bool background = false,
+}) {
   testWidgets(
     variant: platform == null ? const DefaultTestVariant() : TargetPlatformVariant.only(platform),
     description,
     (tester) async {
       mockStorage();
-      final app = FlowApp();
+      final app = FlowApp(background: background);
       await app.start(tester);
       await body(app);
       // Let short delays end (the "Copied" toast keeps the popup up 700 ms).

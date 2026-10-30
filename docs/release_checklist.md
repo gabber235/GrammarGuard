@@ -26,6 +26,17 @@ still holds what was on it before.
 After every row: paste somewhere else and check it still gives
 `clipboard before`.
 
+## Opening the app
+
+On every OS, with the hotkey working:
+
+- Opening the app (Finder, Raycast, the Start menu, a desktop shortcut,
+  the Linux launcher) shows the window.
+- Opening it again while it runs hidden shows the window, and no second
+  copy or tray icon appears.
+- A login start (`--background`, from the Windows installer or the nix
+  modules) stays hidden until the hotkey.
+
 ## Permissions and updates (macOS)
 
 - Fresh install without Accessibility: the hotkey uses the clipboard and
@@ -51,5 +62,5 @@ After every row: paste somewhere else and check it still gives
 - On GNOME and KDE the permission dialog to type appears once and is
   remembered after a restart.
 - On GNOME and KDE no remote control indicator stays after a paste.
-- Without the GlobalShortcuts portal the window opens at launch instead.
+- Without the GlobalShortcuts portal the window opens in window mode.
 - Cmd or Ctrl+V in the window takes the clipboard; Enter copies the result.

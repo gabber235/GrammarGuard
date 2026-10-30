@@ -6,8 +6,7 @@ import "package:hotkey_manager/hotkey_manager.dart";
 import "package:window_manager/window_manager.dart";
 
 /// Clears hotkeys left by a crashed run and prepares a hidden window.
-/// The session shows it: at once when no hotkey is available, otherwise on
-/// the first hotkey press.
+/// The session shows it once the hotkey decides popup or normal window.
 Future<void> prepareWindow() async {
   await hotKeyManager.unregisterAll();
   await Window.initialize(); // flutter_acrylic, for the glass effect

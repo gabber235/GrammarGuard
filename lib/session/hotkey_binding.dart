@@ -20,10 +20,11 @@ class HotkeyBinding extends _$HotkeyBinding {
     final status = await hotkey.register(hotKey, () => ref.read(sessionActionsProvider).onHotkey());
     final window = ref.read(desktopWindowProvider);
     await window.setPopup(popup: status is HotkeyActive);
-    if (status is HotkeyUnavailable) {
-      // No hotkey means no other way in: show the window now.
-      await window.show();
-    }
+    // A launch is someone opening the app, so the window shows, hotkey or
+    // not. A login item stays hidden unless there is no hotkey to open it
+    // with. Later builds come from changing the shortcut in Settings, where
+    // the window is already shown.
+    if (status is HotkeyUnavailable || !ref.read(launchedInBackgroundProvider)) await window.show();
     return status;
   }
 }

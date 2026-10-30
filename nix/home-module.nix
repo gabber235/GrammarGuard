@@ -34,7 +34,10 @@ in
         launchd.agents.grammarguard = {
           enable = true;
           config = {
-            ProgramArguments = [ program ];
+            ProgramArguments = [
+              program
+              "--background"
+            ];
             RunAtLoad = true;
             KeepAlive.SuccessfulExit = false;
             ProcessType = "Interactive";
@@ -49,7 +52,7 @@ in
             After = [ "graphical-session.target" ];
           };
           Service = {
-            ExecStart = program;
+            ExecStart = "${program} --background";
             Restart = "on-failure";
           };
           Install.WantedBy = [ "graphical-session.target" ];
