@@ -1,0 +1,15 @@
+name: devenv
+description: Nix, the binary caches and devenv, so jobs run the commands devenv.nix defines
+runs:
+  using: composite
+  steps:
+    - uses: cachix/install-nix-action@v31
+    - uses: cachix/cachix-action@v17
+      with:
+        name: devenv
+        # Prebuilt Flutter from flutter-overlay.
+        extraPullNames: gabber235
+
+    - name: Install devenv
+      shell: bash
+      run: nix profile add nixpkgs#devenv

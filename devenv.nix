@@ -10,7 +10,8 @@
 }:
 let
   # The Flutter release pubspec.yaml pins (`environment: flutter:`), the one
-  # place the version is set: CI reads the same line (flutter-version-file).
+  # place the version is set. CI jobs that cannot use devenv (Windows, and
+  # the Linux release builds) read the same line.
   flutterVersion =
     let
       pinned = builtins.match ".*\n  flutter: \"?([^\"\n ]+)\"? *\n.*" (builtins.readFile ./pubspec.yaml);
@@ -59,6 +60,7 @@ in
     pkgs.wayland
     pkgs.libxkbcommon
     pkgs.wayland-scanner
+    pkgs.xvfb-run # `it linux` without a display, as in CI
   ];
 
   # On macOS, Xcode builds everything native: its SDK, compiler and linker.

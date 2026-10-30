@@ -59,14 +59,10 @@ jobs:
         with:
           ref: ${{ needs.release.outputs.tag }}
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: pubspec.yaml
+      - uses: ./.github/actions/devenv
 
       - name: Build
-        run: |
-          flutter pub get
-          flutter build macos --release
+        run: devenv shell -- flutter build macos --release
 
       # One self-signed certificate for every release. macOS ties the
       # Accessibility permission to the signing identity, so with a stable
@@ -103,13 +99,14 @@ jobs:
 
       - name: Package and upload
         run: |
-          tool/release.sh macos
+          devenv shell -- tool/release.sh macos
           gh release upload "$TAG" dist/* --clobber
 
   linux:
     needs: release
     if: needs.release.outputs.tag != ''
     # The oldest supported Ubuntu, so the binaries run on older glibc too.
+    # Not devenv: a Nix build links against /nix/store and runs nowhere else.
     runs-on: ubuntu-22.04
     env:
       TAG: ${{ needs.release.outputs.tag }}
@@ -154,9 +151,7 @@ jobs:
         with:
           ref: ${{ needs.release.outputs.tag }}
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: pubspec.yaml
+      - uses: ./.github/actions/flutter-windows
 
       - name: Build
         run: |

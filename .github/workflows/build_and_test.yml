@@ -16,15 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: cachix/install-nix-action@v31
-      - uses: cachix/cachix-action@v17
-        with:
-          name: devenv
-          # Prebuilt Flutter from flutter-overlay.
-          extraPullNames: gabber235
-
-      - name: Install devenv
-        run: nix profile add nixpkgs#devenv
+      - uses: ./.github/actions/devenv
 
       - name: Check
         run: devenv test
@@ -46,21 +38,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev libsecret-1-dev libkeybinder-3.0-dev libxtst-dev libx11-dev libxi-dev libwayland-dev libxkbcommon-dev xvfb
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: pubspec.yaml
-
-      - name: Install dependencies
-        run: flutter pub get
+      - uses: ./.github/actions/devenv
 
       - name: Integration test
-        run: xvfb-run -a flutter test integration_test -d linux
+        run: devenv shell -- xvfb-run -a it linux
 
   integration-macos:
     if: github.event_name == 'pull_request'
@@ -70,16 +51,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: pubspec.yaml
-
-      - name: Install dependencies
-        run: flutter pub get
+      - uses: ./.github/actions/devenv
 
       - name: Integration test
-        run: flutter test integration_test -d macos
+        run: devenv shell it macos
 
   integration-windows:
     if: github.event_name == 'pull_request'
@@ -89,10 +64,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: pubspec.yaml
+      - uses: ./.github/actions/flutter-windows
 
       - name: Install dependencies
         run: flutter pub get
@@ -110,16 +82,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: pubspec.yaml
+      - uses: ./.github/actions/devenv
 
       - name: Build
-        run: |
-          flutter pub get
-          flutter build macos --release
-          tool/release.sh macos
+        run: devenv shell package
 
       - uses: actions/upload-artifact@v4
         with:
@@ -129,6 +95,8 @@ jobs:
 
   build-linux:
     needs: test-and-analyze
+    # As the release: the oldest supported Ubuntu and not devenv, whose
+    # builds link against /nix/store and run nowhere else.
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
@@ -166,10 +134,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: pubspec.yaml
+      - uses: ./.github/actions/flutter-windows
 
       - name: Build
         run: |

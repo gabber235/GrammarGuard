@@ -1,0 +1,17 @@
+name: Flutter on Windows
+description: The Flutter release pubspec.yaml pins, for Windows where devenv cannot run
+runs:
+  using: composite
+  steps:
+    # flutter-action reads flutter-version-file with yq, which it installs
+    # from Chocolatey on Windows; a Chocolatey outage then fails the build.
+    # The same line devenv.nix reads, without yq.
+    - name: Read the pinned Flutter version
+      id: pin
+      shell: bash
+      run: |
+        echo "version=$(sed -nE 's/^  flutter: "?([^" ]+)"?.*/\1/p' pubspec.yaml)" >> "$GITHUB_OUTPUT"
+
+    - uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ steps.pin.outputs.version }}
