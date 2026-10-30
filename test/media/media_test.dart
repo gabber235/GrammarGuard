@@ -32,14 +32,15 @@ void main() {
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
     mockStorage();
     final app = FlowApp();
-    await app.start(tester, pump: false, motion: motion);
+    // Mounted first: opening the app shows the window, and start leaves it
+    // for the other app. The other way round, the first hotkey hides it.
     await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
         child: Desktop(light: brightness == Brightness.light, child: app.widget),
       ),
     );
-    await app.settle();
+    await app.start(tester, pump: false, motion: motion);
     return app;
   }
 
