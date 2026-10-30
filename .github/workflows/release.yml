@@ -59,7 +59,14 @@ jobs:
         with:
           ref: ${{ needs.release.outputs.tag }}
 
-      - uses: ./.github/actions/devenv
+      # A rebuilt older tag may predate these actions: they come from this
+      # workflow's own commit instead.
+      - uses: actions/checkout@v4
+        with:
+          path: .ci
+          sparse-checkout: .github/actions
+
+      - uses: ./.ci/.github/actions/devenv
 
       - name: Build
         run: devenv shell -- flutter build macos --release
@@ -151,7 +158,14 @@ jobs:
         with:
           ref: ${{ needs.release.outputs.tag }}
 
-      - uses: ./.github/actions/flutter-windows
+      # A rebuilt older tag may predate these actions: they come from this
+      # workflow's own commit instead.
+      - uses: actions/checkout@v4
+        with:
+          path: .ci
+          sparse-checkout: .github/actions
+
+      - uses: ./.ci/.github/actions/flutter-windows
 
       - name: Build
         run: |
