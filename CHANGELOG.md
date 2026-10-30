@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/gabber235/GrammarGuard/compare/v1.2.1...v1.2.2) (2026-10-30)
+
+
+### Bug fixes
+
+* **assistant:** render Markdown in the answers ([#25](https://github.com/gabber235/GrammarGuard/issues/25)) ([3fc41e0](https://github.com/gabber235/GrammarGuard/commit/3fc41e0af7357698eab5dca4fc1ee88a46a75511))
+
 ## [1.2.1](https://github.com/gabber235/GrammarGuard/compare/v1.2.0...v1.2.1) (2026-10-30)
 
 
