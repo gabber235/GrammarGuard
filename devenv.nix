@@ -248,6 +248,9 @@ in
         exec ${flutter}/bin/dart format --set-exit-if-changed "$@"
       ''}";
       files = "\\.dart$";
+      # One process: parallel batches each run that pub get on a fresh
+      # checkout and collide on the git dependency's lock.
+      require_serial = true;
       excludes = [
         "\\.g\\.dart$"
         "\\.freezed\\.dart$"
