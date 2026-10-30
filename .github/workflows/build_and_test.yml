@@ -43,6 +43,11 @@ jobs:
       - name: Integration test
         run: devenv shell -- xvfb-run -a it linux
 
+      # flutter test hides why an app did not start; its own output shows it.
+      - name: Start the app directly
+        if: failure()
+        run: devenv shell -- timeout 20 xvfb-run -a build/linux/x64/debug/bundle/grammarguard || true
+
   integration-macos:
     if: github.event_name == 'pull_request'
     needs: test-and-analyze
