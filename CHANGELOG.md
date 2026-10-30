@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.1](https://github.com/gabber235/GrammarGuard/compare/v1.2.0...v1.2.1) (2026-10-30)
+
+
+### Bug fixes
+
+* **assistant:** change existing profiles instead of adding new ones ([#17](https://github.com/gabber235/GrammarGuard/issues/17)) ([47f4a52](https://github.com/gabber235/GrammarGuard/commit/47f4a52c0d161d5c1657060527dc8471ab448983))
+* **review:** highlight a wrapping change per line ([#20](https://github.com/gabber235/GrammarGuard/issues/20)) ([ecd86cd](https://github.com/gabber235/GrammarGuard/commit/ecd86cd91c2122fb19604b25aa337cc3ff68171b))
+* **review:** show a result without changes instead of an error box ([#22](https://github.com/gabber235/GrammarGuard/issues/22)) ([a83104d](https://github.com/gabber235/GrammarGuard/commit/a83104dbbb2b27e349fe0865695b8e046866f7cd))
+* **settings:** accept F keys as the shortcut without a modifier ([#21](https://github.com/gabber235/GrammarGuard/issues/21)) ([14f71cd](https://github.com/gabber235/GrammarGuard/commit/14f71cd79c6bfb9bcf325d2c9bb009804d39f214))
+* show the window when the app is opened, not only by the hotkey ([#23](https://github.com/gabber235/GrammarGuard/issues/23)) ([3a0a182](https://github.com/gabber235/GrammarGuard/commit/3a0a18230a998d7a382b75b5ca5488d813e8c33b))
+
 ## [1.2.0](https://github.com/gabber235/GrammarGuard/compare/v1.1.1...v1.2.0) (2026-10-25)
 
 
