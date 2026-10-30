@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json
 
 PackageIdentifier: Gabber235.GrammarGuard
-PackageVersion: 1.2.1
+PackageVersion: 1.2.2
 InstallerType: inno
 Scope: user
 InstallModes:
@@ -13,7 +13,7 @@ ProductCode: '{6F1C2B5E-7A41-4C8E-9D0A-3B5E8C1F2A94}_is1'
 ReleaseDate: 2026-10-30
 Installers:
 - Architecture: x64
-  InstallerUrl: https://github.com/gabber235/GrammarGuard/releases/download/v1.2.1/GrammarGuard-windows-setup.exe
-  InstallerSha256: C3E6F208B2273D6EE8675B3FA11711C9C5FFF47572DA6F4D561512DA72741EB8
+  InstallerUrl: https://github.com/gabber235/GrammarGuard/releases/download/v1.2.2/GrammarGuard-windows-setup.exe
+  InstallerSha256: D3CD169FFF1A91966758FC7D9FE13D3A6D108458E42C00DCC5680147732E66F7
 ManifestType: installer
 ManifestVersion: 1.12.0
