@@ -50,6 +50,32 @@ void main() {
     expect(find.textContaining("**", findRichText: true), findsNothing);
   });
 
+  testFlow("a web link in the answer opens in the browser", (app) async {
+    final opened = <Object?>[];
+    app.tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel("plugins.flutter.io/url_launcher"),
+      (call) async {
+        opened.add((call.arguments as Map)["url"]);
+        return true;
+      },
+    );
+    await app.chooseAssistantModel();
+    app.model.says("See [the guide](https://example.com/guide).");
+
+    await app.openAssistant("where is the guide?");
+    await app.tester.tapOnText(find.textRange.ofSubstring("the guide"));
+    expect(opened, ["https://example.com/guide"]);
+  });
+
+  testFlow("an image in the answer is never loaded", (app) async {
+    await app.chooseAssistantModel();
+    app.model.says("Here: ![x](https://example.com/a.png)");
+
+    await app.openAssistant("show me");
+    expect(find.textContaining("Here:", findRichText: true), findsOneWidget);
+    expect(find.byType(Image), findsNothing);
+  });
+
   testFlow("adding an instruction to a profile changes that profile, not a new one", (app) async {
     await app.chooseAssistantModel();
     app.model
