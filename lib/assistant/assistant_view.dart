@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:gpt_markdown/gpt_markdown.dart";
 import "package:grammar_guard/assistant/assistant.dart";
 import "package:grammar_guard/assistant/tools.dart";
 import "package:grammar_guard/instructions/instruction.dart";
@@ -279,7 +280,7 @@ class _Mine extends StatelessWidget {
   }
 }
 
-/// The assistant's answer: plain text at reading width, no bubble, so long
+/// The assistant's answer: Markdown at reading width, no bubble, so long
 /// answers read like a note rather than a chat.
 class _Answer extends StatelessWidget {
   const _Answer({required this.text});
@@ -288,7 +289,9 @@ class _Answer extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(right: 120, top: 6, bottom: 6),
-    child: SelectableText(text, style: const TextStyle(fontSize: 16, height: 1.5)),
+    child: SelectionArea(
+      child: GptMarkdown(text, style: TextStyle(fontSize: 16, height: 1.5, color: context.gg.ink)),
+    ),
   );
 }
 

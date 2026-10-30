@@ -237,7 +237,7 @@ Future<void> _proposal(FlowApp app) async {
       "apps": ["com.hnc.discord"],
       "use": ["friendly-short", "discord"],
     })
-    ..says("I added a Friendly and short instruction and switched the Discord profile to it.");
+    ..says("I added a **Friendly and short** instruction and switched the **Discord** profile to it.");
   await app.chooseAssistantModel();
   await app.openAssistant("make my Discord replies friendlier and shorter");
   expect(app.read(assistantProvider).proposal, hasLength(2));
