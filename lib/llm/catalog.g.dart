@@ -8,6 +8,63 @@ part of 'catalog.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// The latest check per backend, written by [ModelCatalog], which asks each
+/// service anyway. No entry means no check ran, such as for Apple's model.
+
+@ProviderFor(ConnectionChecks)
+final connectionChecksProvider = ConnectionChecksProvider._();
+
+/// The latest check per backend, written by [ModelCatalog], which asks each
+/// service anyway. No entry means no check ran, such as for Apple's model.
+final class ConnectionChecksProvider extends $NotifierProvider<ConnectionChecks, Map<Backend, ConnectionCheck>> {
+  /// The latest check per backend, written by [ModelCatalog], which asks each
+  /// service anyway. No entry means no check ran, such as for Apple's model.
+  ConnectionChecksProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'connectionChecksProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$connectionChecksHash();
+
+  @$internal
+  @override
+  ConnectionChecks create() => ConnectionChecks();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<Backend, ConnectionCheck> value) {
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<Backend, ConnectionCheck>>(value));
+  }
+}
+
+String _$connectionChecksHash() => r'c26c74c208cf6d77f8cfc8ddc9df6ba55c6423cf';
+
+/// The latest check per backend, written by [ModelCatalog], which asks each
+/// service anyway. No entry means no check ran, such as for Apple's model.
+
+abstract class _$ConnectionChecks extends $Notifier<Map<Backend, ConnectionCheck>> {
+  Map<Backend, ConnectionCheck> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<Map<Backend, ConnectionCheck>, Map<Backend, ConnectionCheck>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Map<Backend, ConnectionCheck>, Map<Backend, ConnectionCheck>>,
+              Map<Backend, ConnectionCheck>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
 
 @ProviderFor(bundledModels)
 final bundledModelsProvider = BundledModelsProvider._();
@@ -73,7 +130,7 @@ final class ModelCatalogProvider extends $AsyncNotifierProvider<ModelCatalog, Li
   ModelCatalog create() => ModelCatalog();
 }
 
-String _$modelCatalogHash() => r'347eb907bbd803c93a3602dd5dfe5065c40e8aae';
+String _$modelCatalogHash() => r'9e1f0b22518922a0a2f489a3da86908c34f6464d';
 
 /// Every model the user can pick. Starts from the bundled list so the window
 /// never waits on the network, then refreshes from each backend's own list

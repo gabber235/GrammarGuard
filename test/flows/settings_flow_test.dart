@@ -2,6 +2,7 @@ import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:grammar_guard/app/settings/connection_tile.dart";
 import "package:grammar_guard/app/settings/settings_page.dart";
 import "package:grammar_guard/instructions/instruction.dart";
 import "package:grammar_guard/instructions/library_store.dart";
@@ -10,6 +11,7 @@ import "package:grammar_guard/llm/llm.dart";
 import "package:grammar_guard/settings/hotkey_setting.dart";
 import "package:grammar_guard/ui/surfaces.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
+import "package:llm_dart/llm_dart.dart" as llm;
 
 import "../support/test_flow.dart";
 
@@ -162,6 +164,58 @@ void main() {
 
     expect(find.text("No models yet. Add an API key under Connections below."), findsOneWidget);
     expect(find.text("Nothing matches."), findsNothing);
+  });
+
+  group("an API key", () {
+    Finder keyField() =>
+        find.descendant(of: find.widgetWithText(ConnectionRow, "OpenAI"), matching: find.byType(TextField));
+
+    String? saved(FlowApp app) => app.container.read(connectionsProvider).value?[Backend.openai]?.apiKey;
+
+    testFlow("saves itself soon after it is pasted, without Enter", (app) async {
+      await openSettings(app);
+      await app.tester.enterText(keyField(), "sk-pasted");
+      await app.tester.pump(ConnectionRow.saveDelay);
+      await app.settle();
+
+      expect(saved(app), "sk-pasted");
+      expect(find.textContaining("OpenAI"), findsWidgets);
+    });
+
+    testFlow("saves on leaving Settings straight after pasting", (app) async {
+      await openSettings(app);
+      await app.tester.enterText(keyField(), "sk-pasted");
+
+      await app.press(LogicalKeyboardKey.escape);
+
+      expect(find.byType(SettingsPage), findsNothing);
+      expect(saved(app), "sk-pasted");
+    });
+
+    testFlow("the service refusing it shows as rejected, not ready", (app) async {
+      app.model.listing = const llm.AuthError("Invalid OpenAI API key");
+      await openSettings(app);
+      await app.tester.enterText(keyField(), "sk-wrong");
+      await app.tester.pump(ConnectionRow.saveDelay);
+      await app.settle();
+
+      expect(
+        find.descendant(of: find.widgetWithText(ConnectionRow, "OpenAI"), matching: find.text("Key rejected")),
+        findsOneWidget,
+      );
+    });
+
+    testFlow("a service that cannot answer does not call the key wrong", (app) async {
+      await openSettings(app);
+      await app.tester.enterText(keyField(), "sk-pasted");
+      await app.tester.pump(ConnectionRow.saveDelay);
+      await app.settle();
+
+      expect(
+        find.descendant(of: find.widgetWithText(ConnectionRow, "OpenAI"), matching: find.text("Saved, not checked")),
+        findsOneWidget,
+      );
+    });
   });
 
   testFlow("Esc closes the open list and keeps Settings; Enter opens it again", (app) async {
