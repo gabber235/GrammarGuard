@@ -1,6 +1,10 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:grammar_guard/platform/ports.dart";
+import "package:grammar_guard/settings/hotkey_setting.dart";
+import "package:hotkey_manager/hotkey_manager.dart";
+import "package:grammar_guard/llm/catalog.dart";
 import "package:grammar_guard/assistant/assistant.dart";
 import "package:grammar_guard/llm/llm.dart";
 import "package:grammar_guard/platform/scripted_llm.dart";
@@ -66,7 +70,19 @@ final screens = <Screen>[
   Screen("review why", (app) async {
     await review(app);
     app.model.says('{"reasons": [{"id": 0, "reason": "A message starts with a capital letter."}]}');
+    await _keys(app, [LogicalKeyboardKey.keyW]);
+  }),
+  Screen("keys", (app) async {
+    await review(app);
     await _keys(app, [LogicalKeyboardKey.slash], hold: LogicalKeyboardKey.shiftLeft);
+  }),
+  Screen("keys empty", (app) async {
+    await _keys(app, [LogicalKeyboardKey.slash], hold: LogicalKeyboardKey.shiftLeft);
+  }),
+  const Screen("choose first", _chooseFirst),
+  Screen("choose first waiting", (app) async {
+    await _chooseFirst(app);
+    await _keys(app, [LogicalKeyboardKey.escape]);
   }),
   Screen("side by side", (app) async {
     await review(app);
@@ -176,6 +192,23 @@ final screens = <Screen>[
   }),
   Screen("settings general", (app) => _settings(app, "General")),
   Screen("settings general light", (app) => _settings(app, "General"), brightness: Brightness.light),
+  Screen("settings general choose first", (app) async {
+    await _setChooseFirst(app);
+    await _settings(app, "General");
+  }),
+  Screen("settings keys", (app) => _settings(app, "Keys")),
+  Screen("settings models rejected", (app) async {
+    await _settings(app);
+    app.read(connectionChecksProvider.notifier).report(Backend.anthropic, const ConnectionCheck.rejected());
+    await app.settle();
+  }),
+  Screen("settings history custom", (app) async {
+    await review(app);
+    await _keys(app, [LogicalKeyboardKey.enter]);
+    await app.read(historyLimitProvider.notifier).set(250);
+    await app.settle();
+    await _settings(app, "History");
+  }),
   Screen("settings history", (app) async {
     await review(app);
     await _keys(app, [LogicalKeyboardKey.enter]);
@@ -224,6 +257,31 @@ Future<void> _settings(FlowApp app, [String? section]) async {
     await app.tester.tap(find.text(section).first);
     await app.settle();
   }
+}
+
+Future<void> _setChooseFirst(FlowApp app) async {
+  await app
+      .read(chooseFirstHotkeySettingProvider.notifier)
+      .set(
+        HotKey(
+          key: PhysicalKeyboardKey.keyM,
+          modifiers: [HotKeyModifier.alt, HotKeyModifier.shift],
+          scope: HotKeyScope.system,
+        ),
+      );
+  await app.settle();
+}
+
+/// The second shortcut pressed in Discord: the models, nothing sent.
+Future<void> _chooseFirst(FlowApp app) async {
+  await _setChooseFirst(app);
+  // Changing a shortcut shows the window, and a hotkey hides a shown popup.
+  await app.window.hide();
+  app
+    ..frontApp = discord
+    ..selection = discordMessage;
+  app.hotkey.press(HotkeyPurpose.chooseFirst);
+  await app.settle();
 }
 
 Future<void> _proposal(FlowApp app) async {

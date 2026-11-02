@@ -1,14 +1,18 @@
 // Replaces text_display.dart (611 lines)
+import "dart:async";
+
 import "package:animations/animations.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:gpt_markdown/gpt_markdown.dart";
+import "package:grammar_guard/app/command_runner.dart";
 import "package:grammar_guard/app/setup_line.dart";
 import "package:grammar_guard/models/pending_change.dart";
 import "package:grammar_guard/review/explain.dart";
 import "package:grammar_guard/review/review.dart";
 import "package:grammar_guard/review/review_spans.dart";
 import "package:grammar_guard/rewrite/run.dart";
+import "package:grammar_guard/session/commands.dart";
 import "package:grammar_guard/session/session.dart";
 import "package:grammar_guard/settings/hotkey_setting.dart";
 import "package:grammar_guard/ui/motion.dart";
@@ -30,7 +34,7 @@ class Preview extends _$Preview {
   void toggle() => state = !state;
 }
 
-/// ? toggles the reason under the current change.
+/// W toggles the reason under the current change.
 @riverpod
 class ShowReason extends _$ShowReason {
   @override
@@ -39,36 +43,57 @@ class ShowReason extends _$ShowReason {
   void toggle() => state = !state;
 }
 
+/// H switches the review between inline and side by side.
+@Riverpod(keepAlive: true)
+class ReviewLayout extends _$ReviewLayout {
+  @override
+  DiffView build() => DiffView.inline;
+
+  void toggle() => state = state == DiffView.inline ? DiffView.sideBySide : DiffView.inline;
+}
+
+/// The inline review's scroll position, moved by J, K and D.
+@Riverpod(keepAlive: true)
+ScrollController reviewScroll(Ref ref) {
+  final controller = ScrollController();
+  ref.onDispose(controller.dispose);
+  return controller;
+}
+
 class ResultView extends ConsumerWidget {
-  const ResultView({required this.view, required this.preview, required this.scroll, super.key});
-
-  final DiffView view;
-
-  /// V: the final text rendered as Markdown, instead of the diff.
-  final bool preview;
-  final ScrollController scroll;
+  const ResultView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider);
     final run = ref.watch(currentRunProvider);
+    final view = ref.watch(reviewLayoutProvider);
+    final preview = ref.watch(previewProvider);
+    final scroll = ref.watch(reviewScrollProvider);
+    final runner = ref.read(commandRunnerProvider);
     final gg = context.gg;
-    final primary = defaultTargetPlatform == TargetPlatform.macOS ? "Cmd" : "Ctrl";
+    KeyHint hint(AppCommand command) =>
+        KeyHint(command.labels, command.hint, onTap: () => unawaited(runner.run(command)));
 
     final body = switch ((session.input, run?.value)) {
       // Notices ("Copied", "Cancelled") appear as a toast; the empty view
       // keeps its own hint so nothing is said twice.
       (null, _) => const _Empty(),
-      (_, null) when session.cancelled => const _Status(
+      (_, null) when session.hold == RunHold.cancelled => _Status(
         message: "Cancelled.",
+        hints: [hint(AppCommand.retry)],
+      ),
+      (_, null) when session.hold == RunHold.choosing => _Status(
+        message: "Nothing sent yet.",
         hints: [
-          KeyHint(["R"], "try again"),
+          hint(AppCommand.changeModel),
+          KeyHint(AppCommand.retry.labels, "use the usual model", onTap: () => unawaited(runner.run(AppCommand.retry))),
         ],
       ),
       (_, null) => _Status(
         message: "No model is set up yet.",
         hints: [
-          KeyHint([primary, ","], "open Settings"),
+          KeyHint(AppCommand.settings.labels, "open Settings", onTap: () => unawaited(runner.run(AppCommand.settings))),
         ],
       ),
       // Writing, streaming and the finished review are one view: the
@@ -88,13 +113,7 @@ class ResultView extends ConsumerWidget {
         ),
       ),
       (_, Streaming(:final text)) => _ReviewText(scroll: scroll, writing: text),
-      (_, Failed(:final message)) => _Status(
-        message: message,
-        failed: true,
-        hints: const [
-          KeyHint(["R"], "try again"),
-        ],
-      ),
+      (_, Failed(:final message)) => _Status(message: message, failed: true, hints: [hint(AppCommand.retry)]),
       (_, Done()) when preview => RailColumn(
         child: SingleChildScrollView(
           child: GptMarkdown(
@@ -265,7 +284,16 @@ class _Empty extends ConsumerWidget {
           ] else
             Text("Copy some text, then press", style: quiet),
           const SizedBox(height: 12),
-          keys([if (mac) "Cmd" else "Ctrl", "V"]),
+          keys(AppCommand.clipboard.labels),
+          const SizedBox(height: 28),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Press ", style: quiet),
+              const KeyCap("?"),
+              Text(" to see all keys", style: quiet),
+            ],
+          ),
         ],
       ),
     );

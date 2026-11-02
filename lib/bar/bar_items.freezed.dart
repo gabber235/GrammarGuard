@@ -135,13 +135,13 @@ return ask(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Instruction instruction,  bool active)?  instruction,TResult Function( Profile profile)?  profile,TResult Function( ModelInfo model)?  model,TResult Function( BarAction action,  String title)?  action,TResult Function( PutProfile change)?  suggestion,TResult Function( String words,  bool active)?  words,TResult Function( String words)?  ask,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Instruction instruction,  bool active)?  instruction,TResult Function( Profile profile)?  profile,TResult Function( ModelInfo model)?  model,TResult Function( AppCommand command)?  action,TResult Function( PutProfile change)?  suggestion,TResult Function( String words,  bool active)?  words,TResult Function( String words)?  ask,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case InstructionItem() when instruction != null:
 return instruction(_that.instruction,_that.active);case ProfileItem() when profile != null:
 return profile(_that.profile);case ModelItem() when model != null:
 return model(_that.model);case ActionItem() when action != null:
-return action(_that.action,_that.title);case SuggestionItem() when suggestion != null:
+return action(_that.command);case SuggestionItem() when suggestion != null:
 return suggestion(_that.change);case WordsItem() when words != null:
 return words(_that.words,_that.active);case AskItem() when ask != null:
 return ask(_that.words);case _:
@@ -162,13 +162,13 @@ return ask(_that.words);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Instruction instruction,  bool active)  instruction,required TResult Function( Profile profile)  profile,required TResult Function( ModelInfo model)  model,required TResult Function( BarAction action,  String title)  action,required TResult Function( PutProfile change)  suggestion,required TResult Function( String words,  bool active)  words,required TResult Function( String words)  ask,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Instruction instruction,  bool active)  instruction,required TResult Function( Profile profile)  profile,required TResult Function( ModelInfo model)  model,required TResult Function( AppCommand command)  action,required TResult Function( PutProfile change)  suggestion,required TResult Function( String words,  bool active)  words,required TResult Function( String words)  ask,}) {final _that = this;
 switch (_that) {
 case InstructionItem():
 return instruction(_that.instruction,_that.active);case ProfileItem():
 return profile(_that.profile);case ModelItem():
 return model(_that.model);case ActionItem():
-return action(_that.action,_that.title);case SuggestionItem():
+return action(_that.command);case SuggestionItem():
 return suggestion(_that.change);case WordsItem():
 return words(_that.words,_that.active);case AskItem():
 return ask(_that.words);}
@@ -185,13 +185,13 @@ return ask(_that.words);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Instruction instruction,  bool active)?  instruction,TResult? Function( Profile profile)?  profile,TResult? Function( ModelInfo model)?  model,TResult? Function( BarAction action,  String title)?  action,TResult? Function( PutProfile change)?  suggestion,TResult? Function( String words,  bool active)?  words,TResult? Function( String words)?  ask,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Instruction instruction,  bool active)?  instruction,TResult? Function( Profile profile)?  profile,TResult? Function( ModelInfo model)?  model,TResult? Function( AppCommand command)?  action,TResult? Function( PutProfile change)?  suggestion,TResult? Function( String words,  bool active)?  words,TResult? Function( String words)?  ask,}) {final _that = this;
 switch (_that) {
 case InstructionItem() when instruction != null:
 return instruction(_that.instruction,_that.active);case ProfileItem() when profile != null:
 return profile(_that.profile);case ModelItem() when model != null:
 return model(_that.model);case ActionItem() when action != null:
-return action(_that.action,_that.title);case SuggestionItem() when suggestion != null:
+return action(_that.command);case SuggestionItem() when suggestion != null:
 return suggestion(_that.change);case WordsItem() when words != null:
 return words(_that.words,_that.active);case AskItem() when ask != null:
 return ask(_that.words);case _:
@@ -439,11 +439,10 @@ $ModelInfoCopyWith<$Res> get model {
 
 
 class ActionItem extends BarItem {
-  const ActionItem(this.action, this.title): super._();
+  const ActionItem(this.command): super._();
   
 
- final  BarAction action;
- final  String title;
+ final  AppCommand command;
 
 /// Create a copy of BarItem
 /// with the given fields replaced by the non-null parameter values.
@@ -455,18 +454,18 @@ $ActionItemCopyWith<ActionItem> get copyWith => _$ActionItemCopyWithImpl<ActionI
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ActionItem&&(identical(other.action, action) || other.action == action)&&(identical(other.title, title) || other.title == title));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ActionItem&&(identical(other.command, command) || other.command == command));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,action,title);
+    return Object.hash(runtimeType,command);
 }
 
 @override
 String toString() {
-    return 'BarItem.action(action: $action, title: $title)';
+    return 'BarItem.action(command: $command)';
 }
 
 
@@ -477,7 +476,7 @@ abstract mixin class $ActionItemCopyWith<$Res> implements $BarItemCopyWith<$Res>
   factory $ActionItemCopyWith(ActionItem value, $Res Function(ActionItem) _then) = _$ActionItemCopyWithImpl;
 @useResult
 $Res call({
- BarAction action, String title
+ AppCommand command
 });
 
 
@@ -494,11 +493,10 @@ class _$ActionItemCopyWithImpl<$Res>
 
 /// Create a copy of BarItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? action = null,Object? title = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? command = null,}) {
   return _then(ActionItem(
-null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
-as BarAction,null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as String,
+null == command ? _self.command : command // ignore: cast_nullable_to_non_nullable
+as AppCommand,
   ));
 }
 

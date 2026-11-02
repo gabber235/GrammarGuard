@@ -67,22 +67,37 @@ the text contains. <kbd>Cmd</kbd>+<kbd>,</kbd> opens Settings.
 
 ## Keys
 
+Press <kbd>?</kbd> in the window to see the keys that work right now, and click any of them. Settings, Keys lists
+them all. The footer shows the common ones and one tip per rewrite for a key you have not used yet.
+
 | Key | What it does |
 |---|---|
 | <kbd>Option</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> (<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>) | Rewrite the selected text. Change it in Settings. |
-| <kbd>Cmd</kbd>+<kbd>V</kbd> (<kbd>Ctrl</kbd>+<kbd>V</kbd>) in the window | Rewrite what is on the clipboard |
-| <kbd>n</kbd> <kbd>p</kbd> | Next and previous change |
-| <kbd>y</kbd> <kbd>x</kbd> <kbd>u</kbd> | Keep, undo, undo the last decision |
-| <kbd>?</kbd> | Why this change |
-| <kbd>Enter</kbd> | Paste back |
-| <kbd>Space</kbd>, <kbd>m</kbd> | The bar; the bar on models |
+| A second shortcut, off until you set it in Settings, General | Choose the model first; nothing is sent until you pick |
+| <kbd>n</kbd> | Next change |
+| <kbd>p</kbd> | Previous change |
+| <kbd>y</kbd> | Accept the change |
+| <kbd>x</kbd> | Reject the change |
+| <kbd>u</kbd> | Undo the last decision |
+| <kbd>w</kbd> | Why this change |
+| <kbd>Enter</kbd> | Paste back. Changes still open are accepted, and the footer says how many. |
+| <kbd>Space</kbd> | Search everything |
+| <kbd>m</kbd> | Change the model |
 | <kbd>1</kbd> to <kbd>9</kbd> | Turn a pinned instruction on or off |
-| <kbd>[</kbd> <kbd>]</kbd> | Change less or more (Fix only, Polish, Enhance, Rewrite) |
+| <kbd>[</kbd> | Change less (Fix only, Polish, Enhance, Rewrite) |
+| <kbd>]</kbd> | Change more |
 | <kbd>c</kbd> | Compare with another model |
-| <kbd>s</kbd> | Keep what you picked for this app |
 | <kbd>r</kbd> | Try again |
-| <kbd>h</kbd> <kbd>v</kbd> | Side by side; preview the final text |
+| <kbd>s</kbd> | Keep what you picked for this app |
+| <kbd>Cmd</kbd>+<kbd>?</kbd> | Ask the assistant |
+| <kbd>h</kbd> | Side by side |
+| <kbd>v</kbd> | Preview the final text |
 | <kbd>Tab</kbd> | Edit in the Vim editor |
+| <kbd>j</kbd> | Scroll down |
+| <kbd>k</kbd> | Scroll up |
+| <kbd>d</kbd> | Scroll half a page |
+| <kbd>?</kbd> | All keys |
+| <kbd>Cmd</kbd>+<kbd>V</kbd> | Rewrite what is on the clipboard |
 | <kbd>Cmd</kbd>+<kbd>,</kbd> | Settings |
 | <kbd>Esc</kbd> | Back, stop, or hide |
 

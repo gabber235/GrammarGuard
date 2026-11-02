@@ -121,9 +121,22 @@ sealed class HotkeyStatus with _$HotkeyStatus {
   const factory HotkeyStatus.unavailable(String reason) = HotkeyUnavailable;
 }
 
-/// The system wide shortcut that summons GrammarGuard.
+/// What a system wide shortcut is for.
+enum HotkeyPurpose {
+  /// Rewrite the selected text right away.
+  rewrite,
+
+  /// Open on the models with the selected text; nothing is sent until a pick.
+  chooseFirst,
+}
+
+/// The system wide shortcuts that summon GrammarGuard.
 abstract interface class GlobalHotkey {
-  /// Replaces any earlier registration.
-  Future<HotkeyStatus> register(HotKey hotKey, VoidCallback onPressed);
+  /// Replaces every earlier registration. Each shortcut works or fails on
+  /// its own, so one taken by another app leaves the other working.
+  Future<Map<HotkeyPurpose, HotkeyStatus>> register(
+    Map<HotkeyPurpose, HotKey> keys,
+    void Function(HotkeyPurpose purpose) onPressed,
+  );
   Future<void> unregister();
 }

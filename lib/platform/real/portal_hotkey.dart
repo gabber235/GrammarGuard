@@ -2,35 +2,65 @@ import "package:flutter/services.dart";
 import "package:grammar_guard/platform/ports.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
 
-/// The global shortcut through the XDG desktop portal, the only way on
+/// The ids the desktop knows the shortcuts by. Hyprland binds name them
+/// (grammarguard:open), so they must not change.
+const _ids = {HotkeyPurpose.rewrite: "open", HotkeyPurpose.chooseFirst: "choose"};
+
+/// The global shortcuts through the XDG desktop portal, the only way on
 /// Wayland. The runner talks to the portal; the desktop decides which keys
-/// trigger it (Hyprland ignores the proposal and uses its own binds).
+/// trigger them (Hyprland ignores the proposal and uses its own binds).
 class PortalHotkey implements GlobalHotkey {
   PortalHotkey(this._channel) {
     _channel.setMethodCallHandler((call) async {
-      if (call.method == "activated") _onPressed?.call();
+      if (call.method != "activated") return;
+      for (final MapEntry(key: purpose, value: id) in _ids.entries) {
+        if (id == call.arguments) _onPressed?.call(purpose);
+      }
     });
   }
 
   final MethodChannel _channel;
-  VoidCallback? _onPressed;
+  void Function(HotkeyPurpose)? _onPressed;
 
   @override
-  Future<HotkeyStatus> register(HotKey hotKey, VoidCallback onPressed) async {
+  Future<Map<HotkeyPurpose, HotkeyStatus>> register(
+    Map<HotkeyPurpose, HotKey> keys,
+    void Function(HotkeyPurpose purpose) onPressed,
+  ) async {
     _onPressed = null;
-    final keycode = kLinuxToPhysicalKey.entries.where((entry) => entry.value == hotKey.physicalKey).firstOrNull?.key;
-    if (keycode == null) return const HotkeyStatus.unavailable("The desktop cannot use this key for the shortcut.");
+    final usable = {
+      for (final MapEntry(key: purpose, value: hotKey) in keys.entries)
+        if (_keycode(hotKey) != null) purpose: hotKey,
+    };
+    HotkeyStatus status(HotkeyPurpose purpose, HotkeyStatus bound) => usable.containsKey(purpose)
+        ? bound
+        : const HotkeyStatus.unavailable("The desktop cannot use this key for the shortcut.");
+    if (usable.isEmpty) {
+      return {for (final purpose in keys.keys) purpose: status(purpose, const HotkeyStatus.active())};
+    }
+    // One session holds both, so a desktop bound once stays bound.
+    HotkeyStatus bound;
     try {
-      final bound = await _channel.invokeMapMethod<String, Object?>("register", {
-        "keycode": keycode,
-        "modifiers": [for (final modifier in hotKey.modifiers ?? const <HotKeyModifier>[]) modifier.name],
+      final answer = await _channel.invokeMapMethod<String, Object?>("register", {
+        "shortcuts": [
+          for (final MapEntry(key: purpose, value: hotKey) in usable.entries)
+            {
+              "id": _ids[purpose],
+              "keycode": _keycode(hotKey),
+              "modifiers": [for (final modifier in hotKey.modifiers ?? const <HotKeyModifier>[]) modifier.name],
+            },
+        ],
       });
       _onPressed = onPressed;
-      return HotkeyStatus.active(note: bound?["note"] as String?);
+      bound = HotkeyStatus.active(note: answer?["note"] as String?);
     } on PlatformException catch (error) {
-      return HotkeyStatus.unavailable(error.message ?? "The desktop did not allow the shortcut.");
+      bound = HotkeyStatus.unavailable(error.message ?? "The desktop did not allow the shortcut.");
     }
+    return {for (final purpose in keys.keys) purpose: status(purpose, bound)};
   }
+
+  int? _keycode(HotKey hotKey) =>
+      kLinuxToPhysicalKey.entries.where((entry) => entry.value == hotKey.physicalKey).firstOrNull?.key;
 
   @override
   Future<void> unregister() async {

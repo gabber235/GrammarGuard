@@ -131,7 +131,7 @@ void main() {
     testWidgets("Escape in normal mode goes back and keeps the edits", (tester) async {
       final app = await pumpHome(tester, replacement);
       await app.open();
-      await tester.tap(find.text("keep"));
+      await tester.tap(find.text("accept"));
       await tester.pumpAndSettle();
 
       await app.press(LogicalKeyboardKey.escape);
@@ -181,7 +181,7 @@ void main() {
       await app.open();
       expect(app.review.pending, equals(1));
 
-      await tester.tap(find.text("keep"));
+      await tester.tap(find.text("accept"));
       await tester.pumpAndSettle();
 
       expect(app.review.statuses, equals([ChangeStatus.accepted]));
@@ -192,7 +192,7 @@ void main() {
       final app = await pumpHome(tester, replacement);
       await app.open();
 
-      await tester.tap(find.text("undo"));
+      await tester.tap(find.text("reject"));
       await tester.pumpAndSettle();
 
       expect(app.review.statuses, equals([ChangeStatus.rejected]));

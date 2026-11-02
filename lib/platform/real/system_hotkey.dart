@@ -6,14 +6,24 @@ class SystemHotkey implements GlobalHotkey {
   SystemHotkey(this._manager);
 
   final HotKeyManager _manager;
-  HotKey? _current;
+  final _current = <HotKey>[];
 
   @override
-  Future<HotkeyStatus> register(HotKey hotKey, VoidCallback onPressed) async {
+  Future<Map<HotkeyPurpose, HotkeyStatus>> register(
+    Map<HotkeyPurpose, HotKey> keys,
+    void Function(HotkeyPurpose purpose) onPressed,
+  ) async {
     await unregister();
+    return {
+      for (final MapEntry(key: purpose, value: hotKey) in keys.entries)
+        purpose: await _register(hotKey, () => onPressed(purpose)),
+    };
+  }
+
+  Future<HotkeyStatus> _register(HotKey hotKey, VoidCallback onPressed) async {
     try {
       await _manager.register(hotKey, keyDownHandler: (_) => onPressed());
-      _current = hotKey;
+      _current.add(hotKey);
       return const HotkeyStatus.active();
     } on PlatformException catch (error) {
       return HotkeyStatus.unavailable(error.message ?? "Another app already uses this shortcut.");
@@ -22,9 +32,9 @@ class SystemHotkey implements GlobalHotkey {
 
   @override
   Future<void> unregister() async {
-    final current = _current;
-    if (current == null) return;
-    await _manager.unregister(current);
-    _current = null;
+    for (final hotKey in _current) {
+      await _manager.unregister(hotKey);
+    }
+    _current.clear();
   }
 }

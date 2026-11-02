@@ -148,7 +148,7 @@ void main() {
           5900: _press(LogicalKeyboardKey.keyN),
           6500: (app, stage) async {
             app.model.says(_reasons);
-            await _press(LogicalKeyboardKey.slash, hold: LogicalKeyboardKey.shiftLeft, shows: ["?"])(app, stage);
+            await _press(LogicalKeyboardKey.keyW, shows: ["w"])(app, stage);
           },
           8300: _press(LogicalKeyboardKey.keyY),
           9100: _press(LogicalKeyboardKey.enter),

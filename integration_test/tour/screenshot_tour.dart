@@ -211,9 +211,9 @@ void main() {
     await key(LogicalKeyboardKey.keyU);
     await key(LogicalKeyboardKey.keyU);
 
-    await key(LogicalKeyboardKey.slash, hold: LogicalKeyboardKey.shiftLeft, ms: 1200);
+    await key(LogicalKeyboardKey.keyW, ms: 1200);
     await shot("why");
-    await key(LogicalKeyboardKey.slash, hold: LogicalKeyboardKey.shiftLeft);
+    await key(LogicalKeyboardKey.keyW);
 
     await key(LogicalKeyboardKey.keyH);
     await shot("side-by-side");

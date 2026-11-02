@@ -2,12 +2,15 @@
 
 #include <xkbcommon/xkbcommon.h>
 
+#include <vector>
+
 #include "portal.h"
 
 namespace {
 
 constexpr const char* kShortcuts = "org.freedesktop.portal.GlobalShortcuts";
-constexpr const char* kShortcutId = "open";
+constexpr const char* kOpenId = "open";
+constexpr const char* kChooseId = "choose";
 constexpr const char* kDeclined = "The desktop did not allow the shortcut.";
 constexpr const char* kReplaced = "A later shortcut change replaced this one.";
 
@@ -20,11 +23,22 @@ struct Shortcut {
 
 Shortcut shortcut;
 
+struct Wanted {
+  const char* id;  // kOpenId or kChooseId
+  gchar* trigger;  // null when the key has no keysym name
+};
+
 struct Binding {
   FlMethodCall* call;
-  gchar* trigger;  // null when the key has no keysym name
+  std::vector<Wanted> wanted;
   guint generation;
 };
+
+const char* known_id(const gchar* id) {
+  if (g_strcmp0(id, kOpenId) == 0) return kOpenId;
+  if (g_strcmp0(id, kChooseId) == 0) return kChooseId;
+  return nullptr;
+}
 
 bool replaced(const Binding* binding) {
   return binding->generation != shortcut.generation;
@@ -32,7 +46,7 @@ bool replaced(const Binding* binding) {
 
 void finish(Binding* binding) {
   g_object_unref(binding->call);
-  g_free(binding->trigger);
+  for (const Wanted& wanted : binding->wanted) g_free(wanted.trigger);
   delete binding;
 }
 
@@ -92,27 +106,42 @@ gchar* trigger_for(xkb_keycode_t keycode, FlValue* modifiers) {
 }
 
 gchar* note_for(GVariant* results) {
+  const gchar* open_keys = nullptr;
+  const gchar* choose_keys = nullptr;
   g_autoptr(GVariant) shortcuts =
       g_variant_lookup_value(results, "shortcuts", G_VARIANT_TYPE("a(sa{sv})"));
+  std::vector<GVariant*> held;
   if (shortcuts) {
     GVariantIter iter;
     g_variant_iter_init(&iter, shortcuts);
     const gchar* id;
     GVariant* properties;
     while (g_variant_iter_next(&iter, "(&s@a{sv})", &id, &properties)) {
-      g_autoptr(GVariant) owned_properties G_GNUC_UNUSED = properties;
+      // The descriptions point into these, so they live until the note is made.
+      held.push_back(properties);
       const gchar* description;
-      if (g_strcmp0(id, kShortcutId) == 0 &&
-          g_variant_lookup(properties, "trigger_description", "&s", &description) && *description) {
-        return g_strdup_printf(
-            "Your desktop opens GrammarGuard with %s. Change the keys in its shortcut settings.",
-            description);
-      }
+      if (!g_variant_lookup(properties, "trigger_description", "&s", &description) || !*description) continue;
+      if (g_strcmp0(id, kOpenId) == 0) open_keys = description;
+      if (g_strcmp0(id, kChooseId) == 0) choose_keys = description;
     }
   }
-  return g_strdup(
-      "Your desktop decides the keys. Assign them to Open GrammarGuard in its shortcut settings. "
-      "Some, such as Hyprland, need a bind to grammarguard:open in their configuration.");
+  gchar* note;
+  if (open_keys && choose_keys) {
+    note = g_strdup_printf(
+        "Your desktop opens GrammarGuard with %s, and on the models with %s. Change the keys in its "
+        "shortcut settings.",
+        open_keys, choose_keys);
+  } else if (open_keys) {
+    note = g_strdup_printf(
+        "Your desktop opens GrammarGuard with %s. Change the keys in its shortcut settings.", open_keys);
+  } else {
+    note = g_strdup(
+        "Your desktop decides the keys. Assign them to Open GrammarGuard in its shortcut settings. "
+        "Some, such as Hyprland, need a bind to grammarguard:open (grammarguard:choose to choose "
+        "the model first) in their configuration.");
+  }
+  for (GVariant* properties : held) g_variant_unref(properties);
+  return note;
 }
 
 void decline(Binding* binding) {
@@ -133,9 +162,9 @@ void on_activated(GDBusConnection*, const gchar*, const gchar*, const gchar*, co
   const gchar* id;
   g_variant_get_child(parameters, 0, "&o", &session);
   g_variant_get_child(parameters, 1, "&s", &id);
-  if (g_strcmp0(session, shortcut.session) != 0 || g_strcmp0(id, kShortcutId) != 0) return;
-  fl_method_channel_invoke_method(shortcut.channel, "activated", nullptr, nullptr, nullptr,
-                                  nullptr);
+  if (g_strcmp0(session, shortcut.session) != 0 || !known_id(id)) return;
+  g_autoptr(FlValue) which = fl_value_new_string(id);
+  fl_method_channel_invoke_method(shortcut.channel, "activated", which, nullptr, nullptr, nullptr);
 }
 
 void on_bound(guint32 code, GVariant* results, gpointer user_data) {
@@ -174,17 +203,21 @@ void on_created(guint32 code, GVariant* results, gpointer user_data) {
       portal_connection(), nullptr, kShortcuts, "Activated", kPortalPath, nullptr,
       G_DBUS_SIGNAL_FLAGS_NONE, on_activated, nullptr, nullptr);
 
-  GVariantBuilder properties;
-  g_variant_builder_init(&properties, G_VARIANT_TYPE_VARDICT);
-  g_variant_builder_add(&properties, "{sv}", "description",
-                        g_variant_new_string("Open GrammarGuard"));
-  if (binding->trigger) {
-    g_variant_builder_add(&properties, "{sv}", "preferred_trigger",
-                          g_variant_new_string(binding->trigger));
-  }
   GVariantBuilder shortcuts;
   g_variant_builder_init(&shortcuts, G_VARIANT_TYPE("a(sa{sv})"));
-  g_variant_builder_add(&shortcuts, "(sa{sv})", kShortcutId, &properties);
+  for (const Wanted& wanted : binding->wanted) {
+    GVariantBuilder properties;
+    g_variant_builder_init(&properties, G_VARIANT_TYPE_VARDICT);
+    g_variant_builder_add(&properties, "{sv}", "description",
+                          g_variant_new_string(wanted.id == kOpenId
+                                                   ? "Open GrammarGuard"
+                                                   : "Open GrammarGuard and choose the model first"));
+    if (wanted.trigger) {
+      g_variant_builder_add(&properties, "{sv}", "preferred_trigger",
+                            g_variant_new_string(wanted.trigger));
+    }
+    g_variant_builder_add(&shortcuts, "(sa{sv})", wanted.id, &properties);
+  }
   portal_request(kShortcuts, "BindShortcuts",
                  g_variant_new("(oa(sa{sv})s)", shortcut.session, &shortcuts, ""),
                  g_variant_builder_new(G_VARIANT_TYPE_VARDICT), on_bound, binding);
@@ -192,8 +225,7 @@ void on_created(guint32 code, GVariant* results, gpointer user_data) {
 
 void register_shortcut(FlMethodCall* call) {
   FlValue* args = fl_method_call_get_args(call);
-  auto keycode = static_cast<xkb_keycode_t>(fl_value_get_int(fl_value_lookup_string(args, "keycode")));
-  FlValue* modifiers = fl_value_lookup_string(args, "modifiers");
+  FlValue* requested = fl_value_lookup_string(args, "shortcuts");
   shortcut.generation++;
   close_session();
 
@@ -213,8 +245,14 @@ void register_shortcut(FlMethodCall* call) {
     return;
   }
 
-  auto* binding = new Binding{FL_METHOD_CALL(g_object_ref(call)), trigger_for(keycode, modifiers),
-                              shortcut.generation};
+  auto* binding = new Binding{FL_METHOD_CALL(g_object_ref(call)), {}, shortcut.generation};
+  for (size_t i = 0; i < fl_value_get_length(requested); i++) {
+    FlValue* entry = fl_value_get_list_value(requested, i);
+    const char* id = known_id(fl_value_get_string(fl_value_lookup_string(entry, "id")));
+    if (!id) continue;
+    auto keycode = static_cast<xkb_keycode_t>(fl_value_get_int(fl_value_lookup_string(entry, "keycode")));
+    binding->wanted.push_back({id, trigger_for(keycode, fl_value_lookup_string(entry, "modifiers"))});
+  }
   GVariantBuilder* options = g_variant_builder_new(G_VARIANT_TYPE_VARDICT);
   g_autofree gchar* token = portal_token();
   g_variant_builder_add(options, "{sv}", "session_handle_token", g_variant_new_string(token));

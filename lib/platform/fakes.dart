@@ -1,6 +1,5 @@
 import "dart:async";
 
-import "package:flutter/foundation.dart";
 import "package:grammar_guard/platform/ports.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
 
@@ -35,24 +34,29 @@ class FakeHotkey implements GlobalHotkey {
   FakeHotkey({this.status = const HotkeyStatus.active()});
 
   HotkeyStatus status;
-  HotKey? registered;
-  VoidCallback? _onPressed;
+  Map<HotkeyPurpose, HotKey> registered = const {};
+  void Function(HotkeyPurpose)? _onPressed;
 
-  /// Simulates the user pressing the global shortcut in another app.
-  void press() => _onPressed?.call();
+  /// Simulates the user pressing a global shortcut in another app.
+  void press([HotkeyPurpose purpose = HotkeyPurpose.rewrite]) {
+    if (registered.containsKey(purpose)) _onPressed?.call(purpose);
+  }
 
   @override
-  Future<HotkeyStatus> register(HotKey hotKey, VoidCallback onPressed) async {
+  Future<Map<HotkeyPurpose, HotkeyStatus>> register(
+    Map<HotkeyPurpose, HotKey> keys,
+    void Function(HotkeyPurpose purpose) onPressed,
+  ) async {
     if (status is HotkeyActive) {
-      registered = hotKey;
+      registered = keys;
       _onPressed = onPressed;
     }
-    return status;
+    return {for (final purpose in keys.keys) purpose: status};
   }
 
   @override
   Future<void> unregister() async {
-    registered = null;
+    registered = const {};
     _onPressed = null;
   }
 }

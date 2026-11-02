@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:grammar_guard/review/review.dart";
 import "package:grammar_guard/services/vim/vim_state.dart";
+import "package:grammar_guard/session/commands.dart";
 import "package:grammar_guard/ui/surfaces.dart";
 import "package:grammar_guard/ui/theme.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
@@ -32,8 +33,8 @@ class EditorFooter extends ConsumerWidget {
         const SizedBox(width: 16),
         Expanded(
           child: KeyHints([
-            KeyHint([primaryKey, "Y"], "keep", onTap: onAccept),
-            KeyHint([primaryKey, "N"], "undo", onTap: onReject),
+            KeyHint([primaryKey, "Y"], "accept", onTap: onAccept),
+            KeyHint([primaryKey, "N"], "reject", onTap: onReject),
             KeyHint(const ["Enter"], "paste back", onTap: onConfirmAll),
             KeyHint(const ["Esc"], "back", onTap: onCancel),
           ]),

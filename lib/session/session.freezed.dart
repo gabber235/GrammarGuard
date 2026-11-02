@@ -18,8 +18,9 @@ mixin _$SessionState {
 /// Null until text is captured. No text means no model call.
  Captured? get input; RunChoices get choices;/// Second model while comparing (C). Both results run side by side.
  ModelRef? get compare;/// The bar, shown in place of the result while set (Space, M, C).
- BarRequest? get bar;/// Esc during a run. Stops watching the run, which cancels it.
- bool get cancelled;/// One line toast: "Copied", "Select some text first", a paste problem.
+ BarRequest? get bar;/// Why no model runs although there is text.
+ RunHold get hold;/// ?: the list of keys, shown in place of the result. A run keeps going.
+ bool get showKeys;/// One line toast: "Copied", "Select some text first", a paste problem.
  String? get notice;
 /// Create a copy of SessionState
 /// with the given fields replaced by the non-null parameter values.
@@ -32,20 +33,20 @@ $SessionStateCopyWith<SessionState> get copyWith => _$SessionStateCopyWithImpl<S
 @override
 bool operator ==(Object other) {
   final _this = this as SessionState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionState&&(identical(other.input, _this.input) || other.input == _this.input)&&(identical(other.choices, _this.choices) || other.choices == _this.choices)&&(identical(other.compare, _this.compare) || other.compare == _this.compare)&&(identical(other.bar, _this.bar) || other.bar == _this.bar)&&(identical(other.cancelled, _this.cancelled) || other.cancelled == _this.cancelled)&&(identical(other.notice, _this.notice) || other.notice == _this.notice));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionState&&(identical(other.input, _this.input) || other.input == _this.input)&&(identical(other.choices, _this.choices) || other.choices == _this.choices)&&(identical(other.compare, _this.compare) || other.compare == _this.compare)&&(identical(other.bar, _this.bar) || other.bar == _this.bar)&&(identical(other.hold, _this.hold) || other.hold == _this.hold)&&(identical(other.showKeys, _this.showKeys) || other.showKeys == _this.showKeys)&&(identical(other.notice, _this.notice) || other.notice == _this.notice));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SessionState;
-  return Object.hash(runtimeType,_this.input,_this.choices,_this.compare,_this.bar,_this.cancelled,_this.notice);
+  return Object.hash(runtimeType,_this.input,_this.choices,_this.compare,_this.bar,_this.hold,_this.showKeys,_this.notice);
 }
 
 @override
 String toString() {
   final _this = this as SessionState;
-  return 'SessionState(input: ${_this.input}, choices: ${_this.choices}, compare: ${_this.compare}, bar: ${_this.bar}, cancelled: ${_this.cancelled}, notice: ${_this.notice})';
+  return 'SessionState(input: ${_this.input}, choices: ${_this.choices}, compare: ${_this.compare}, bar: ${_this.bar}, hold: ${_this.hold}, showKeys: ${_this.showKeys}, notice: ${_this.notice})';
 }
 
 
@@ -56,7 +57,7 @@ abstract mixin class $SessionStateCopyWith<$Res>  {
   factory $SessionStateCopyWith(SessionState value, $Res Function(SessionState) _then) = _$SessionStateCopyWithImpl;
 @useResult
 $Res call({
- Captured? input, RunChoices choices, ModelRef? compare, BarRequest? bar, bool cancelled, String? notice
+ Captured? input, RunChoices choices, ModelRef? compare, BarRequest? bar, RunHold hold, bool showKeys, String? notice
 });
 
 
@@ -73,13 +74,14 @@ class _$SessionStateCopyWithImpl<$Res>
 
 /// Create a copy of SessionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? input = freezed,Object? choices = null,Object? compare = freezed,Object? bar = freezed,Object? cancelled = null,Object? notice = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? input = freezed,Object? choices = null,Object? compare = freezed,Object? bar = freezed,Object? hold = null,Object? showKeys = null,Object? notice = freezed,}) {
   return _then(SessionState(
 input: freezed == input ? _self.input : input // ignore: cast_nullable_to_non_nullable
 as Captured?,choices: null == choices ? _self.choices : choices // ignore: cast_nullable_to_non_nullable
 as RunChoices,compare: freezed == compare ? _self.compare : compare // ignore: cast_nullable_to_non_nullable
 as ModelRef?,bar: freezed == bar ? _self.bar : bar // ignore: cast_nullable_to_non_nullable
-as BarRequest?,cancelled: null == cancelled ? _self.cancelled : cancelled // ignore: cast_nullable_to_non_nullable
+as BarRequest?,hold: null == hold ? _self.hold : hold // ignore: cast_nullable_to_non_nullable
+as RunHold,showKeys: null == showKeys ? _self.showKeys : showKeys // ignore: cast_nullable_to_non_nullable
 as bool,notice: freezed == notice ? _self.notice : notice // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -211,10 +213,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Captured? input,  RunChoices choices,  ModelRef? compare,  BarRequest? bar,  bool cancelled,  String? notice)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Captured? input,  RunChoices choices,  ModelRef? compare,  BarRequest? bar,  RunHold hold,  bool showKeys,  String? notice)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SessionState() when $default != null:
-return $default(_that.input,_that.choices,_that.compare,_that.bar,_that.cancelled,_that.notice);case _:
+return $default(_that.input,_that.choices,_that.compare,_that.bar,_that.hold,_that.showKeys,_that.notice);case _:
   return orElse();
 
 }
@@ -232,10 +234,10 @@ return $default(_that.input,_that.choices,_that.compare,_that.bar,_that.cancelle
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Captured? input,  RunChoices choices,  ModelRef? compare,  BarRequest? bar,  bool cancelled,  String? notice)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Captured? input,  RunChoices choices,  ModelRef? compare,  BarRequest? bar,  RunHold hold,  bool showKeys,  String? notice)  $default,) {final _that = this;
 switch (_that) {
 case _SessionState():
-return $default(_that.input,_that.choices,_that.compare,_that.bar,_that.cancelled,_that.notice);case _:
+return $default(_that.input,_that.choices,_that.compare,_that.bar,_that.hold,_that.showKeys,_that.notice);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -252,10 +254,10 @@ return $default(_that.input,_that.choices,_that.compare,_that.bar,_that.cancelle
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Captured? input,  RunChoices choices,  ModelRef? compare,  BarRequest? bar,  bool cancelled,  String? notice)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Captured? input,  RunChoices choices,  ModelRef? compare,  BarRequest? bar,  RunHold hold,  bool showKeys,  String? notice)?  $default,) {final _that = this;
 switch (_that) {
 case _SessionState() when $default != null:
-return $default(_that.input,_that.choices,_that.compare,_that.bar,_that.cancelled,_that.notice);case _:
+return $default(_that.input,_that.choices,_that.compare,_that.bar,_that.hold,_that.showKeys,_that.notice);case _:
   return null;
 
 }
@@ -267,7 +269,7 @@ return $default(_that.input,_that.choices,_that.compare,_that.bar,_that.cancelle
 
 
 class _SessionState implements SessionState {
-  const _SessionState({this.input, this.choices = const RunChoices(), this.compare, this.bar, this.cancelled = false, this.notice});
+  const _SessionState({this.input, this.choices = const RunChoices(), this.compare, this.bar, this.hold = RunHold.none, this.showKeys = false, this.notice});
   
 
 /// Null until text is captured. No text means no model call.
@@ -277,8 +279,10 @@ class _SessionState implements SessionState {
 @override final  ModelRef? compare;
 /// The bar, shown in place of the result while set (Space, M, C).
 @override final  BarRequest? bar;
-/// Esc during a run. Stops watching the run, which cancels it.
-@override@JsonKey() final  bool cancelled;
+/// Why no model runs although there is text.
+@override@JsonKey() final  RunHold hold;
+/// ?: the list of keys, shown in place of the result. A run keeps going.
+@override@JsonKey() final  bool showKeys;
 /// One line toast: "Copied", "Select some text first", a paste problem.
 @override final  String? notice;
 
@@ -292,18 +296,18 @@ _$SessionStateCopyWith<_SessionState> get copyWith => __$SessionStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SessionState&&(identical(other.input, input) || other.input == input)&&(identical(other.choices, choices) || other.choices == choices)&&(identical(other.compare, compare) || other.compare == compare)&&(identical(other.bar, bar) || other.bar == bar)&&(identical(other.cancelled, cancelled) || other.cancelled == cancelled)&&(identical(other.notice, notice) || other.notice == notice));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SessionState&&(identical(other.input, input) || other.input == input)&&(identical(other.choices, choices) || other.choices == choices)&&(identical(other.compare, compare) || other.compare == compare)&&(identical(other.bar, bar) || other.bar == bar)&&(identical(other.hold, hold) || other.hold == hold)&&(identical(other.showKeys, showKeys) || other.showKeys == showKeys)&&(identical(other.notice, notice) || other.notice == notice));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,input,choices,compare,bar,cancelled,notice);
+    return Object.hash(runtimeType,input,choices,compare,bar,hold,showKeys,notice);
 }
 
 @override
 String toString() {
-    return 'SessionState(input: $input, choices: $choices, compare: $compare, bar: $bar, cancelled: $cancelled, notice: $notice)';
+    return 'SessionState(input: $input, choices: $choices, compare: $compare, bar: $bar, hold: $hold, showKeys: $showKeys, notice: $notice)';
 }
 
 
@@ -314,7 +318,7 @@ abstract mixin class _$SessionStateCopyWith<$Res> implements $SessionStateCopyWi
   factory _$SessionStateCopyWith(_SessionState value, $Res Function(_SessionState) _then) = __$SessionStateCopyWithImpl;
 @override @useResult
 $Res call({
- Captured? input, RunChoices choices, ModelRef? compare, BarRequest? bar, bool cancelled, String? notice
+ Captured? input, RunChoices choices, ModelRef? compare, BarRequest? bar, RunHold hold, bool showKeys, String? notice
 });
 
 
@@ -331,13 +335,14 @@ class __$SessionStateCopyWithImpl<$Res>
 
 /// Create a copy of SessionState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? input = freezed,Object? choices = null,Object? compare = freezed,Object? bar = freezed,Object? cancelled = null,Object? notice = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? input = freezed,Object? choices = null,Object? compare = freezed,Object? bar = freezed,Object? hold = null,Object? showKeys = null,Object? notice = freezed,}) {
   return _then(_SessionState(
 input: freezed == input ? _self.input : input // ignore: cast_nullable_to_non_nullable
 as Captured?,choices: null == choices ? _self.choices : choices // ignore: cast_nullable_to_non_nullable
 as RunChoices,compare: freezed == compare ? _self.compare : compare // ignore: cast_nullable_to_non_nullable
 as ModelRef?,bar: freezed == bar ? _self.bar : bar // ignore: cast_nullable_to_non_nullable
-as BarRequest?,cancelled: null == cancelled ? _self.cancelled : cancelled // ignore: cast_nullable_to_non_nullable
+as BarRequest?,hold: null == hold ? _self.hold : hold // ignore: cast_nullable_to_non_nullable
+as RunHold,showKeys: null == showKeys ? _self.showKeys : showKeys // ignore: cast_nullable_to_non_nullable
 as bool,notice: freezed == notice ? _self.notice : notice // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

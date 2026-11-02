@@ -8,6 +8,7 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 part "hotkey_setting.g.dart";
 
 const _hotkeyKey = "hotkey";
+const _chooseFirstKey = "hotkey_choose_first";
 const _historyKey = "history_enabled";
 const _historyLimitKey = "history_limit";
 const _readingSizeKey = "reading_size";
@@ -19,24 +20,44 @@ final defaultHotKey = HotKey(
   scope: HotKeyScope.system,
 );
 
+HotKey? _decode(String? saved) {
+  if (saved == null) return null;
+  try {
+    return HotKey.fromJson(jsonDecode(saved) as Map<String, dynamic>);
+  } on FormatException {
+    return null;
+  }
+}
+
 @Riverpod(keepAlive: true)
 class HotkeySetting extends _$HotkeySetting {
   @override
-  Future<HotKey> build() async {
-    final prefs = await ref.watch(preferencesProvider.future);
-    final saved = prefs.getString(_hotkeyKey);
-    if (saved == null) return defaultHotKey;
-    try {
-      return HotKey.fromJson(jsonDecode(saved) as Map<String, dynamic>);
-    } on FormatException {
-      return defaultHotKey;
-    }
-  }
+  Future<HotKey> build() async =>
+      _decode((await ref.watch(preferencesProvider.future)).getString(_hotkeyKey)) ?? defaultHotKey;
 
   /// HotkeyBinding watches this provider and re-registers.
   Future<void> set(HotKey hotKey) async {
     final prefs = await ref.read(preferencesProvider.future);
     await prefs.setString(_hotkeyKey, jsonEncode(hotKey.toJson()));
+    state = AsyncData(hotKey);
+  }
+}
+
+/// The second shortcut: open on the models with the selected text and send
+/// nothing until one is picked. Off until someone sets it, so it never takes
+/// a key from another app unasked.
+@Riverpod(keepAlive: true)
+class ChooseFirstHotkeySetting extends _$ChooseFirstHotkeySetting {
+  @override
+  Future<HotKey?> build() async => _decode((await ref.watch(preferencesProvider.future)).getString(_chooseFirstKey));
+
+  Future<void> set(HotKey? hotKey) async {
+    final prefs = await ref.read(preferencesProvider.future);
+    if (hotKey == null) {
+      await prefs.remove(_chooseFirstKey);
+    } else {
+      await prefs.setString(_chooseFirstKey, jsonEncode(hotKey.toJson()));
+    }
     state = AsyncData(hotKey);
   }
 }

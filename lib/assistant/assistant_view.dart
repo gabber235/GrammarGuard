@@ -137,7 +137,7 @@ class AssistantView extends HookConsumerWidget {
 }
 
 /// What the assistant wants to change, reviewed like a rewrite: the pill
-/// marks the current line, y and x keep or drop it, Enter applies.
+/// marks the current line, y and x accept or reject it, Enter applies.
 class _ProposalCard extends StatelessWidget {
   const _ProposalCard({required this.state, required this.library});
   final AssistantState state;
@@ -241,7 +241,7 @@ class _ProposalLine extends StatelessWidget {
               ],
             ),
           ),
-          if (dropped) Text("dropped", style: TextStyle(fontSize: 12, color: gg.muted)),
+          if (dropped) Text("rejected", style: TextStyle(fontSize: 12, color: gg.muted)),
         ],
       ),
     );
