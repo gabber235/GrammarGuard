@@ -42,17 +42,17 @@ Map<String, dynamic> _$HistoryEntryToJson(_HistoryEntry instance) => <String, dy
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// The last 100 delivered rewrites, stored only on this computer in
-/// history.jsonl. Settings can clear it or turn it off.
+/// The last delivered rewrites, as many as [HistoryLimit] says, stored only
+/// on this computer in history.jsonl. Settings can clear it or turn it off.
 
 @ProviderFor(History)
 final historyProvider = HistoryProvider._();
 
-/// The last 100 delivered rewrites, stored only on this computer in
-/// history.jsonl. Settings can clear it or turn it off.
+/// The last delivered rewrites, as many as [HistoryLimit] says, stored only
+/// on this computer in history.jsonl. Settings can clear it or turn it off.
 final class HistoryProvider extends $AsyncNotifierProvider<History, List<HistoryEntry>> {
-  /// The last 100 delivered rewrites, stored only on this computer in
-  /// history.jsonl. Settings can clear it or turn it off.
+  /// The last delivered rewrites, as many as [HistoryLimit] says, stored only
+  /// on this computer in history.jsonl. Settings can clear it or turn it off.
   HistoryProvider._()
     : super(
         from: null,
@@ -72,10 +72,10 @@ final class HistoryProvider extends $AsyncNotifierProvider<History, List<History
   History create() => History();
 }
 
-String _$historyHash() => r'fb8f3aedbfa948f077a0c8d28577912633289a46';
+String _$historyHash() => r'2d41b4e30b97794acb93912c30bb9ca2685ecdb9';
 
-/// The last 100 delivered rewrites, stored only on this computer in
-/// history.jsonl. Settings can clear it or turn it off.
+/// The last delivered rewrites, as many as [HistoryLimit] says, stored only
+/// on this computer in history.jsonl. Settings can clear it or turn it off.
 
 abstract class _$History extends $AsyncNotifier<List<HistoryEntry>> {
   FutureOr<List<HistoryEntry>> build();

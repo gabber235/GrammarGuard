@@ -8,6 +8,8 @@ import "package:grammar_guard/instructions/instruction.dart";
 import "package:grammar_guard/instructions/library_store.dart";
 import "package:grammar_guard/llm/connections.dart";
 import "package:grammar_guard/llm/llm.dart";
+import "package:grammar_guard/platform/platform_providers.dart";
+import "package:grammar_guard/rewrite/history.dart";
 import "package:grammar_guard/settings/hotkey_setting.dart";
 import "package:grammar_guard/ui/surfaces.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
@@ -215,6 +217,133 @@ void main() {
         find.descendant(of: find.widgetWithText(ConnectionRow, "OpenAI"), matching: find.text("Saved, not checked")),
         findsOneWidget,
       );
+    });
+  });
+
+  group("the rewrites to keep", () {
+    Future<void> openHistory(FlowApp app) async {
+      await openSettings(app);
+      await app.tester.tap(find.text("History"));
+      await app.settle();
+    }
+
+    Future<void> saveRewrites(FlowApp app, int count) async {
+      final history = app.container.read(historyProvider.notifier);
+      for (var i = 0; i < count; i++) {
+        await history.add(
+          HistoryEntry(
+            at: DateTime(2026, 11, 3, 12, i),
+            input: "before $i",
+            output: "after $i",
+            profiles: const [],
+            instructions: const [],
+            picked: const [],
+            words: "",
+            decisions: const [],
+          ),
+        );
+      }
+    }
+
+    Future<void> pick(FlowApp app, String option) async {
+      await app.tester.tap(
+        find.text(
+          app.container.read(historyLimitProvider).value == 0
+              ? "Off"
+              : "${app.container.read(historyLimitProvider).value}",
+        ),
+      );
+      await app.settle();
+      await app.tester.tap(find.text(option).last);
+      await app.settle();
+    }
+
+    int saved(FlowApp app) => app.container.read(historyProvider).value!.length;
+    int limit(FlowApp app) => app.container.read(historyLimitProvider).value!;
+
+    testFlow("a preset is the new limit for new rewrites", (app) async {
+      await openHistory(app);
+      await pick(app, "20");
+      expect(limit(app), 20);
+
+      await saveRewrites(app, 25);
+      expect(saved(app), 20);
+    });
+
+    testFlow("a lower limit asks first and Cancel changes nothing", (app) async {
+      await saveRewrites(app, 25);
+      await openHistory(app);
+
+      await pick(app, "20");
+      expect(find.text("This removes the 5 oldest rewrites. This cannot be undone."), findsOneWidget);
+      await app.tester.tap(find.text("Cancel"));
+      await app.settle();
+
+      expect(limit(app), HistoryLimit.standard);
+      expect(saved(app), 25);
+    });
+
+    testFlow("a lower limit removes the oldest once confirmed", (app) async {
+      await saveRewrites(app, 25);
+      await openHistory(app);
+
+      await pick(app, "20");
+      await app.tester.tap(find.text("Remove them"));
+      await app.settle();
+
+      expect(limit(app), 20);
+      expect(saved(app), 20);
+      expect(app.container.read(historyProvider).value!.first.input, "before 24", reason: "the newest stay");
+    });
+
+    testFlow("Off can keep what is saved, and saves nothing new", (app) async {
+      await saveRewrites(app, 3);
+      await openHistory(app);
+
+      await pick(app, "Off");
+      await app.tester.tap(find.text("Keep them"));
+      await app.settle();
+
+      expect(limit(app), 0);
+      expect(saved(app), 3);
+      await saveRewrites(app, 1);
+      expect(saved(app), 3);
+    });
+
+    testFlow("Off can delete what is saved", (app) async {
+      await saveRewrites(app, 3);
+      await openHistory(app);
+
+      await pick(app, "Off");
+      await app.tester.tap(find.text("Delete them"));
+      await app.settle();
+
+      expect(saved(app), 0);
+    });
+
+    testFlow("a custom number is any whole number up to the maximum", (app) async {
+      await openHistory(app);
+      await pick(app, "Custom");
+      final field = find.widgetWithText(TextField, "How many, up to ${HistoryLimit.max}");
+
+      await app.tester.enterText(field, "${HistoryLimit.max + 1}");
+      await app.tester.testTextInput.receiveAction(TextInputAction.done);
+      await app.settle();
+      expect(find.text("Use a whole number from 1 to ${HistoryLimit.max}."), findsOneWidget);
+      expect(limit(app), HistoryLimit.standard);
+
+      await app.tester.enterText(field, "250");
+      await app.tester.testTextInput.receiveAction(TextInputAction.done);
+      await app.settle();
+      expect(limit(app), 250);
+    });
+
+    testFlow("an older off switch still counts as off", (app) async {
+      final prefs = await app.container.read(preferencesProvider.future);
+      await prefs.setBool("history_enabled", false);
+      app.container.invalidate(historyLimitProvider);
+
+      expect(await app.container.read(historyLimitProvider.future), 0);
     });
   });
 

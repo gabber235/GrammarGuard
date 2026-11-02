@@ -10,8 +10,6 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 part "history.freezed.dart";
 part "history.g.dart";
 
-const _limit = 100;
-
 /// One delivered rewrite. Rich on purpose: the bar ranks recents per app
 /// from [picked] and [words], profile suggestions count [picked], and the
 /// assistant reads [decisions] to spot habits worth an instruction.
@@ -35,8 +33,8 @@ abstract class HistoryEntry with _$HistoryEntry {
   factory HistoryEntry.fromJson(Map<String, dynamic> json) => _$HistoryEntryFromJson(json);
 }
 
-/// The last 100 delivered rewrites, stored only on this computer in
-/// history.jsonl. Settings can clear it or turn it off.
+/// The last delivered rewrites, as many as [HistoryLimit] says, stored only
+/// on this computer in history.jsonl. Settings can clear it or turn it off.
 @Riverpod(keepAlive: true)
 class History extends _$History {
   @override
@@ -47,8 +45,20 @@ class History extends _$History {
   }
 
   Future<void> add(HistoryEntry entry) async {
-    if (!await ref.read(historyEnabledProvider.future)) return;
-    final kept = [entry, ...await future].take(_limit).toList();
+    final limit = await ref.read(historyLimitProvider.future);
+    if (limit == 0) return;
+    await _write([entry, ...await future].take(limit).toList());
+  }
+
+  /// Drops the oldest rewrites beyond [limit].
+  Future<void> trim(int limit) async {
+    if (limit == 0) return clear();
+    final entries = await future;
+    if (entries.length <= limit) return;
+    await _write(entries.take(limit).toList());
+  }
+
+  Future<void> _write(List<HistoryEntry> kept) async {
     await (await _file()).writeAsString("${kept.reversed.map((e) => jsonEncode(e.toJson())).join("\n")}\n");
     state = AsyncData(kept);
   }

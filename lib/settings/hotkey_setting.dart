@@ -9,6 +9,7 @@ part "hotkey_setting.g.dart";
 
 const _hotkeyKey = "hotkey";
 const _historyKey = "history_enabled";
+const _historyLimitKey = "history_limit";
 const _readingSizeKey = "reading_size";
 
 /// The default stays Alt+Shift+G (Option+Shift+G on macOS).
@@ -40,14 +41,26 @@ class HotkeySetting extends _$HotkeySetting {
   }
 }
 
+/// How many rewrites stay on this computer; zero keeps none. Stored once
+/// here, and an older "off" switch still counts.
 @Riverpod(keepAlive: true)
-class HistoryEnabled extends _$HistoryEnabled {
-  @override
-  Future<bool> build() async => (await ref.watch(preferencesProvider.future)).getBool(_historyKey) ?? true;
+class HistoryLimit extends _$HistoryLimit {
+  static const standard = 100;
+  static const presets = [0, 20, 100, 1000];
 
-  Future<void> set({required bool enabled}) async {
-    await (await ref.read(preferencesProvider.future)).setBool(_historyKey, enabled);
-    state = AsyncData(enabled);
+  /// Every rewrite saves the whole file again, which stays quick up to here.
+  static const max = 10000;
+
+  @override
+  Future<int> build() async {
+    final prefs = await ref.watch(preferencesProvider.future);
+    return prefs.getInt(_historyLimitKey) ?? (prefs.getBool(_historyKey) == false ? 0 : standard);
+  }
+
+  Future<void> set(int limit) async {
+    final clamped = limit.clamp(0, max);
+    await (await ref.read(preferencesProvider.future)).setInt(_historyLimitKey, clamped);
+    state = AsyncData(clamped);
   }
 }
 

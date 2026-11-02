@@ -47,39 +47,49 @@ abstract class _$HotkeySetting extends $AsyncNotifier<HotKey> {
   }
 }
 
-@ProviderFor(HistoryEnabled)
-final historyEnabledProvider = HistoryEnabledProvider._();
+/// How many rewrites stay on this computer; zero keeps none. Stored once
+/// here, and an older "off" switch still counts.
 
-final class HistoryEnabledProvider extends $AsyncNotifierProvider<HistoryEnabled, bool> {
-  HistoryEnabledProvider._()
+@ProviderFor(HistoryLimit)
+final historyLimitProvider = HistoryLimitProvider._();
+
+/// How many rewrites stay on this computer; zero keeps none. Stored once
+/// here, and an older "off" switch still counts.
+final class HistoryLimitProvider extends $AsyncNotifierProvider<HistoryLimit, int> {
+  /// How many rewrites stay on this computer; zero keeps none. Stored once
+  /// here, and an older "off" switch still counts.
+  HistoryLimitProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'historyEnabledProvider',
+        name: r'historyLimitProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$historyEnabledHash();
+  String debugGetCreateSourceHash() => _$historyLimitHash();
 
   @$internal
   @override
-  HistoryEnabled create() => HistoryEnabled();
+  HistoryLimit create() => HistoryLimit();
 }
 
-String _$historyEnabledHash() => r'd664e0d748b016479eb59a9ea1263e5a5b226f57';
+String _$historyLimitHash() => r'f9d740c9a631af225f7650e4b92f6d3114da69bb';
 
-abstract class _$HistoryEnabled extends $AsyncNotifier<bool> {
-  FutureOr<bool> build();
+/// How many rewrites stay on this computer; zero keeps none. Stored once
+/// here, and an older "off" switch still counts.
+
+abstract class _$HistoryLimit extends $AsyncNotifier<int> {
+  FutureOr<int> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<bool>, bool>;
+    final ref = this.ref as $Ref<AsyncValue<int>, int>;
     final element =
-        ref.element as $ClassProviderElement<AnyNotifier<AsyncValue<bool>, bool>, AsyncValue<bool>, Object?, Object?>;
+        ref.element as $ClassProviderElement<AnyNotifier<AsyncValue<int>, int>, AsyncValue<int>, Object?, Object?>;
     return element.handleCreate(ref, build);
   }
 }
