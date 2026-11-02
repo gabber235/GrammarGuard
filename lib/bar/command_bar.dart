@@ -2,10 +2,8 @@ import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:grammar_guard/app/command_runner.dart";
 import "package:grammar_guard/app/library_writes.dart";
-import "package:grammar_guard/app/navigation.dart";
-import "package:grammar_guard/app/result_view.dart";
-import "package:grammar_guard/app/settings/settings_page.dart";
 import "package:grammar_guard/assistant/assistant.dart";
 import "package:grammar_guard/bar/bar_items.dart";
 import "package:grammar_guard/instructions/instruction.dart";
@@ -61,7 +59,9 @@ class CommandBar extends HookConsumerWidget {
     final library = ref.watch(libraryStoreProvider).value?.library;
     final resolved = ref.watch(resolvedProvider);
     final session = ref.read(sessionActionsProvider);
-    final model = ref.watch(runRequestProvider)?.model.ref;
+    // While nothing runs (Esc, choosing first) it is the one that would.
+    final model = ref.watch(runRequestProvider)?.model.ref ?? resolved?.model?.ref;
+    final models = ref.watch(modelCatalogProvider).value ?? const <ModelInfo>[];
     final comparing = request.mode == BarMode.compare;
 
     final all = library == null
@@ -72,7 +72,8 @@ class CommandBar extends HookConsumerWidget {
             library: library,
             active: {for (final a in resolved?.active ?? const []) a.instruction.id},
             words: resolved?.words ?? "",
-            models: ref.watch(modelCatalogProvider).value ?? const [],
+            models: models,
+            current: model,
             history: ref.watch(historyProvider).value ?? const [],
             source: resolved?.source,
           );
@@ -158,7 +159,12 @@ class CommandBar extends HookConsumerWidget {
             child: items.isEmpty
                 ? Padding(
                     padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-                    child: Text("Nothing matches.", style: TextStyle(color: gg.muted)),
+                    child: Text(
+                      models.isEmpty && (comparing || query.text.trimLeft().startsWith("@"))
+                          ? "No models yet. Add a key in Settings."
+                          : "Nothing matches.",
+                      style: TextStyle(color: gg.muted),
+                    ),
                   )
                 : BottomFade(
                     child: ListView(
@@ -180,6 +186,11 @@ class CommandBar extends HookConsumerWidget {
                             },
                             child: _Row(
                               item: item,
+                              keys: switch (item) {
+                                ActionItem(:final command) => command.labels,
+                                InstructionItem(instruction: Instruction(:final pin?)) => ["$pin"],
+                                _ => const [],
+                              },
                               origin: i < on ? _origin(resolved, item) : null,
                               inUse: switch (item) {
                                 InstructionItem(:final active) => active,
@@ -220,12 +231,14 @@ class _Label extends StatelessWidget {
       Padding(padding: EdgeInsets.fromLTRB(16, top, 16, 0), child: SectionLabel(text));
 }
 
-/// One bar row: what kind of thing it is, its name, and either where an
-/// "on" row comes from or "on" for a search result already in use.
+/// One bar row: what kind of thing it is, its name, either where an "on" row
+/// comes from or "on" for a search result already in use, and the key that
+/// does the same without the bar.
 class _Row extends StatelessWidget {
-  const _Row({required this.item, required this.inUse, this.origin});
+  const _Row({required this.item, required this.inUse, this.keys = const [], this.origin});
 
   final BarItem item;
+  final List<String> keys;
 
   /// Already part of this rewrite: an instruction that is on, the model.
   final bool inUse;
@@ -262,14 +275,33 @@ class _Row extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (trailing case (final text, final color))
-          Text(
-            text,
-            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w700),
+        if (item case ModelItem(model: ModelInfo(:final price?)))
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Tooltip(
+              message: "Per million tokens",
+              waitDuration: const Duration(milliseconds: 600),
+              child: Text(_priceLabel(price), style: TextStyle(fontSize: 12, color: gg.muted)),
+            ),
           ),
+        if (trailing case (final text, final color))
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w700),
+            ),
+          ),
+        for (final key in keys) Padding(padding: const EdgeInsets.only(left: 6), child: KeyCap(key)),
       ],
     );
   }
+}
+
+/// What a million tokens cost, the way the services say it.
+String _priceLabel(Price price) {
+  String dollars(double amount) => "\$${amount.toStringAsFixed(amount == amount.roundToDouble() ? 0 : 2)}";
+  return price == Price.free ? "free" : "${dollars(price.inputPerMillion)} in, ${dollars(price.outputPerMillion)} out";
 }
 
 /// One place that turns a row and a scope into an effect.
@@ -281,7 +313,7 @@ Future<void> handleBarItem(WidgetRef ref, BarItem item, Scope scope) async {
   final library = ref.read(libraryStoreProvider).value?.library;
   final resolved = ref.read(resolvedProvider);
   final assistant = ref.read(assistantProvider.notifier);
-  final preview = ref.read(previewProvider.notifier);
+  final runner = ref.read(commandRunnerProvider);
   if (library == null) return; // the bar lists nothing before the library loads
 
   Future<void> save(List<LibraryChange> changes) =>
@@ -302,27 +334,16 @@ Future<void> handleBarItem(WidgetRef ref, BarItem item, Scope scope) async {
       session.useModel(model.ref);
     case (ModelItem(:final model), _) when resolved != null:
       await save(keepOne(library, resolved, scope, model: model.ref));
+      // Only now: earlier, the text would go to the model this replaces.
+      session.releaseHold();
     case (SuggestionItem(:final change), _):
       await save([change]);
     case (ProfileItem(:final profile), _):
       session.useProfile(profile.name);
     case (AskItem(:final words), _):
       await assistant.open(words);
-    case (ActionItem(:final action), _):
-      switch (action) {
-        case BarAction.settings:
-          await openSettings();
-        case BarAction.history:
-          await openSettings(SettingsSection.history);
-        case BarAction.undoSetupChange:
-          await store.undo();
-        case BarAction.compare:
-          session.openBar(const BarRequest(mode: BarMode.compare));
-        case BarAction.retry:
-          session.retry();
-        case BarAction.preview:
-          preview.toggle();
-      }
+    case (ActionItem(:final command), _):
+      await runner.run(command);
     case (_, _):
       break; // saving needs captured text; nothing to save against
   }

@@ -9,7 +9,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 
 /// Everything picked for now (instructions, words, model) becomes part of
 /// this app's profile. Creates the profile when none matched.
-Future<void> saveToProfile(BuildContext context, WidgetRef ref) async {
+Future<void> saveToProfile(BuildContext context, Ref ref) async {
   final resolved = ref.read(resolvedProvider);
   final source = resolved?.source;
   final messenger = ScaffoldMessenger.of(context);

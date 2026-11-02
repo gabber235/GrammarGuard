@@ -8,6 +8,7 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:grammar_guard/app/keys_view.dart";
 import "package:grammar_guard/app/library_writes.dart";
 import "package:grammar_guard/app/settings/connection_tile.dart";
 import "package:grammar_guard/app/settings/history_section.dart";
@@ -18,6 +19,7 @@ import "package:grammar_guard/llm/catalog.dart";
 import "package:grammar_guard/llm/llm.dart";
 import "package:grammar_guard/platform/ports.dart";
 import "package:grammar_guard/session/hotkey_binding.dart";
+import "package:grammar_guard/session/key_tips.dart";
 import "package:grammar_guard/settings/hotkey_setting.dart";
 import "package:grammar_guard/ui/inline_picker.dart";
 import "package:grammar_guard/ui/motion.dart";
@@ -26,7 +28,7 @@ import "package:grammar_guard/ui/theme.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:hotkey_manager/hotkey_manager.dart";
 
-enum SettingsSection { models, instructions, profiles, general, history }
+enum SettingsSection { models, instructions, profiles, general, keys, history }
 
 class SettingsPage extends HookConsumerWidget {
   const SettingsPage({this.initial = SettingsSection.models, super.key});
@@ -107,6 +109,7 @@ class SettingsPage extends HookConsumerWidget {
                         SettingsSection.instructions => const InstructionsSection(),
                         SettingsSection.profiles => const ProfilesSection(),
                         SettingsSection.general => const _GeneralSection(),
+                        SettingsSection.keys => const KeysSection(),
                         SettingsSection.history => const HistorySection(),
                       },
                     ),
@@ -127,6 +130,7 @@ extension on SettingsSection {
     SettingsSection.instructions => "Instructions",
     SettingsSection.profiles => "Profiles",
     SettingsSection.general => "General",
+    SettingsSection.keys => "Keys",
     SettingsSection.history => "History",
   };
 
@@ -134,7 +138,8 @@ extension on SettingsSection {
     SettingsSection.models => Icons.memory,
     SettingsSection.instructions => Icons.tune,
     SettingsSection.profiles => Icons.apps,
-    SettingsSection.general => Icons.keyboard,
+    SettingsSection.general => Icons.settings_outlined,
+    SettingsSection.keys => Icons.keyboard,
     SettingsSection.history => Icons.history,
   };
 }
@@ -177,13 +182,17 @@ class _GeneralSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gg = context.gg;
-    final status = ref.watch(hotkeyBindingProvider).value;
+    final statuses = ref.watch(hotkeyBindingProvider).value;
+    final status = statuses?[HotkeyPurpose.rewrite];
+    final chooseStatus = statuses?[HotkeyPurpose.chooseFirst];
     final hotkey = ref.watch(hotkeySettingProvider).value;
+    final chooseFirst = ref.watch(chooseFirstHotkeySettingProvider).value;
     final size = ref.watch(readingSizeProvider).value ?? ReadingSize.standard;
+    final tips = ref.watch(keyTipsProvider).value?.enabled ?? true;
     final mac = defaultTargetPlatform == TargetPlatform.macOS;
     return SettingsPageBody(
       title: "General",
-      description: "The shortcut that opens GrammarGuard, and how large the text is.",
+      description: "The shortcuts that open GrammarGuard, key tips, and how large the text is.",
       children: [
         Panel(
           child: Column(
@@ -193,7 +202,12 @@ class _GeneralSection extends ConsumerWidget {
               const SizedBox(height: 4),
               Text("Opens GrammarGuard from any app.", style: TextStyle(fontSize: 13, color: gg.muted)),
               const SizedBox(height: 12),
-              _ShortcutRecorder(current: hotkey, mac: mac),
+              _ShortcutRecorder(
+                current: hotkey,
+                other: chooseFirst,
+                mac: mac,
+                onSet: (key) => ref.read(hotkeySettingProvider.notifier).set(key),
+              ),
               if (status case HotkeyActive(:final note?)) ...[
                 const SizedBox(height: 10),
                 Text(note, style: TextStyle(fontSize: 13, color: gg.muted)),
@@ -202,6 +216,54 @@ class _GeneralSection extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Text(reason, style: TextStyle(color: gg.removed)),
               ],
+            ],
+          ),
+        ),
+        Panel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Choose the model first", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              Text(
+                "A second shortcut that opens on the models with your selected text. Nothing is sent until you pick one.",
+                style: TextStyle(fontSize: 13, color: gg.muted),
+              ),
+              const SizedBox(height: 12),
+              _ShortcutRecorder(
+                current: chooseFirst,
+                other: hotkey,
+                mac: mac,
+                onSet: (key) => ref.read(chooseFirstHotkeySettingProvider.notifier).set(key),
+                onRemove: () => ref.read(chooseFirstHotkeySettingProvider.notifier).set(null),
+              ),
+              if (chooseStatus case HotkeyUnavailable(:final reason)) ...[
+                const SizedBox(height: 10),
+                Text(reason, style: TextStyle(color: gg.removed)),
+              ],
+            ],
+          ),
+        ),
+        Panel(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Key tips", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text(
+                      "One small tip per rewrite, for a key you have not used yet.",
+                      style: TextStyle(fontSize: 13, color: gg.muted),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: tips,
+                onChanged: (enabled) => ref.read(keyTipsProvider.notifier).setEnabled(enabled: enabled),
+              ),
             ],
           ),
         ),
@@ -314,18 +376,22 @@ final _bareKeys = {
   PhysicalKeyboardKey.insert,
 };
 
-/// Shows the shortcut; Change listens for exactly one new one. Only while
+/// Shows a shortcut; Change listens for exactly one new one. Only while
 /// recording are keys taken, a modifier is required unless the key is in
-/// [_bareKeys] (a bare letter would steal that letter in every app), and Esc
-/// cancels.
-class _ShortcutRecorder extends HookConsumerWidget {
-  const _ShortcutRecorder({required this.current, required this.mac});
+/// [_bareKeys] (a bare letter would steal that letter in every app), the
+/// [other] shortcut's keys are refused, and Esc cancels. Without [current]
+/// it reads as off. With [onRemove] it can go back to that.
+class _ShortcutRecorder extends HookWidget {
+  const _ShortcutRecorder({required this.current, required this.mac, required this.onSet, this.other, this.onRemove});
 
   final HotKey? current;
+  final HotKey? other;
   final bool mac;
+  final Future<void> Function(HotKey key) onSet;
+  final VoidCallback? onRemove;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final gg = context.gg;
     final recording = useState(false);
     final hint = useState<String?>(null);
@@ -350,11 +416,14 @@ class _ShortcutRecorder extends HookConsumerWidget {
         hint.value = "Hold Cmd, Option, Ctrl or Shift too, or use an F key.";
         return KeyEventResult.handled;
       }
+      final taken = other;
+      if (taken != null && taken.physicalKey == key && setEquals({...?taken.modifiers}, {...modifiers})) {
+        hint.value = "The other shortcut uses these keys.";
+        return KeyEventResult.handled;
+      }
       recording.value = false;
       hint.value = null;
-      unawaited(
-        ref.read(hotkeySettingProvider.notifier).set(HotKey(key: key, modifiers: modifiers, scope: HotKeyScope.system)),
-      );
+      unawaited(onSet(HotKey(key: key, modifiers: modifiers, scope: HotKeyScope.system)));
       return KeyEventResult.handled;
     }
 
@@ -366,7 +435,9 @@ class _ShortcutRecorder extends HookConsumerWidget {
           if (recording.value)
             Text("Press the new shortcut…", style: TextStyle(fontSize: 15, color: gg.highlighter))
           else if (current case final hotkey?)
-            Wrap(spacing: 4, children: [for (final k in hotkeyLabels(hotkey, mac: mac)) KeyCap(k, size: 15)]),
+            Wrap(spacing: 4, children: [for (final k in hotkeyLabels(hotkey, mac: mac)) KeyCap(k, size: 15)])
+          else
+            Text("Off", style: TextStyle(fontSize: 15, color: gg.muted)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(hint.value ?? "", style: TextStyle(fontSize: 13, color: gg.muted)),
@@ -377,8 +448,16 @@ class _ShortcutRecorder extends HookConsumerWidget {
               hint.value = null;
               if (recording.value) focus.requestFocus();
             },
-            child: Text(recording.value ? "Cancel" : "Change"),
+            child: Text(
+              recording.value
+                  ? "Cancel"
+                  : current == null
+                  ? "Set"
+                  : "Change",
+            ),
           ),
+          if (onRemove != null && current != null && !recording.value)
+            TextButton(onPressed: onRemove, child: const Text("Turn off")),
         ],
       ),
     );

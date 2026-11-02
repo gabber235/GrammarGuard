@@ -1,5 +1,4 @@
 // The few shapes every screen is built from, so they all read alike.
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:grammar_guard/ui/motion.dart";
@@ -63,11 +62,8 @@ class KeyCap extends StatelessWidget {
   }
 }
 
-/// The modifier shortcuts are drawn with: Cmd on macOS, Ctrl elsewhere.
-/// Both work everywhere; this is only the label.
-String get primaryKey => defaultTargetPlatform == TargetPlatform.macOS ? "Cmd" : "Ctrl";
-
-/// Keys and what they do, optionally clickable: `KeyHint(["n", "p"], "next")`.
+/// Keys pressed together and what they do, optionally clickable:
+/// `KeyHint(["Shift", "Enter"], "for this app")`.
 class KeyHint {
   const KeyHint(this.keys, this.what, {this.onTap});
 

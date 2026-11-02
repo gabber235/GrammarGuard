@@ -1,11 +1,17 @@
+import "dart:async";
+
 import "package:animations/animations.dart";
 import "package:clock/clock.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:grammar_guard/app/command_runner.dart";
 import "package:grammar_guard/assistant/assistant.dart";
 import "package:grammar_guard/hooks/timer.dart";
+import "package:grammar_guard/review/review.dart";
 import "package:grammar_guard/rewrite/run.dart";
 import "package:grammar_guard/rewrite/usage.dart";
+import "package:grammar_guard/session/commands.dart";
+import "package:grammar_guard/session/key_tips.dart";
 import "package:grammar_guard/session/session.dart";
 import "package:grammar_guard/ui/motion.dart";
 import "package:grammar_guard/ui/surfaces.dart";
@@ -24,7 +30,11 @@ class Footer extends HookConsumerWidget {
     final run = ref.watch(currentRunProvider)?.value;
     final comparing = ref.watch(sessionProvider.select((s) => s.compare != null));
     final bar = ref.watch(sessionProvider.select((s) => s.bar?.mode));
-    final session = ref.read(sessionActionsProvider);
+    final showKeys = ref.watch(sessionProvider.select((s) => s.showKeys));
+    final choosing = ref.watch(sessionProvider.select((s) => s.hold == RunHold.choosing));
+    final input = ref.watch(sessionProvider.select((s) => s.input));
+    final open = ref.watch(reviewProvider)?.getPendingChangeCount() ?? 0;
+    final runner = ref.read(commandRunnerProvider);
     final assistant = ref.watch(assistantProvider.select((a) => (open: a.open, proposal: a.proposal.isNotEmpty)));
     // Ticks redraw the running time; the time itself is read now, so a run
     // that starts after a quiet while does not count from the last tick.
@@ -49,41 +59,46 @@ class Footer extends HookConsumerWidget {
       Done() => "price unknown",
       _ => "",
     };
-    final hints = switch ((assistant, bar, comparing, run)) {
-      ((open: true, proposal: true), _, _, _) => const [
-        KeyHint(["n", "p"], "step"),
-        KeyHint(["y", "x"], "keep, drop"),
-        KeyHint(["Enter"], "apply"),
-        KeyHint(["Tab"], "reply"),
+    void act(AppCommand command) => unawaited(runner.run(command));
+    KeyHint hint(AppCommand command, {String? what}) =>
+        KeyHint(command.labels, what ?? command.hint, onTap: () => act(command));
+    // Their keys belong to those views; only going back is the same everywhere.
+    List<KeyHint> own(List<KeyEntry> entries) => [
+      for (final entry in entries)
+        KeyHint(entry.labels, entry.what, onTap: entry.keys.first == "Esc" ? () => act(AppCommand.back) : null),
+    ];
+    final hints = switch ((assistant, bar, comparing, showKeys, input, run)) {
+      ((open: true, proposal: true), _, _, _, _, _) => own(proposalKeys),
+      ((open: true, proposal: false), _, _, _, _, _) => own(assistantKeys),
+      (_, BarMode.compare, _, _, _, _) => own(compareBarKeys),
+      (_, BarMode.act, _, _, _, _) => own(barKeys),
+      (_, _, true, _, _, _) => own(compareKeys),
+      (_, _, _, true, _, _) => [
+        hint(AppCommand.allKeys, what: "close"),
+        hint(AppCommand.back, what: "back to the text"),
       ],
-      ((open: true, proposal: false), _, _, _) => const [
-        KeyHint(["Enter"], "send"),
-        KeyHint(["Esc"], "back to the text"),
+      (_, _, _, _, _, Done()) => [
+        hint(AppCommand.next),
+        hint(AppCommand.previous),
+        hint(AppCommand.accept),
+        hint(AppCommand.reject),
+        hint(AppCommand.allKeys),
+        // Enter accepts what is still open: said before it happens.
+        hint(AppCommand.paste, what: open == 0 ? AppCommand.paste.hint : "paste, accept $open"),
       ],
-      (_, BarMode.compare, _, _) => [
-        const KeyHint(["Enter"], "compare"),
-        KeyHint(const ["Esc"], "back", onTap: session.closeBar),
+      (_, _, _, _, _, Waiting() || Streaming()) => [
+        hint(AppCommand.changeModel),
+        hint(AppCommand.back, what: "stop"),
+        hint(AppCommand.allKeys),
       ],
-      (_, BarMode.act, _, _) => [
-        const KeyHint(["Enter"], "for now"),
-        const KeyHint(["Shift", "Enter"], "for this app"),
-        KeyHint([primaryKey, "Enter"], "always"),
-        const KeyHint(["Tab"], "ask"),
-        KeyHint(const ["Esc"], "back", onTap: session.closeBar),
+      (_, _, _, _, null, _) => [hint(AppCommand.allKeys)],
+      _ => [
+        hint(AppCommand.retry, what: choosing ? "use the usual model" : null),
+        hint(AppCommand.changeModel),
+        hint(AppCommand.allKeys),
       ],
-      (_, _, true, _) => const [
-        KeyHint(["Left"], "keep left"),
-        KeyHint(["Right"], "keep right"),
-        KeyHint(["Esc"], "back"),
-      ],
-      (_, _, _, Done()) => const [
-        KeyHint(["n", "p"], "next"),
-        KeyHint(["y", "x"], "keep, undo"),
-        KeyHint(["?"], "why"),
-        KeyHint(["Enter"], "paste back"),
-      ],
-      _ => const <KeyHint>[],
     };
+    final tip = ref.watch(keyTipsProvider).value?.shown;
     final quiet = TextStyle(fontSize: 13, color: gg.muted);
 
     return DefaultTextStyle.merge(
@@ -113,6 +128,11 @@ class Footer extends HookConsumerWidget {
                         child: Text(timing, maxLines: 1, overflow: TextOverflow.ellipsis),
                       ),
                     ),
+                  ],
+                  // Only over a finished review: a run has enough going on.
+                  if (tip != null && run is Done && !assistant.open && bar == null && !comparing && !showKeys) ...[
+                    const SizedBox(width: 14),
+                    Flexible(flex: 3, child: _Tip(tip, onTap: () => act(tip))),
                   ],
                 ],
               ),
@@ -144,6 +164,32 @@ class Footer extends HookConsumerWidget {
       ),
     );
   }
+}
+
+/// One key not used yet. Gives way first when the footer runs out of room.
+class _Tip extends StatelessWidget {
+  const _Tip(this.command, {required this.onTap});
+
+  final AppCommand command;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: "Turn tips off in Settings, General",
+    waitDuration: const Duration(milliseconds: 600),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final key in command.labels) Padding(padding: const EdgeInsets.only(right: 3), child: KeyCap(key)),
+          const SizedBox(width: 3),
+          Flexible(child: Text(command.tip ?? command.title, maxLines: 1, overflow: TextOverflow.ellipsis)),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Money the way people say it: "free", "under 1 cent", "3 cents", "$1.20".

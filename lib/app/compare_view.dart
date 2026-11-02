@@ -7,7 +7,7 @@ import "package:grammar_guard/ui/surfaces.dart";
 import "package:grammar_guard/ui/theme.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 
-/// Two models, same prompt. Left or right arrow keeps one and goes on to
+/// Two models, same prompt. Left or right arrow uses one and goes on to
 /// review it. Both runs are in the run cache, so picking costs nothing.
 class CompareView extends ConsumerWidget {
   const CompareView({super.key});

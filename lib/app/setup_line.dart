@@ -1,4 +1,6 @@
+import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:grammar_guard/instructions/instruction.dart";
 import "package:grammar_guard/session/session.dart";
 import "package:grammar_guard/ui/theme.dart";
@@ -7,12 +9,16 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 /// What this rewrite uses, in one quiet line above the text, grouped by why
 /// it is on: "Discord profile  Casual, Discord markdown   Default  Polish".
 /// The model ends the line. Clicking it opens the bar (Space), which lists
-/// the same things and changes them.
-class SetupLine extends ConsumerWidget {
+/// the same things and changes them; the model opens the bar on the models.
+class SetupLine extends HookConsumerWidget {
   const SetupLine({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.read(sessionActionsProvider);
+    final modelTap = useMemoized(TapGestureRecognizer.new);
+    useEffect(() => modelTap.dispose, [modelTap]);
+    modelTap.onTap = () => session.openBar(const BarRequest(query: "@"));
     final resolved = ref.watch(resolvedProvider);
     final model = ref.watch(runRequestProvider)?.model;
     if (resolved == null) return const SizedBox.shrink();
@@ -39,10 +45,10 @@ class SetupLine extends ConsumerWidget {
     const gap = TextSpan(text: "      ");
 
     return Tooltip(
-      message: "Space to change",
+      message: "Space to change, m to change the model",
       waitDuration: const Duration(milliseconds: 600),
       child: InkWell(
-        onTap: ref.read(sessionActionsProvider).openBar,
+        onTap: session.openBar,
         borderRadius: BorderRadius.circular(6),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -67,6 +73,7 @@ class SetupLine extends ConsumerWidget {
                   gap,
                   TextSpan(
                     text: model.label,
+                    recognizer: modelTap,
                     style: TextStyle(color: gg.model, fontWeight: FontWeight.w700),
                   ),
                   if (resolved.model?.origin case FromYou())

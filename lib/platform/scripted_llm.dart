@@ -82,6 +82,7 @@ class ScriptedLlm implements LlmGateway {
 
   @override
   Future<List<llm.AIModel>> models(Connection connection) async => switch (listing) {
+    // ignore: only_throw_errors
     final Object error? => throw error,
     null => throw const llm.InvalidRequestError("Scripted: use the bundled list."),
   };

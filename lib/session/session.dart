@@ -14,6 +14,7 @@ import "package:grammar_guard/review/review.dart";
 import "package:grammar_guard/rewrite/history.dart";
 import "package:grammar_guard/rewrite/run.dart";
 import "package:grammar_guard/session/hotkey_binding.dart";
+import "package:grammar_guard/session/key_tips.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:markdown/markdown.dart" show markdownToHtml;
 import "package:riverpod_annotation/riverpod_annotation.dart";
@@ -35,12 +36,27 @@ abstract class SessionState with _$SessionState {
     /// The bar, shown in place of the result while set (Space, M, C).
     BarRequest? bar,
 
-    /// Esc during a run. Stops watching the run, which cancels it.
-    @Default(false) bool cancelled,
+    /// Why no model runs although there is text.
+    @Default(RunHold.none) RunHold hold,
+
+    /// ?: the list of keys, shown in place of the result. A run keeps going.
+    @Default(false) bool showKeys,
 
     /// One line toast: "Copied", "Select some text first", a paste problem.
     String? notice,
   }) = _SessionState;
+}
+
+/// What keeps captured text from going to a model.
+enum RunHold {
+  none,
+
+  /// Esc during a run. Stops watching the run, which cancels it.
+  cancelled,
+
+  /// The choose first hotkey: nothing is sent until a model is picked, or
+  /// someone presses R for the usual one.
+  choosing,
 }
 
 /// What Enter on a model row in the bar does.
@@ -61,7 +77,7 @@ abstract class BarRequest with _$BarRequest {
 
 /// Popup when a global hotkey works, a normal window otherwise.
 @Riverpod(keepAlive: true)
-bool isPopup(Ref ref) => ref.watch(hotkeyBindingProvider).value is HotkeyActive;
+bool isPopup(Ref ref) => ref.watch(hotkeyBindingProvider).value?[HotkeyPurpose.rewrite] is HotkeyActive;
 
 @Riverpod(keepAlive: true)
 Resolved? resolved(Ref ref) {
@@ -76,7 +92,7 @@ RunRequest? _request(Ref ref, ModelRef? pick) {
   final session = ref.watch(sessionProvider);
   final resolved = ref.watch(resolvedProvider);
   final input = session.input;
-  if (input == null || resolved == null || session.cancelled) return null;
+  if (input == null || resolved == null || session.hold != RunHold.none) return null;
 
   // The model picked for now, by a profile or by default, else the first
   // model in the catalog. A pick naming a model that is gone falls back too.
@@ -137,15 +153,15 @@ class SessionActions {
   SessionState get state => ref.read(sessionProvider);
   set state(SessionState next) => ref.read(sessionProvider.notifier).update((_) => next);
 
-  /// The global hotkey. Runs while the source app is still in front.
-  Future<void> onHotkey() async {
+  /// A global hotkey. Runs while the source app is still in front.
+  Future<void> onHotkey([HotkeyPurpose purpose = HotkeyPurpose.rewrite]) async {
     final window = ref.read(desktopWindowProvider);
     if (await window.isVisible() && ref.read(isPopupProvider)) {
       await window.hide();
       return;
     }
     try {
-      await _start(await ref.read(textBridgeProvider).capture());
+      await _start(await ref.read(textBridgeProvider).capture(), purpose);
     } on Object catch (error) {
       // The hotkey callback has no caller to report to: say it here.
       state = SessionState(notice: "Could not read the selection. $error");
@@ -159,20 +175,27 @@ class SessionActions {
     await _start(await ref.read(textBridgeProvider).captureClipboard());
   }
 
-  Future<void> _start(Captured captured) async {
+  Future<void> _start(Captured captured, [HotkeyPurpose purpose = HotkeyPurpose.rewrite]) async {
     if (captured.text.trim().isEmpty) {
       state = SessionState(notice: captured.fallbackReason ?? "Select some text first, or copy it.");
       return;
     }
+    // Set together with the text: the run starts from the state, so a hold
+    // set later would already have sent the text.
+    final (hold, bar) = switch (purpose) {
+      HotkeyPurpose.rewrite => (RunHold.none, null),
+      HotkeyPurpose.chooseFirst => (RunHold.choosing, const BarRequest(query: "@")),
+    };
     final same = state.input?.text == captured.text && state.input?.source?.id == captured.source?.id;
     if (same) {
       // Same text again: keep choices and cached results, refresh the
       // source so paste back targets the app that is in front now.
-      state = SessionState(input: captured, choices: state.choices);
+      state = SessionState(input: captured, choices: state.choices, hold: hold, bar: bar);
       return;
     }
     ref.invalidate(runProvider); // drop the cache of the previous text
-    state = SessionState(input: captured);
+    state = SessionState(input: captured, hold: hold, bar: bar);
+    unawaited(ref.read(keyTipsProvider.notifier).nextRewrite());
   }
 
   void toggle(Instruction instruction) {
@@ -189,11 +212,23 @@ class SessionActions {
     if (next != null) _choose(state.choices.turnOn(next.id));
   }
 
-  /// Every for-now change reruns: clear Esc and any old toast.
-  void _choose(RunChoices choices) => state = state.copyWith(choices: choices, cancelled: false, notice: null);
+  /// Every for-now change reruns: clear Esc and any old toast. Choosing first
+  /// goes on until a model is picked, whatever else changes meanwhile.
+  void _choose(RunChoices choices) => state = state.copyWith(
+    choices: choices,
+    hold: state.hold == RunHold.choosing ? RunHold.choosing : RunHold.none,
+    notice: null,
+  );
 
-  /// A model picked in the bar for now. ⇧Enter and ⌘Enter save it instead.
-  void useModel(ModelRef? model) => _choose(state.choices.copyWith(model: model));
+  /// A model picked in the bar for now. ⇧Enter and ⌘Enter save it instead,
+  /// then [releaseHold].
+  void useModel(ModelRef? model) {
+    _choose(state.choices.copyWith(model: model));
+    releaseHold();
+  }
+
+  /// The wait for a model is over: the text may go to one.
+  void releaseHold() => state = state.copyWith(hold: RunHold.none);
 
   /// A profile picked in the bar for now, instead of the matching ones.
   void useProfile(String name) => _choose(state.choices.copyWith(profile: name));
@@ -203,8 +238,15 @@ class SessionActions {
 
   void closeBar() => state = state.copyWith(bar: null);
 
+  /// ?: the list of keys in place of the result, or back.
+  void toggleKeys() => state = state.copyWith(showKeys: !state.showKeys);
+
+  void closeKeys() {
+    if (state.showKeys) state = state.copyWith(showKeys: false);
+  }
+
   /// C: run a second model next to the current one.
-  void compareWith(ModelRef model) => state = state.copyWith(compare: model);
+  void compareWith(ModelRef model) => state = state.copyWith(compare: model, hold: RunHold.none);
 
   /// Left or right arrow while comparing: keep that result and review it.
   /// Both runs are cached, so nothing is generated again.
@@ -215,9 +257,13 @@ class SessionActions {
 
   void setWords(String words) => _choose(state.choices.copyWith(words: words));
 
-  /// Esc: closes the bar, else leaves compare, else cancels a running
-  /// rewrite, else hides the popup.
+  /// Esc: closes the keys or the bar, else leaves compare, else cancels a
+  /// running rewrite, else hides the popup.
   Future<void> escape() async {
+    if (state.showKeys) {
+      closeKeys();
+      return;
+    }
     if (state.bar != null) {
       closeBar();
       return;
@@ -227,7 +273,7 @@ class SessionActions {
       return;
     }
     if (ref.read(currentRunProvider)?.value?.isActive ?? false) {
-      state = state.copyWith(cancelled: true, notice: "Cancelled. Press R to try again.");
+      state = state.copyWith(hold: RunHold.cancelled, notice: "Cancelled. Press r to try again.");
       return;
     }
     if (ref.read(isPopupProvider)) await ref.read(desktopWindowProvider).hide();
@@ -237,7 +283,7 @@ class SessionActions {
   void retry() {
     final request = ref.read(runRequestProvider);
     if (request != null) ref.invalidate(runProvider(request));
-    state = state.copyWith(cancelled: false, notice: null);
+    state = state.copyWith(hold: RunHold.none, notice: null);
   }
 
   /// Enter, or Confirm in the editor. Only a finished, reviewed result is
@@ -247,7 +293,13 @@ class SessionActions {
     final run = ref.read(currentRunProvider)?.value;
     final output = ref.read(reviewProvider)?.finalText;
     if (input == null || run is! Done || output == null) {
-      state = state.copyWith(notice: "Still writing. Enter works when it is done.");
+      state = state.copyWith(
+        notice: switch (state.hold) {
+          RunHold.choosing => "Nothing sent yet. Press m to pick a model, or r for the usual one.",
+          RunHold.cancelled => "Cancelled. Press r to try again.",
+          RunHold.none => "Still writing. Enter works when it is done.",
+        },
+      );
       return;
     }
 
@@ -310,7 +362,7 @@ class SessionActions {
         // The run keeps going while hidden; reopening shows its result.
         if (ref.read(isPopupProvider)) await window.hide();
       case WindowEvent.closeRequested:
-        state = state.copyWith(cancelled: true);
+        state = state.copyWith(hold: RunHold.cancelled);
         await window.close();
       case WindowEvent.reopened:
         // Opening the app is a way in that needs no hotkey, so a broken

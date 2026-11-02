@@ -32,7 +32,7 @@ final class HotkeySettingProvider extends $AsyncNotifierProvider<HotkeySetting, 
   HotkeySetting create() => HotkeySetting();
 }
 
-String _$hotkeySettingHash() => r'b8bf89ce6933956b0d872dc38a2736b8e4a6d02d';
+String _$hotkeySettingHash() => r'd85aec3d45fb8a1a8d7f0e396d3e51dc2710e88d';
 
 abstract class _$HotkeySetting extends $AsyncNotifier<HotKey> {
   FutureOr<HotKey> build();
@@ -43,6 +43,58 @@ abstract class _$HotkeySetting extends $AsyncNotifier<HotKey> {
     final element =
         ref.element
             as $ClassProviderElement<AnyNotifier<AsyncValue<HotKey>, HotKey>, AsyncValue<HotKey>, Object?, Object?>;
+    return element.handleCreate(ref, build);
+  }
+}
+
+/// The second shortcut: open on the models with the selected text and send
+/// nothing until one is picked. Off until someone sets it, so it never takes
+/// a key from another app unasked.
+
+@ProviderFor(ChooseFirstHotkeySetting)
+final chooseFirstHotkeySettingProvider = ChooseFirstHotkeySettingProvider._();
+
+/// The second shortcut: open on the models with the selected text and send
+/// nothing until one is picked. Off until someone sets it, so it never takes
+/// a key from another app unasked.
+final class ChooseFirstHotkeySettingProvider extends $AsyncNotifierProvider<ChooseFirstHotkeySetting, HotKey?> {
+  /// The second shortcut: open on the models with the selected text and send
+  /// nothing until one is picked. Off until someone sets it, so it never takes
+  /// a key from another app unasked.
+  ChooseFirstHotkeySettingProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'chooseFirstHotkeySettingProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$chooseFirstHotkeySettingHash();
+
+  @$internal
+  @override
+  ChooseFirstHotkeySetting create() => ChooseFirstHotkeySetting();
+}
+
+String _$chooseFirstHotkeySettingHash() => r'd1d86d9bab4d25707bd8821999a5d698241409be';
+
+/// The second shortcut: open on the models with the selected text and send
+/// nothing until one is picked. Off until someone sets it, so it never takes
+/// a key from another app unasked.
+
+abstract class _$ChooseFirstHotkeySetting extends $AsyncNotifier<HotKey?> {
+  FutureOr<HotKey?> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<HotKey?>, HotKey?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<AnyNotifier<AsyncValue<HotKey?>, HotKey?>, AsyncValue<HotKey?>, Object?, Object?>;
     return element.handleCreate(ref, build);
   }
 }
