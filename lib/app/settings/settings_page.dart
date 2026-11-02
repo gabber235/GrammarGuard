@@ -266,6 +266,7 @@ class _AssistantModelPicker extends ConsumerWidget {
           InlinePicker<ModelRef>(
             value: current,
             hint: "Choose a model",
+            empty: "No models yet. Add an API key under Connections below.",
             options: [
               for (final m in models) PickerOption(m.ref, m.label, detail: several ? m.ref.backend.label : null),
             ],
