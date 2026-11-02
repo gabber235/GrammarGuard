@@ -33,6 +33,7 @@ class InlinePicker<T> extends HookWidget {
     required this.onPicked,
     this.label,
     this.hint = "Choose",
+    this.empty = "Nothing to choose from yet.",
     super.key,
   });
 
@@ -45,6 +46,9 @@ class InlinePicker<T> extends HookWidget {
   /// What is chosen, on the field's border like a text field's label.
   final String? label;
   final String hint;
+
+  /// Why the list has no options at all, and what to do about it.
+  final String empty;
 
   /// More options than this get a search field.
   static const searchAbove = 8;
@@ -150,72 +154,77 @@ class InlinePicker<T> extends HookWidget {
       body = InputDecorator(
         isFocused: true,
         decoration: InputDecoration(labelText: label, contentPadding: const EdgeInsets.all(4)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (searchable) ...[
-              Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Icon(Icons.search, size: 18, color: gg.muted),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: query,
-                      focusNode: search,
-                      onChanged: (_) => highlighted.value = 0,
-                      style: field?.copyWith(color: gg.ink),
-                      decoration: const InputDecoration(
-                        hintText: "Search",
-                        filled: false,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 10),
+        // Inside the search field's tap group: pressing a row must not count
+        // as a tap outside the field, whose focus loss would close the list
+        // and take the row away before the button comes up.
+        child: TextFieldTapRegion(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (searchable) ...[
+                Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Icon(Icons.search, size: 18, color: gg.muted),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: query,
+                        focusNode: search,
+                        onChanged: (_) => highlighted.value = 0,
+                        style: field?.copyWith(color: gg.ink),
+                        decoration: const InputDecoration(
+                          hintText: "Search",
+                          filled: false,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Divider(color: gg.hairline, height: 1),
-            ],
-            if (shown.isEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: Text("Nothing matches.", style: TextStyle(color: gg.muted)),
-              )
-            else
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: listHeight),
-                child: NotificationListener<ScrollMetricsNotification>(
-                  onNotification: (n) => track(n.metrics),
-                  child: NotificationListener<ScrollUpdateNotification>(
+                  ],
+                ),
+                Divider(color: gg.hairline, height: 1),
+              ],
+              if (shown.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  child: Text(options.isEmpty ? empty : "Nothing matches.", style: TextStyle(color: gg.muted)),
+                )
+              else
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: listHeight),
+                  child: NotificationListener<ScrollMetricsNotification>(
                     onNotification: (n) => track(n.metrics),
-                    child: BottomFade(
-                      on: more.value,
-                      // Not a shrink wrapped ListView: dialogs measure their
-                      // content's intrinsic size, which a lazy list cannot give.
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.only(top: searchable ? 4 : 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (final (i, option) in shown.indexed)
-                              PillRow(
-                                key: rowKeys.putIfAbsent(option.value, GlobalKey.new),
-                                current: i == index,
-                                onTap: () => pick(option),
-                                child: _Row(option: option, chosen: option == chosen),
-                              ).stagger(context, i),
-                          ],
+                    child: NotificationListener<ScrollUpdateNotification>(
+                      onNotification: (n) => track(n.metrics),
+                      child: BottomFade(
+                        on: more.value,
+                        // Not a shrink wrapped ListView: dialogs measure their
+                        // content's intrinsic size, which a lazy list cannot give.
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.only(top: searchable ? 4 : 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (final (i, option) in shown.indexed)
+                                PillRow(
+                                  key: rowKeys.putIfAbsent(option.value, GlobalKey.new),
+                                  current: i == index,
+                                  onTap: () => pick(option),
+                                  child: _Row(option: option, chosen: option == chosen),
+                                ).stagger(context, i),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       );
     }

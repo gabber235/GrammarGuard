@@ -1,9 +1,11 @@
+import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:grammar_guard/app/settings/settings_page.dart";
 import "package:grammar_guard/instructions/instruction.dart";
 import "package:grammar_guard/instructions/library_store.dart";
+import "package:grammar_guard/llm/connections.dart";
 import "package:grammar_guard/llm/llm.dart";
 import "package:grammar_guard/settings/hotkey_setting.dart";
 import "package:grammar_guard/ui/surfaces.dart";
@@ -127,6 +129,39 @@ void main() {
     expect(find.descendant(of: panel, matching: find.text("Claude Opus 5")), findsOneWidget);
     expect(find.descendant(of: panel, matching: find.byType(TextField)), findsNothing);
     expect(app.tester.getSize(panel).height, closed);
+  });
+
+  for (final platform in const [TargetPlatform.macOS, TargetPlatform.linux, TargetPlatform.windows]) {
+    testFlow("a mouse click picks a row in a list with a search field on $platform", (app) async {
+      await openSettings(app);
+      await app.tester.tap(find.text("Choose a model"));
+      await app.settle();
+
+      // A real click spans frames, unlike tester.tap: the row must survive
+      // the frame between pressing and releasing the button.
+      final click = await app.tester.startGesture(
+        app.tester.getCenter(find.text("Claude Sonnet 5.5")),
+        kind: PointerDeviceKind.mouse,
+      );
+      await app.tester.pump();
+      await click.up();
+      await app.settle();
+
+      expect(app.library.assistantModel?.id, contains("sonnet"));
+    }, platform: platform);
+  }
+
+  testFlow("an empty model list says what to do instead of that nothing matches", (app) async {
+    final connections = app.container.read(connectionsProvider.notifier);
+    await connections.save(const Connection(backend: Backend.anthropic, enabled: true));
+    await app.settle();
+    await openSettings(app);
+
+    await app.tester.tap(find.text("Choose a model"));
+    await app.settle();
+
+    expect(find.text("No models yet. Add an API key under Connections below."), findsOneWidget);
+    expect(find.text("Nothing matches."), findsNothing);
   });
 
   testFlow("Esc closes the open list and keeps Settings; Enter opens it again", (app) async {
