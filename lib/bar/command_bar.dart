@@ -278,11 +278,10 @@ class _Row extends StatelessWidget {
         if (item case ModelItem(model: ModelInfo(:final price?)))
           Padding(
             padding: const EdgeInsets.only(left: 10),
-            child: Tooltip(
-              message: "Per million tokens",
-              waitDuration: const Duration(milliseconds: 600),
-              child: Text(_priceLabel(price), style: TextStyle(fontSize: 12, color: gg.muted)),
-            ),
+            // No tooltip here: these rows move by GlobalKey as the search narrows,
+            // and a moved OverlayPortal trips the semantics assertion on unique
+            // traversal parents.
+            child: Text(_priceLabel(price), style: TextStyle(fontSize: 12, color: gg.muted)),
           ),
         if (trailing case (final text, final color))
           Padding(
@@ -301,7 +300,9 @@ class _Row extends StatelessWidget {
 /// What a million tokens cost, the way the services say it.
 String _priceLabel(Price price) {
   String dollars(double amount) => "\$${amount.toStringAsFixed(amount == amount.roundToDouble() ? 0 : 2)}";
-  return price == Price.free ? "free" : "${dollars(price.inputPerMillion)} in, ${dollars(price.outputPerMillion)} out";
+  return price == Price.free
+      ? "free"
+      : "${dollars(price.inputPerMillion)} in, ${dollars(price.outputPerMillion)} out per million";
 }
 
 /// One place that turns a row and a scope into an effect.
