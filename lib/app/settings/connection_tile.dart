@@ -48,6 +48,15 @@ class ConnectionRow extends HookConsumerWidget {
     final check = ref.watch(connectionChecksProvider)[backend];
     final key = useTextEditingController(text: connection?.apiKey ?? "");
     final url = useTextEditingController(text: connection?.baseUrl?.toString() ?? "");
+    // Shown before the connections loaded: fill in once they have, or saving
+    // on leaving the page would delete the key.
+    useEffect(() {
+      if (connection != null) {
+        key.text = connection.apiKey ?? "";
+        url.text = connection.baseUrl?.toString() ?? "";
+      }
+      return null;
+    }, [connection == null]);
     // Leaving the page runs after this widget's ref is gone.
     final store = ref.read(connectionsProvider.notifier);
     final saved = useRef(connection);

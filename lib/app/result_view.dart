@@ -25,8 +25,9 @@ import "package:riverpod_annotation/riverpod_annotation.dart";
 
 part "result_view.g.dart";
 
-/// V toggles the rendered preview of the final text.
-@riverpod
+/// V toggles the rendered preview of the final text. Kept while another view
+/// takes the result's place.
+@Riverpod(keepAlive: true)
 class Preview extends _$Preview {
   @override
   bool build() => false;

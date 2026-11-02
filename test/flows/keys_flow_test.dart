@@ -176,6 +176,17 @@ void main() {
       expect(find.text("Choose the model first, from any app"), findsNothing);
     });
 
+    testFlow("going back keeps the preview and side by side as they were", (app) async {
+      await rewrite(app);
+      await app.press(LogicalKeyboardKey.keyV);
+      expect(app.read(previewProvider), isTrue);
+
+      await pressQuestionMark(app);
+      await pressQuestionMark(app);
+
+      expect(app.read(previewProvider), isTrue);
+    });
+
     testFlow("a new capture leaves it for the result", (app) async {
       await rewrite(app);
       await pressQuestionMark(app);
