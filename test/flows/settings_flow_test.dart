@@ -221,6 +221,43 @@ void main() {
   });
 
   group("the rewrites to keep", () {
+    testFlow("a typed limit asks once, whether by Enter or by leaving the field", (app) async {
+      await openSettings(app);
+      await app.tester.tap(find.text("History"));
+      await app.settle();
+      final history = app.container.read(historyProvider.notifier);
+      for (var i = 0; i < 3; i++) {
+        await history.add(
+          HistoryEntry(
+            at: DateTime(2026, 11, 3, 12, i),
+            input: "before $i",
+            output: "after $i",
+            profiles: const [],
+            instructions: const [],
+            picked: const [],
+            words: "",
+            decisions: const [],
+          ),
+        );
+      }
+      await app.settle();
+      await app.tester.tap(find.text("100"));
+      await app.settle();
+      await app.tester.tap(find.text("Custom").last);
+      await app.settle();
+      await app.tester.enterText(find.widgetWithText(TextField, "How many, up to ${HistoryLimit.max}"), "1");
+
+      await app.tester.testTextInput.receiveAction(TextInputAction.done);
+      await app.settle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await app.tester.tap(find.text("Remove them"));
+      await app.settle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(app.container.read(historyProvider).value, hasLength(1));
+      expect(app.container.read(historyLimitProvider).value, 1);
+    });
+
     Future<void> openHistory(FlowApp app) async {
       await openSettings(app);
       await app.tester.tap(find.text("History"));

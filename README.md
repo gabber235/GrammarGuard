@@ -8,7 +8,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/in_use_light.webp">
-  <img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/in_use.webp" alt="A chat message is typed with mistakes and selected. Option Shift G opens GrammarGuard, the rewrite streams in as a diff of the message, n moves to a change, ? explains it, y keeps it, and Enter pastes the corrected message back into the chat." width="100%">
+  <img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/in_use.webp" alt="A chat message is typed with mistakes and selected. Option Shift G opens GrammarGuard, the rewrite streams in as a diff of the message, n moves to a change, w explains it, y accepts it, and Enter pastes the corrected message back into the chat." width="100%">
 </picture>
 
 GrammarGuard is a desktop app for macOS, Windows and Linux that rewrites text where you write it: a chat, an
@@ -31,7 +31,7 @@ Package managers and first launch steps are under [Install](#install).
 ### Review every change
 
 Removed words are struck through next to their replacement. <kbd>n</kbd> and <kbd>p</kbd> move between
-changes, <kbd>y</kbd> keeps one, <kbd>x</kbd> undoes it, and <kbd>?</kbd> asks the model why it made it. The
+changes, <kbd>y</kbd> accepts one, <kbd>x</kbd> rejects it, and <kbd>w</kbd> asks the model why it made it. The
 line above the text says what shaped the rewrite: the profile for this app, the defaults, and the model.
 <kbd>Enter</kbd> pastes the result back where it came from. The film above shows the whole round.
 
@@ -46,9 +46,9 @@ turns on a tone or switches the model. <kbd>Shift</kbd>+<kbd>Enter</kbd> keeps t
 
 ### Compare two models
 
-<kbd>c</kbd> runs a second model next to the first. <kbd>Left</kbd> or <kbd>Right</kbd> keeps one.
+<kbd>c</kbd> runs a second model next to the first. <kbd>Left</kbd> or <kbd>Right</kbd> uses one.
 
-<img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/compare.webp" alt="c opens the model list, Claude Sonnet is picked, both rewrites show side by side, and Right keeps the second one." width="100%">
+<img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/compare.webp" alt="c opens the model list, Claude Sonnet is picked, both rewrites show side by side, and Right uses the second one." width="100%">
 
 ### Set it up by asking
 

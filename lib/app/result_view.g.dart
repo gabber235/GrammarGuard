@@ -8,21 +8,24 @@ part of 'result_view.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// V toggles the rendered preview of the final text.
+/// V toggles the rendered preview of the final text. Kept while another view
+/// takes the result's place.
 
 @ProviderFor(Preview)
 final previewProvider = PreviewProvider._();
 
-/// V toggles the rendered preview of the final text.
+/// V toggles the rendered preview of the final text. Kept while another view
+/// takes the result's place.
 final class PreviewProvider extends $NotifierProvider<Preview, bool> {
-  /// V toggles the rendered preview of the final text.
+  /// V toggles the rendered preview of the final text. Kept while another view
+  /// takes the result's place.
   PreviewProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'previewProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -40,9 +43,10 @@ final class PreviewProvider extends $NotifierProvider<Preview, bool> {
   }
 }
 
-String _$previewHash() => r'2a06342dec6ed411dcd64b9e3ec3a2b51a266e2f';
+String _$previewHash() => r'cf852c9c3a2f6d95d360e5af1a110a60ed7bd55a';
 
-/// V toggles the rendered preview of the final text.
+/// V toggles the rendered preview of the final text. Kept while another view
+/// takes the result's place.
 
 abstract class _$Preview extends $Notifier<bool> {
   bool build();

@@ -105,7 +105,7 @@ void main() {
       ..reply(_notesFixed) // the Notes text, light theme
       ..fail("429: rate limit reached for this key. Try again in a minute.")
       ..reply(_notesFixed) // R after the error
-      // ? asks the same model why each change was made.
+      // W asks the same model why each change was made.
       ..says(
         '{"reasons": [{"id": 0, "reason": "Capitalize the first word."}, '
         '{"id": 1, "reason": "I is always capitalized."}, '

@@ -32,9 +32,12 @@ class SystemHotkey implements GlobalHotkey {
 
   @override
   Future<void> unregister() async {
-    for (final hotKey in _current) {
+    // Taken first: registering again unregisters too, while the old binding's
+    // own unregister may still be on its way.
+    final old = [..._current];
+    _current.clear();
+    for (final hotKey in old) {
       await _manager.unregister(hotKey);
     }
-    _current.clear();
   }
 }

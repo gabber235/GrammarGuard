@@ -124,6 +124,7 @@ class _LimitPicker extends HookConsumerWidget {
     final custom = useState(!isPreset);
     final typed = useTextEditingController(text: isPreset ? "" : "$limit");
     final problem = useState<String?>(null);
+    final asking = useRef(false);
 
     Future<void> apply(int next) async {
       final notifier = ref.read(historyLimitProvider.notifier);
@@ -160,7 +161,13 @@ class _LimitPicker extends HookConsumerWidget {
         return;
       }
       problem.value = null;
-      if (next != limit) await apply(next);
+      // Enter also takes the focus away, and so does the question itself.
+      if (next == limit || asking.value) return;
+      asking.value = true;
+      await apply(next);
+      asking.value = false;
+      // Cancelled: back to what holds, or leaving the field asks again.
+      if (context.mounted && ref.read(historyLimitProvider).value != next) typed.text = "$limit";
     }
 
     return Padding(
