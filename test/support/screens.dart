@@ -168,7 +168,7 @@ final screens = <Screen>[
     await _keys(app, [LogicalKeyboardKey.arrowDown]);
   }),
   Screen("settings instructions", (app) => _settings(app, "Instructions")),
-  Screen("settings instruction dialog", (app) async {
+  Screen("settings instruction edit", (app) async {
     await _settings(app, "Instructions");
     await app.tester.tap(find.text("Casual").first);
     await app.settle();
@@ -177,7 +177,23 @@ final screens = <Screen>[
     await _settings(app, "Instructions");
     await app.tester.tap(find.text("Casual").first);
     await app.settle();
-    await app.tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text("Tone")));
+    await app.tester.tap(find.text("Tone"));
+    await app.settle();
+  }),
+  Screen("settings instruction new", (app) async {
+    await _settings(app, "Instructions");
+    await app.tester.scrollUntilVisible(find.text("New instruction"), 200, scrollable: find.byType(Scrollable).last);
+    await app.tester.ensureVisible(find.text("New instruction"));
+    await app.settle();
+    await app.tester.tap(find.text("New instruction"));
+    await app.settle();
+  }),
+  Screen("settings instruction problem", (app) async {
+    await _settings(app, "Instructions");
+    await app.tester.tap(find.text("Casual").first);
+    await app.settle();
+    await app.tester.enterText(find.byType(TextField).first, "");
+    await app.tester.tap(find.text("Save"));
     await app.settle();
   }),
   Screen("settings profiles", (app) async {
@@ -213,6 +229,29 @@ final screens = <Screen>[
     await review(app);
     await _keys(app, [LogicalKeyboardKey.enter]);
     await _settings(app, "History");
+  }),
+  Screen("settings history stop saving", (app) async {
+    await review(app);
+    await _keys(app, [LogicalKeyboardKey.enter]);
+    await _settings(app, "History");
+    await app.tester.tap(find.text("100"));
+    await app.settle();
+    await app.tester.tap(find.text("Off"));
+    await app.settle();
+  }),
+  Screen("settings history keep fewer", (app) async {
+    for (var i = 0; i < 3; i++) {
+      await review(app);
+      await _keys(app, [LogicalKeyboardKey.enter]);
+    }
+    await _settings(app, "History");
+    await app.tester.tap(find.text("100"));
+    await app.settle();
+    await app.tester.tap(find.text("Custom").last);
+    await app.settle();
+    await app.tester.enterText(find.byType(TextField), "1");
+    await app.tester.testTextInput.receiveAction(TextInputAction.done);
+    await app.settle();
   }),
   Screen("settings history picker", (app) async {
     await review(app);
