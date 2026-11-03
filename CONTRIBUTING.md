@@ -3,6 +3,8 @@
 Open an issue or a pull request against `main`. Please include tests for behavior changes, and refresh the
 goldens (`goldens` in devenv) when the UI changes.
 
+The reasoning behind the product's rules is in [docs/design.md](docs/design.md).
+
 ## Building from source
 
 The quickest way is [devenv](https://devenv.sh): `devenv shell` installs the exact Flutter version this project

@@ -8,5 +8,10 @@ The app's look is finished and deliberate. New UI must read as if it was always 
 - Build from `lib/ui/surfaces.dart` and `InlinePicker`. Do not add a new kind of control or style for one feature.
 - When a feature replaces a control, keep the row it lived in. Change as little of the screen as the feature allows.
 - Do not change an existing icon, label or position unless the task asks for it.
+- When UI needs a form, a confirmation or a choice, swap the view or open it in place. No dialogs, sheets, menus or overlays. "Popup" in the code means the window itself, not a layer in it. Why: `docs/design.md`.
 - When no existing pattern fits, show the options and ask before building.
 - Before reporting UI work, run `media` and open each changed screen in `build/media/web/screens` next to the same or nearest screen from `main`. The goldens in `test/goldens/goldens/ci` draw text as blocks, so they cannot show whether a screen feels the same.
+
+## Design decisions
+
+Before adding a view, a setting or a kind of control, or changing what reaches a model, read `docs/design.md`.
