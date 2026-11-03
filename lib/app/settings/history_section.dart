@@ -226,6 +226,8 @@ class _LimitPicker extends HookConsumerWidget {
                   },
                   child: TextField(
                     controller: typed,
+                    // The open question is about this number, so it holds still.
+                    readOnly: question.value != null,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: const InputDecoration(hintText: "Up to ${HistoryLimit.max}"),

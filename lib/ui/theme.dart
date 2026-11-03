@@ -38,7 +38,7 @@ class GgTheme extends ThemeExtension<GgTheme> {
   /// Panels on the window: cards, fields, list groups.
   final Color raised;
 
-  /// Layers above the window content: the bar, dialogs, toasts.
+  /// Layers above the window content: the bar, toasts.
   final Color floating;
   final Color shadow;
   final Color ink;
@@ -110,7 +110,7 @@ class GgTheme extends ThemeExtension<GgTheme> {
   );
 
   /// Material widgets restyled to the three surface levels, so a ListTile,
-  /// Switch or dialog looks like it belongs here without per screen code.
+  /// Switch looks like it belongs here without per screen code.
   ThemeData toThemeData(Brightness brightness) {
     final scheme = ColorScheme.fromSeed(
       seedColor: highlighter,

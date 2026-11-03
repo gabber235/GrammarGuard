@@ -4,8 +4,8 @@ import "package:flutter/material.dart";
 ///
 /// Focus is taken back whenever it ends up above this widget: a text field
 /// let go of it, or the app came back to the front and Flutter restored a
-/// node higher up (the Navigator). Focus elsewhere, such as a dialog or a
-/// page pushed on top, is left alone.
+/// node higher up (the Navigator). Focus elsewhere, such as a page pushed on
+/// top, is left alone.
 class AlwaysFocused extends StatefulWidget {
   const AlwaysFocused({required this.child, super.key});
   final Widget child;

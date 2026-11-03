@@ -165,11 +165,13 @@ void mockStorage() {
 /// A widget test with fakes for every port, the bundled library, and an
 /// Anthropic key so the catalog is not empty. [platform] runs it as that
 /// OS, for behavior that differs per platform (text field keys, labels).
+/// [motion] plays the animations, for what happens during them.
 void testFlow(
   String description,
   Future<void> Function(FlowApp app) body, {
   TargetPlatform? platform,
   bool background = false,
+  bool motion = false,
 }) {
   testWidgets(
     variant: platform == null ? const DefaultTestVariant() : TargetPlatformVariant.only(platform),
@@ -177,7 +179,7 @@ void testFlow(
     (tester) async {
       mockStorage();
       final app = FlowApp(background: background);
-      await app.start(tester);
+      await app.start(tester, motion: motion);
       await body(app);
       // Let short delays end (the "Copied" toast keeps the popup up 700 ms).
       await tester.pump(const Duration(seconds: 5));
