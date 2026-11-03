@@ -333,6 +333,24 @@ void main() {
       expect(saved(app), 25);
     });
 
+    testFlow("the number holds still while its question is open", (app) async {
+      await saveRewrites(app, 3);
+      await openHistory(app);
+      await pick(app, "Custom");
+      final field = find.byType(TextField);
+
+      await app.tester.enterText(field, "2");
+      await app.tester.testTextInput.receiveAction(TextInputAction.done);
+      await app.settle();
+      expect(find.text("Keep fewer rewrites"), findsOneWidget);
+      expect(app.tester.widget<TextField>(field).readOnly, isTrue);
+
+      await app.tester.tap(find.text("Remove them"));
+      await app.settle();
+      expect(app.tester.widget<TextField>(field).readOnly, isFalse);
+      expect(saved(app), 2);
+    });
+
     testFlow("picking again replaces the question", (app) async {
       await saveRewrites(app, 25);
       await openHistory(app);
@@ -538,6 +556,19 @@ void main() {
         expect(find.byType(SettingsPage), findsNothing, reason: "the next Esc leaves Settings");
       });
     }
+
+    testFlow("the second click of a double click does not reach the editor", motion: true, (app) async {
+      await openInstructions(app);
+      await app.tester.tap(find.text("Casual").first);
+      await app.tester.pump(const Duration(milliseconds: 100));
+
+      await app.tester.tap(find.text("Delete"), warnIfMissed: false);
+      await app.tester.pump(const Duration(seconds: 1));
+      expect(app.library[casual], isNotNull);
+
+      await tap(app, "Delete");
+      expect(app.library[casual], isNull, reason: "it works once the editor is in place");
+    });
 
     testFlow("another page closes the editor without saving", (app) async {
       await edit(app, "Casual");

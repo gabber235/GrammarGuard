@@ -46,7 +46,7 @@ class GrammarGuardApp extends ConsumerWidget {
       theme: GgTheme.light.copyWith(textSize: readingSize).toThemeData(Brightness.light),
       darkTheme: GgTheme.dark.copyWith(textSize: readingSize).toThemeData(Brightness.dark),
       home: const RewriteScreen(),
-      // One window surface for every page, dialog and toast. macOS keeps a
+      // One window surface for every page and toast. macOS keeps a
       // hidden title bar (window_setup.dart), so the normal window leaves
       // room for the traffic lights; the popup hides them.
       builder: (context, child) => GlassSurface(

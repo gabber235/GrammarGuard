@@ -236,8 +236,13 @@ class InstructionsSection extends HookConsumerWidget {
     final gg = context.gg;
     return PageTransitionSwitcher(
       duration: context.motion(Motion.lift),
-      transitionBuilder: (child, animation, secondary) =>
-          LiftTransition(animation: animation, secondaryAnimation: secondary, lift: Lift.sideways, child: child),
+      // No clicks while the views swap: the second click of a double click on
+      // a row would land on whatever button is coming in under it, even Delete.
+      transitionBuilder: (child, animation, secondary) => ListenableBuilder(
+        listenable: Listenable.merge([animation, secondary]),
+        builder: (_, child) => IgnorePointer(ignoring: !animation.isCompleted || !secondary.isDismissed, child: child),
+        child: LiftTransition(animation: animation, secondaryAnimation: secondary, lift: Lift.sideways, child: child),
+      ),
       child: switch (editing.value) {
         final edit? => _InstructionEditor(library: library, existing: edit.existing, onDone: finish),
         // The key keeps the scroll position for the way back from the editor.
