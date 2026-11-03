@@ -7,7 +7,7 @@ import "package:grammar_guard/ui/motion.dart";
 ///
 /// Surfaces stack in three levels, the same everywhere:
 /// the window ([glass] or [surface]), a [raised] panel on it, and a
-/// [floating] layer over everything (dialogs, toasts, the reason note).
+/// [floating] layer over everything (toasts, the reason note).
 @immutable
 class GgTheme extends ThemeExtension<GgTheme> {
   const GgTheme({
@@ -197,13 +197,6 @@ class GgTheme extends ThemeExtension<GgTheme> {
         deleteIconColor: muted,
         padding: const EdgeInsets.symmetric(horizontal: 4),
         showCheckmark: false,
-      ),
-      dialogTheme: DialogThemeData(
-        backgroundColor: floating,
-        elevation: 24,
-        shadowColor: shadow,
-        shape: rounded,
-        titleTextStyle: base.copyWith(fontSize: 17, fontWeight: FontWeight.w600, color: ink),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,

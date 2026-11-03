@@ -31,7 +31,6 @@ class InlinePicker<T> extends HookWidget {
     required this.options,
     required this.value,
     required this.onPicked,
-    this.label,
     this.title,
     this.hint = "Choose",
     this.empty = "Nothing to choose from yet.",
@@ -43,9 +42,6 @@ class InlinePicker<T> extends HookWidget {
   /// The current choice; [hint] shows while it is none of [options].
   final T? value;
   final ValueChanged<T> onPicked;
-
-  /// What is chosen, on the field's border like a text field's label.
-  final String? label;
 
   /// Draws it as a list row with this title and the choice at the end, for
   /// groups of rows, instead of a field. The list opens under the row.
@@ -162,10 +158,7 @@ class InlinePicker<T> extends HookWidget {
         borderRadius: BorderRadius.circular(GgTheme.smallRadius),
         child: InputDecorator(
           isFocused: node.hasPrimaryFocus,
-          decoration: InputDecoration(
-            labelText: label,
-            suffixIcon: Icon(Icons.unfold_more, size: 18, color: gg.muted),
-          ),
+          decoration: InputDecoration(suffixIcon: Icon(Icons.unfold_more, size: 18, color: gg.muted)),
           // A text field's own text style, so it reads like the fields around it.
           child: Text(
             chosen?.label ?? hint,
@@ -177,7 +170,7 @@ class InlinePicker<T> extends HookWidget {
     } else {
       body = InputDecorator(
         isFocused: true,
-        decoration: InputDecoration(labelText: label, contentPadding: const EdgeInsets.all(4)),
+        decoration: const InputDecoration(contentPadding: EdgeInsets.all(4)),
         // Inside the search field's tap group: pressing a row must not count
         // as a tap outside the field, whose focus loss would close the list
         // and take the row away before the button comes up.
@@ -226,8 +219,6 @@ class InlinePicker<T> extends HookWidget {
                       onNotification: (n) => track(n.metrics),
                       child: BottomFade(
                         on: more.value,
-                        // Not a shrink wrapped ListView: dialogs measure their
-                        // content's intrinsic size, which a lazy list cannot give.
                         child: SingleChildScrollView(
                           padding: EdgeInsets.only(top: searchable ? 4 : 0),
                           child: Column(

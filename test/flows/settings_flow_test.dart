@@ -250,10 +250,10 @@ void main() {
       await app.tester.testTextInput.receiveAction(TextInputAction.done);
       await app.settle();
 
-      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text("Keep fewer rewrites"), findsOneWidget);
       await app.tester.tap(find.text("Remove them"));
       await app.settle();
-      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.text("Keep fewer rewrites"), findsNothing);
       expect(app.container.read(historyProvider).value, hasLength(1));
       expect(app.container.read(historyLimitProvider).value, 1);
     });
@@ -317,6 +317,31 @@ void main() {
       await app.settle();
 
       expect(limit(app), HistoryLimit.standard);
+      expect(saved(app), 25);
+    });
+
+    testFlow("Esc leaves the question, not Settings, and changes nothing", (app) async {
+      await saveRewrites(app, 25);
+      await openHistory(app);
+
+      await pick(app, "20");
+      await app.press(LogicalKeyboardKey.escape);
+
+      expect(find.byType(SettingsPage), findsOneWidget);
+      expect(find.text("Keep fewer rewrites"), findsNothing);
+      expect(limit(app), HistoryLimit.standard);
+      expect(saved(app), 25);
+    });
+
+    testFlow("picking again replaces the question", (app) async {
+      await saveRewrites(app, 25);
+      await openHistory(app);
+
+      await pick(app, "20");
+      await pick(app, "100");
+
+      expect(find.text("Keep fewer rewrites"), findsNothing);
+      expect(limit(app), 100);
       expect(saved(app), 25);
     });
 
@@ -401,26 +426,128 @@ void main() {
     expect(find.byType(SettingsPage), findsNothing);
   });
 
-  testFlow("an instruction's group is picked from a list that opens inside the dialog", (app) async {
-    await openSettings(app);
-    await app.tester.tap(find.text("Instructions"));
-    await app.settle();
-    await app.tester.tap(find.text("Casual").first);
-    await app.settle();
-    final dialog = find.byType(AlertDialog);
+  group("the instruction editor", () {
+    Future<void> openInstructions(FlowApp app) async {
+      await openSettings(app);
+      await app.tester.tap(find.text("Instructions"));
+      await app.settle();
+    }
 
-    await app.tester.tap(find.descendant(of: dialog, matching: find.text("Tone")));
-    await app.settle();
-    await app.tester.tap(find.descendant(of: dialog, matching: find.text("Length")));
-    await app.settle();
-    expect(
-      find.descendant(of: dialog, matching: find.text("Audience")),
-      findsNothing,
-      reason: "picking closes it",
-    );
+    Future<void> edit(FlowApp app, String name) async {
+      await openInstructions(app);
+      await app.tester.tap(find.text(name).first);
+      await app.settle();
+      expect(find.text("Edit $name"), findsOneWidget);
+    }
 
-    await app.tester.tap(find.text("Save"));
-    await app.settle();
-    expect(app.library[const InstructionId("casual")]?.group, const GroupId("length"));
+    Future<void> tap(FlowApp app, String text) async {
+      await app.tester.tap(find.text(text));
+      await app.settle();
+    }
+
+    /// The button at the end of the list; the list builds it before it shows.
+    Future<void> scrollToNew(FlowApp app) async {
+      await app.tester.scrollUntilVisible(find.text("New instruction"), 200, scrollable: find.byType(Scrollable).last);
+      await app.tester.ensureVisible(find.text("New instruction"));
+      await app.settle();
+    }
+
+    const casual = InstructionId("casual");
+
+    testFlow("an instruction's group is picked from a list that opens in place", (app) async {
+      await edit(app, "Casual");
+
+      await tap(app, "Tone");
+      await tap(app, "Length");
+      expect(find.text("Audience"), findsNothing, reason: "picking closes it");
+
+      await tap(app, "Save");
+      expect(app.library[casual]?.group, const GroupId("length"));
+      expect(find.text("Instructions"), findsNWidgets(2), reason: "back on the list");
+    });
+
+    testFlow("Save writes the new name and text", (app) async {
+      await edit(app, "Casual");
+      final nameField = app.tester.widget<TextField>(find.byType(TextField).first);
+      expect(nameField.focusNode?.hasFocus, isTrue);
+      expect(nameField.controller?.selection, const TextSelection.collapsed(offset: 6), reason: "caret after the name");
+
+      await app.tester.enterText(find.byType(TextField).first, "Relaxed");
+      await app.tester.enterText(find.byType(TextField).last, "Be relaxed.");
+      await tap(app, "Save");
+
+      expect(app.library[casual]?.name, "Relaxed");
+      expect(app.library[casual]?.text, "Be relaxed.");
+    });
+
+    testFlow("New instruction adds one", (app) async {
+      await openInstructions(app);
+      await scrollToNew(app);
+      final before = app.library.instructions.length;
+      await tap(app, "New instruction");
+      expect(find.text("Delete"), findsNothing, reason: "nothing to delete yet");
+
+      await app.tester.enterText(find.byType(TextField).first, "Pirate");
+      await app.tester.enterText(find.byType(TextField).last, "Talk like a pirate.");
+      await tap(app, "Save");
+
+      expect(app.library.instructions, hasLength(before + 1));
+      expect(app.library.instructions.last.name, "Pirate");
+      expect(app.library.instructions.last.text, "Talk like a pirate.");
+    });
+
+    testFlow("Delete removes it", (app) async {
+      await edit(app, "Casual");
+      await tap(app, "Delete");
+      expect(app.library[casual], isNull);
+    });
+
+    testFlow("a name the library refuses says why and keeps the editor open", (app) async {
+      await edit(app, "Casual");
+
+      await app.tester.enterText(find.byType(TextField).first, "");
+      await tap(app, "Save");
+
+      expect(find.text("Every instruction needs an id and a name."), findsOneWidget);
+      expect(find.text("Edit Casual"), findsOneWidget);
+      expect(app.library[casual]?.name, "Casual");
+    });
+
+    for (final (way, leave) in [
+      ("Cancel", (FlowApp app) => tap(app, "Cancel")),
+      ("Esc", (FlowApp app) => app.press(LogicalKeyboardKey.escape)),
+      ("the back arrow", (FlowApp app) => app.tester.tap(find.byIcon(Icons.arrow_back)).then((_) => app.settle())),
+    ]) {
+      testFlow("$way goes back to the list without saving, at the same scroll", (app) async {
+        await openInstructions(app);
+        final list = find.byType(Scrollable).last;
+        await scrollToNew(app);
+        final scrolled = app.tester.state<ScrollableState>(list).position.pixels;
+        await tap(app, "New instruction");
+
+        await app.tester.enterText(find.byType(TextField).first, "Pirate");
+        final before = app.library.instructions.length;
+        await leave(app);
+
+        expect(find.byType(SettingsPage), findsOneWidget);
+        expect(find.text("New instruction"), findsOneWidget, reason: "back on the list");
+        expect(app.library.instructions, hasLength(before));
+        expect(app.tester.state<ScrollableState>(find.byType(Scrollable).last).position.pixels, scrolled);
+
+        await app.press(LogicalKeyboardKey.escape);
+        expect(find.byType(SettingsPage), findsNothing, reason: "the next Esc leaves Settings");
+      });
+    }
+
+    testFlow("another page closes the editor without saving", (app) async {
+      await edit(app, "Casual");
+
+      await app.tester.enterText(find.byType(TextField).first, "Relaxed");
+      await tap(app, "History");
+      await tap(app, "Instructions");
+
+      expect(find.text("Edit Casual"), findsNothing);
+      expect(app.library[casual]?.name, "Casual");
+    });
   });
 }
