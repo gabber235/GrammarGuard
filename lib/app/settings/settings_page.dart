@@ -138,8 +138,8 @@ extension on SettingsSection {
     SettingsSection.models => Icons.memory,
     SettingsSection.instructions => Icons.tune,
     SettingsSection.profiles => Icons.apps,
-    SettingsSection.general => Icons.settings_outlined,
-    SettingsSection.keys => Icons.keyboard,
+    SettingsSection.general => Icons.keyboard,
+    SettingsSection.keys => Icons.keyboard_command_key,
     SettingsSection.history => Icons.history,
   };
 }

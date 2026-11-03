@@ -214,6 +214,13 @@ final screens = <Screen>[
     await _keys(app, [LogicalKeyboardKey.enter]);
     await _settings(app, "History");
   }),
+  Screen("settings history picker", (app) async {
+    await review(app);
+    await _keys(app, [LogicalKeyboardKey.enter]);
+    await _settings(app, "History");
+    await app.tester.tap(find.text("100"));
+    await app.settle();
+  }),
 ];
 
 /// A Discord message with the mistakes people make when they type fast.

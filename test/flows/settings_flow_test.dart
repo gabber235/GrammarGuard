@@ -245,7 +245,7 @@ void main() {
       await app.settle();
       await app.tester.tap(find.text("Custom").last);
       await app.settle();
-      await app.tester.enterText(find.widgetWithText(TextField, "How many, up to ${HistoryLimit.max}"), "1");
+      await app.tester.enterText(find.byType(TextField), "1");
 
       await app.tester.testTextInput.receiveAction(TextInputAction.done);
       await app.settle();
@@ -361,7 +361,7 @@ void main() {
     testFlow("a custom number is any whole number up to the maximum", (app) async {
       await openHistory(app);
       await pick(app, "Custom");
-      final field = find.widgetWithText(TextField, "How many, up to ${HistoryLimit.max}");
+      final field = find.byType(TextField);
 
       await app.tester.enterText(field, "${HistoryLimit.max + 1}");
       await app.tester.testTextInput.receiveAction(TextInputAction.done);
