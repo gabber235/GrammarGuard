@@ -162,23 +162,20 @@ class KeysSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final library = ref.watch(libraryStoreProvider).value?.library;
-    Widget group(String label, List<Widget> rows) => Panel(
-      padding: const EdgeInsets.fromLTRB(6, 12, 6, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(padding: const EdgeInsets.fromLTRB(10, 0, 10, 6), child: SectionLabel(label)),
-          ...rows,
-        ],
+    List<Widget> group(String label, List<Widget> rows) => [
+      SectionLabel(label),
+      Panel(
+        padding: const EdgeInsets.fromLTRB(6, 8, 6, 8),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows),
       ),
-    );
+    ];
 
     return SettingsPageBody(
       title: "Keys",
       description: "Every key in one place. In the main window, press ? to see the ones that work right now.",
       children: [
         for (final commandGroup in CommandGroup.values)
-          group(commandGroup.label, [
+          ...group(commandGroup.label, [
             for (final command in AppCommand.values)
               if (command.group == commandGroup && command.keys.isNotEmpty) KeyRow(command.labels, command.title),
             if (commandGroup == CommandGroup.rewrite && library != null)
@@ -187,7 +184,7 @@ class KeysSection extends ConsumerWidget {
             if (commandGroup == CommandGroup.window) const _GlobalKeys(),
           ]),
         for (final (label, entries) in otherKeyGroups)
-          group(label, [for (final entry in entries) KeyRow(entry.labels, entry.what)]),
+          ...group(label, [for (final entry in entries) KeyRow(entry.labels, entry.what)]),
       ],
     );
   }

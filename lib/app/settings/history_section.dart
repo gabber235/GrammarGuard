@@ -170,55 +170,58 @@ class _LimitPicker extends HookConsumerWidget {
       if (context.mounted && ref.read(historyLimitProvider).value != next) typed.text = "$limit";
     }
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InlinePicker<int?>(
-            label: "Rewrites to keep on this computer",
-            value: custom.value ? null : limit,
-            hint: "Custom",
-            options: [
-              for (final preset in HistoryLimit.presets) PickerOption(preset, preset == 0 ? "Off" : "$preset"),
-              const PickerOption(null, "Custom"),
-            ],
-            onPicked: (picked) {
-              problem.value = null;
-              custom.value = picked == null;
-              if (picked == null) {
-                typed.text = isPreset ? "" : "$limit";
-              } else {
-                unawaited(apply(picked));
-              }
-            },
-          ),
-          if (custom.value) ...[
-            const SizedBox(height: 10),
-            Focus(
-              skipTraversal: true,
-              canRequestFocus: false,
-              onFocusChange: (focused) {
-                if (!focused) unawaited(applyTyped());
-              },
-              child: TextField(
-                controller: typed,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: InputDecoration(labelText: "How many, up to ${HistoryLimit.max}", errorText: problem.value),
-                onSubmitted: (_) => applyTyped(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InlinePicker<int?>(
+          title: "Rewrites to keep on this computer",
+          value: custom.value ? null : limit,
+          hint: "Custom",
+          options: [
+            for (final preset in HistoryLimit.presets) PickerOption(preset, preset == 0 ? "Off" : "$preset"),
+            const PickerOption(null, "Custom"),
+          ],
+          onPicked: (picked) {
+            problem.value = null;
+            custom.value = picked == null;
+            if (picked == null) {
+              typed.text = isPreset ? "" : "$limit";
+            } else {
+              unawaited(apply(picked));
+            }
+          },
+        ),
+        if (custom.value)
+          ListTile(
+            title: const Text("How many"),
+            subtitle: problem.value == null ? null : Text(problem.value!, style: TextStyle(color: gg.removed)),
+            trailing: SizedBox(
+              width: 140,
+              child: Focus(
+                skipTraversal: true,
+                canRequestFocus: false,
+                onFocusChange: (focused) {
+                  if (!focused) unawaited(applyTyped());
+                },
+                child: TextField(
+                  controller: typed,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(hintText: "Up to ${HistoryLimit.max}"),
+                  onSubmitted: (_) => applyTyped(),
+                ),
               ),
             ),
-          ],
-          if (limit > 0 && limit < _recentsReach) ...[
-            const SizedBox(height: 8),
-            Text(
+          ),
+        if (limit > 0 && limit < _recentsReach)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+            child: Text(
               "With few rewrites, recent picks and the assistant have less to learn from.",
               style: TextStyle(fontSize: 13, color: gg.muted),
             ),
-          ],
-        ],
-      ),
+          ),
+      ],
     );
   }
 }

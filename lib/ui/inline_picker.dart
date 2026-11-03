@@ -32,6 +32,7 @@ class InlinePicker<T> extends HookWidget {
     required this.value,
     required this.onPicked,
     this.label,
+    this.title,
     this.hint = "Choose",
     this.empty = "Nothing to choose from yet.",
     super.key,
@@ -45,6 +46,10 @@ class InlinePicker<T> extends HookWidget {
 
   /// What is chosen, on the field's border like a text field's label.
   final String? label;
+
+  /// Draws it as a list row with this title and the choice at the end, for
+  /// groups of rows, instead of a field. The list opens under the row.
+  final String? title;
   final String hint;
 
   /// Why the list has no options at all, and what to do about it.
@@ -130,8 +135,27 @@ class InlinePicker<T> extends HookWidget {
       return false;
     }
 
+    // Focus stays on the picker's own node, as it does for the field.
+    Widget titleRow(String title) => ExcludeFocus(
+      child: ListTile(
+        title: Text(title),
+        selected: !open.value && node.hasPrimaryFocus,
+        onTap: open.value ? close : show,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(chosen?.label ?? hint, style: TextStyle(fontSize: 15, color: gg.ink)),
+            const SizedBox(width: 8),
+            Icon(Icons.unfold_more, size: 18, color: gg.muted),
+          ],
+        ),
+      ),
+    );
+
     final Widget body;
-    if (!open.value) {
+    if (!open.value && title != null) {
+      body = titleRow(title!);
+    } else if (!open.value) {
       body = InkWell(
         canRequestFocus: false,
         onTap: show,
@@ -229,6 +253,16 @@ class InlinePicker<T> extends HookWidget {
       );
     }
 
+    final content = title == null || !open.value
+        ? body
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              titleRow(title!),
+              Padding(padding: const EdgeInsets.fromLTRB(14, 4, 14, 10), child: body),
+            ],
+          );
+
     return TapRegion(
       onTapOutside: open.value ? (_) => open.value = false : null,
       child: CallbackShortcuts(
@@ -256,8 +290,13 @@ class InlinePicker<T> extends HookWidget {
           // Not a zero duration AnimatedSize under reduced motion: that one
           // relayouts itself during its own layout and asserts.
           child: context.reduceMotion
-              ? body
-              : AnimatedSize(duration: Motion.medium, curve: Motion.out, alignment: Alignment.topCenter, child: body),
+              ? content
+              : AnimatedSize(
+                  duration: Motion.medium,
+                  curve: Motion.out,
+                  alignment: Alignment.topCenter,
+                  child: content,
+                ),
         ),
       ),
     );
