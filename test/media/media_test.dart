@@ -208,11 +208,11 @@ void main() {
         3000: _press(LogicalKeyboardKey.keyM),
         3700: (app, stage) async =>
             stage.type("sonnet", cps: 18, onType: (typed) => app.tester.enterText(find.byType(TextField), "@$typed")),
-        4500: _press(LogicalKeyboardKey.enter),
-        7000: _press(LogicalKeyboardKey.space),
-        7700: (app, stage) async =>
+        4900: _press(LogicalKeyboardKey.enter),
+        6700: _press(LogicalKeyboardKey.space),
+        7300: (app, stage) async =>
             stage.type("shorter", cps: 18, onType: (typed) => app.tester.enterText(find.byType(TextField), typed)),
-        8600: _press(LogicalKeyboardKey.enter),
+        8550: _press(LogicalKeyboardKey.enter),
       },
       length: 11000,
     );
