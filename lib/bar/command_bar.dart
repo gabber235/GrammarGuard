@@ -275,6 +275,12 @@ class _Row extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        // Apple's one model already has the provider's name.
+        if (item case ModelItem(:final model) when model.label != model.ref.backend.label)
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Text(model.ref.backend.label, style: TextStyle(fontSize: 12, color: gg.muted)),
+          ),
         if (item case ModelItem(model: ModelInfo(:final price?)))
           Padding(
             padding: const EdgeInsets.only(left: 10),

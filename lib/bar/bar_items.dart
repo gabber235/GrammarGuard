@@ -1,4 +1,6 @@
 // What the bar offers for a query. Pure.
+import "dart:math";
+
 import "package:collection/collection.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:grammar_guard/assistant/suggest.dart";
@@ -97,7 +99,15 @@ List<BarItem> barItems({
     if (kind == null || kind == ActionItem) ..._actions,
   ];
   final ranked = candidates
-      .map((item) => (item, matchScore(item.label, text)))
+      .map(
+        (item) => (
+          item,
+          switch (item) {
+            ModelItem(:final model) when kind == ModelItem => _modelScore(model, text),
+            _ => matchScore(item.label, text),
+          },
+        ),
+      )
       .where((e) => e.$2 > 0)
       .sortedBy<num>((e) => -e.$2)
       .map((e) => e.$1)
@@ -107,6 +117,19 @@ List<BarItem> barItems({
   // Free text is always usable: as a request, or as a question.
   if (kind == null) ranked.addAll([BarItem.words(text), BarItem.ask(text)]);
   return ranked;
+}
+
+/// Listing models, the provider finds a row too: the connection, and on a
+/// router the maker in the model's id ("inception/mercury-3"). Elsewhere it
+/// would fill the bar with every model of a connection. Only from the start
+/// of a word, and below a name's word start: Enter takes the top row, so
+/// "@op" must stay on Claude Opus, not the first of OpenRouter.
+double _modelScore(ModelInfo model, String text) {
+  final ModelRef(:backend, :id) = model.ref;
+  final slash = id.indexOf("/");
+  final provider = "${backend.label} ${slash < 0 ? "" : id.substring(0, slash)}".toLowerCase();
+  final found = provider.split(" ").any((word) => word.startsWith(text.toLowerCase()));
+  return max(matchScore(model.label, text), found ? 2.5 : 0);
 }
 
 /// How well [query] finds [label], for every search that lists rows: word
