@@ -34,6 +34,9 @@ class WindowManagerWindow with WindowListener, WidgetsBindingObserver implements
   void onWindowBlur() => _events.add(WindowEvent.blurred);
 
   @override
+  void onWindowFocus() => _events.add(WindowEvent.focused);
+
+  @override
   void onWindowClose() => _events.add(WindowEvent.closeRequested);
 
   @override

@@ -9,6 +9,7 @@ import "package:grammar_guard/instructions/library_store.dart";
 import "package:grammar_guard/llm/connections.dart";
 import "package:grammar_guard/llm/llm.dart";
 import "package:grammar_guard/platform/platform_providers.dart";
+import "package:grammar_guard/platform/ports.dart";
 import "package:grammar_guard/rewrite/history.dart";
 import "package:grammar_guard/settings/hotkey_setting.dart";
 import "package:grammar_guard/ui/surfaces.dart";
@@ -217,6 +218,24 @@ void main() {
         find.descendant(of: find.widgetWithText(ConnectionRow, "OpenAI"), matching: find.text("Saved, not checked")),
         findsOneWidget,
       );
+    });
+  });
+
+  group("a local server", () {
+    testFlow("started while the app runs shows its models when the window comes back", (app) async {
+      await app.read(connectionsProvider.notifier).save(const Connection(backend: Backend.ollama, enabled: true));
+      app.model.listing = const llm.HttpError("Connection refused");
+      await openSettings(app);
+      await app.settle();
+      Finder status(String text) =>
+          find.descendant(of: find.widgetWithText(ConnectionRow, "Ollama"), matching: find.text(text));
+      expect(status("Not reachable"), findsOneWidget);
+
+      app.model.listing = const [llm.AIModel(id: "llama3.2:latest")];
+      app.window.emit(WindowEvent.focused);
+      await app.settle();
+
+      expect(status("Ready, 1 model"), findsOneWidget);
     });
   });
 

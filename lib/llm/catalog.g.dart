@@ -98,19 +98,22 @@ final class BundledModelsProvider extends $FunctionalProvider<AsyncValue<Bundled
 String _$bundledModelsHash() => r'93e1c9ff54a5d1660833af9e08de78ad90a66a11';
 
 /// Every model the user can pick. Starts from the bundled list so the window
-/// never waits on the network, then refreshes from each backend's own list
-/// (llm_dart's ModelListingCapability) in the background.
+/// never waits on the network, then lists each backend's own models
+/// (llm_dart's ModelListingCapability) in the background: after a connection
+/// changes, and on every [refresh].
 
 @ProviderFor(ModelCatalog)
 final modelCatalogProvider = ModelCatalogProvider._();
 
 /// Every model the user can pick. Starts from the bundled list so the window
-/// never waits on the network, then refreshes from each backend's own list
-/// (llm_dart's ModelListingCapability) in the background.
+/// never waits on the network, then lists each backend's own models
+/// (llm_dart's ModelListingCapability) in the background: after a connection
+/// changes, and on every [refresh].
 final class ModelCatalogProvider extends $AsyncNotifierProvider<ModelCatalog, List<ModelInfo>> {
   /// Every model the user can pick. Starts from the bundled list so the window
-  /// never waits on the network, then refreshes from each backend's own list
-  /// (llm_dart's ModelListingCapability) in the background.
+  /// never waits on the network, then lists each backend's own models
+  /// (llm_dart's ModelListingCapability) in the background: after a connection
+  /// changes, and on every [refresh].
   ModelCatalogProvider._()
     : super(
         from: null,
@@ -130,11 +133,12 @@ final class ModelCatalogProvider extends $AsyncNotifierProvider<ModelCatalog, Li
   ModelCatalog create() => ModelCatalog();
 }
 
-String _$modelCatalogHash() => r'9e1f0b22518922a0a2f489a3da86908c34f6464d';
+String _$modelCatalogHash() => r'c482aa3a3a8b6991288c0ff7a44ab140a733222b';
 
 /// Every model the user can pick. Starts from the bundled list so the window
-/// never waits on the network, then refreshes from each backend's own list
-/// (llm_dart's ModelListingCapability) in the background.
+/// never waits on the network, then lists each backend's own models
+/// (llm_dart's ModelListingCapability) in the background: after a connection
+/// changes, and on every [refresh].
 
 abstract class _$ModelCatalog extends $AsyncNotifier<List<ModelInfo>> {
   FutureOr<List<ModelInfo>> build();

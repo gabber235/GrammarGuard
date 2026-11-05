@@ -1,6 +1,7 @@
 import "dart:async";
 import "dart:convert";
 
+import "package:clock/clock.dart";
 import "package:collection/collection.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:grammar_guard/llm/connections.dart";
@@ -81,55 +82,110 @@ bool isEmbeddingModel(String id, {String? family}) =>
     id.toLowerCase().contains("embed") || (family?.toLowerCase().contains("bert") ?? false);
 
 /// Every model the user can pick. Starts from the bundled list so the window
-/// never waits on the network, then refreshes from each backend's own list
-/// (llm_dart's ModelListingCapability) in the background.
+/// never waits on the network, then lists each backend's own models
+/// (llm_dart's ModelListingCapability) in the background: after a connection
+/// changes, and on every [refresh].
 @Riverpod(keepAlive: true)
 class ModelCatalog extends _$ModelCatalog {
+  /// A cloud service's list changes rarely and can be large, so looking at
+  /// the window does not ask for it each time. A server with an address the
+  /// user chose changes with every pull, so it is always asked.
+  static const cloudListAge = Duration(minutes: 5);
+
+  // Each build replaces these, so a listing a newer build outran writes to
+  // maps nobody reads.
+  Map<Backend, List<ModelInfo>> _listed = {};
+  Map<Backend, DateTime> _listedAt = {};
+  var _refreshing = false;
+
   @override
   Future<List<ModelInfo>> build() async {
     final connections = await ref.watch(connectionsProvider.future);
     final bundled = await ref.watch(bundledModelsProvider.future);
-    final usable = connections.values.where((c) => c.isUsable).toList();
-    unawaited(Future.microtask(() => _refresh(usable, bundled)));
-    return [for (final c in usable) ..._fallback(c.backend, bundled)];
+    _listed = {};
+    _listedAt = {};
+    _refreshing = false;
+    unawaited(Future.microtask(() => _list(first: true)));
+    return [
+      for (final c in connections.values)
+        if (c.isUsable) ..._fallback(c.backend, bundled),
+    ];
   }
 
-  Future<void> _refresh(List<Connection> usable, Bundled bundled) async {
-    final gateway = ref.read(llmGatewayProvider);
-    final checks = ref.read(connectionChecksProvider.notifier);
-    void report(Backend backend, ConnectionCheck check) {
-      if (ref.mounted) checks.report(backend, check);
-    }
+  /// Asks the backends for their lists again. Nothing is announced while it
+  /// runs, and the catalog only changes when a list did. Does nothing when a
+  /// listing is already running.
+  Future<void> refresh() async {
+    await future;
+    if (ref.mounted && !_refreshing) await _list();
+  }
 
-    final lists = await Future.wait(
-      usable.map((c) async {
-        if (c.backend == Backend.apple) return _fallback(c.backend, bundled);
-        report(c.backend, const ConnectionCheck.checking());
-        try {
-          final known = bundled[c.backend] ?? const {};
+  /// [first] is the listing after a build: it shows "Checking…" on the
+  /// settings rows and takes each service's own order.
+  Future<void> _list({bool first = false}) async {
+    // This build's ref: `this.ref` always answers for the newest build, so its
+    // `mounted` would not notice that a newer build replaced this listing.
+    final ref = this.ref;
+    if (!ref.mounted) return;
+    _refreshing = true;
+    try {
+      final (listed, listedAt) = (_listed, _listedAt);
+      final usable = (await ref.read(connectionsProvider.future)).values.where((c) => c.isUsable).toList();
+      final bundled = await ref.read(bundledModelsProvider.future);
+      final gateway = ref.read(llmGatewayProvider);
+      final checks = ref.read(connectionChecksProvider.notifier);
+      void report(Backend backend, ConnectionCheck check) {
+        if (ref.mounted) checks.report(backend, check);
+      }
+
+      final lists = await Future.wait(
+        usable.map((c) async {
+          if (c.backend == Backend.apple) return _fallback(c.backend, bundled);
+          // A failed listing keeps what the backend last said: dropping its
+          // models would move a pick to another service without asking.
+          List<ModelInfo> last() => listed[c.backend] ?? _fallback(c.backend, bundled);
           final local = c.backend == Backend.ollama || c.backend == Backend.openaiCompatible;
-          final listed = [
-            for (final m in await gateway.models(c))
-              // The big lists also hold audio, image and embedding models;
-              // keep the ones we know prices for, or everything local that
-              // can write. Only Ollama's description is a model family.
-              if ((local || known.containsKey(m.id)) &&
-                  !isEmbeddingModel(m.id, family: c.backend == Backend.ollama ? m.description : null))
-                known[m.id] ?? ModelInfo(ref: ModelRef(c.backend, m.id), label: m.id, price: Price.free),
-          ];
-          report(c.backend, ConnectionCheck.working(listed.length));
-          return listed;
-        } on llm.AuthError {
-          report(c.backend, const ConnectionCheck.rejected());
-          return _fallback(c.backend, bundled);
-        } on llm.LLMError {
-          report(c.backend, const ConnectionCheck.unknown());
-          return _fallback(c.backend, bundled); // offline, or no listing API
-        }
-      }),
-    );
-    if (!ref.mounted) return; // a newer build replaced this one
-    state = AsyncData(lists.flattened.toList());
+          final now = clock.now();
+          if (!local && now.difference(listedAt[c.backend] ?? DateTime(0)) < cloudListAge) return last();
+          if (first) report(c.backend, const ConnectionCheck.checking());
+          try {
+            final known = bundled[c.backend] ?? const {};
+            final models = [
+              for (final m in await gateway.models(c))
+                // The big lists also hold audio, image and embedding models;
+                // keep the ones we know prices for, or everything local that
+                // can write. Only Ollama's description is a model family.
+                if ((local || known.containsKey(m.id)) &&
+                    !isEmbeddingModel(m.id, family: c.backend == Backend.ollama ? m.description : null))
+                  known[m.id] ?? ModelInfo(ref: ModelRef(c.backend, m.id), label: m.id, price: Price.free),
+            ];
+            report(c.backend, ConnectionCheck.working(models.length));
+            listedAt[c.backend] = now;
+            return listed[c.backend] = _keepingOrder(first ? null : last(), models);
+          } on llm.AuthError {
+            report(c.backend, const ConnectionCheck.rejected());
+            return last();
+          } on llm.LLMError {
+            report(c.backend, const ConnectionCheck.unknown());
+            return last(); // offline, or no listing API
+          }
+        }),
+      );
+      if (!ref.mounted) return; // a newer build replaced this one
+      final next = lists.flattened.toList();
+      // A new list would rebuild every request made from it.
+      if (!const ListEquality<ModelInfo>().equals(state.value, next)) state = AsyncData(next);
+    } finally {
+      if (ref.mounted) _refreshing = false;
+    }
+  }
+
+  /// [models] in the order of the [previous] list, new ones last. The first
+  /// model is the default, and Ollama lists the newest first: a refresh must
+  /// not change the default, which would also restart a visible rewrite.
+  static List<ModelInfo> _keepingOrder(List<ModelInfo>? previous, List<ModelInfo> models) {
+    final rest = {for (final m in models) m.ref: m};
+    return [for (final m in previous ?? const <ModelInfo>[]) ?rest.remove(m.ref), ...rest.values];
   }
 
   static List<ModelInfo> _fallback(Backend backend, Bundled bundled) => switch (backend) {

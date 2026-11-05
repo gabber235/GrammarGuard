@@ -90,6 +90,10 @@ abstract interface class TextBridge {
 
 enum WindowEvent {
   blurred,
+
+  /// The window came to the front, by any way in: the hotkey, the tray, the
+  /// OS reopening the app, or switching back to it.
+  focused,
   closeRequested,
 
   /// The OS opened the running app again: Finder, the Dock, Raycast,
