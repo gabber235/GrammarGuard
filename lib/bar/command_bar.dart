@@ -279,7 +279,7 @@ class _Row extends StatelessWidget {
         if (item case ModelItem(:final model) when model.label != model.ref.backend.label)
           Padding(
             padding: const EdgeInsets.only(left: 10),
-            child: Text(model.ref.backend.label, style: TextStyle(fontSize: 12, color: gg.muted)),
+            child: Text(model.ref.backend.label, style: TextStyle(fontSize: 12, color: gg.model)),
           ),
         if (item case ModelItem(model: ModelInfo(:final price?)))
           Padding(
