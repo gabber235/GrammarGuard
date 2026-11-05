@@ -36,7 +36,7 @@ in
     pkgs.secretspec # `eval-model`'s key
     pkgs._1password-cli # how secretspec reads 1Password; the desktop app unlocks it
   ]
-  ++ lib.optionals pkgs.stdenv.isDarwin [
+  ++ lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
     pkgs.cocoapods # the macOS build's plugins
     # flutter_tools copies the engine framework out of the read only store with
     # the rsync on PATH. macOS's own (openrsync) ignores --chmod, so the copy
@@ -47,7 +47,7 @@ in
     # https://github.com/flutter/flutter/issues/195257
     pkgs.rsync
   ]
-  ++ lib.optionals pkgs.stdenv.isLinux [
+  ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
     # What `flutter build linux` links against, as in CI and the AUR package.
     pkgs.clang
     pkgs.cmake
@@ -69,7 +69,7 @@ in
   # Nix's (from the default stdenv) would win on PATH and in CC, LD and
   # NIX_LDFLAGS, and Xcode's link step fails with them ("ld: unknown options").
   apple.sdk = null;
-  stdenv = if pkgs.stdenv.isDarwin then pkgs.stdenvNoCC else pkgs.stdenv;
+  stdenv = if pkgs.stdenv.hostPlatform.isDarwin then pkgs.stdenvNoCC else pkgs.stdenv;
 
   # Prebuilt Flutter releases from flutter-overlay's CI.
   cachix.pull = [ "gabber235" ];
@@ -86,7 +86,7 @@ in
     # The Xcode project sets its own minimum macOS; Nix's would override it.
     unset MACOSX_DEPLOYMENT_TARGET
     export PATH="$HOME/.pub-cache/bin:$PATH"
-    ${lib.optionalString pkgs.stdenv.isLinux ''
+    ${lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
       # Dart build hooks get PATH but not PKG_CONFIG_PATH, and cnativeapi's
       # hook (tray_manager) asks pkg-config for GTK, X11 and Xi. This
       # pkg-config carries the shell's search path with it.
