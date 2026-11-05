@@ -179,6 +179,44 @@ void main() {
       length: 5600,
     );
 
+    // Changing the setup during a review: the level by key, the model and an
+    // instruction from the bar. Each change reruns the rewrite at once.
+    film(
+      "on the fly",
+      before: (app, stage) async {
+        await _ready(app, stage);
+        app.model
+          ..reply([
+            "Hi team, ",
+            "we meant to ship Friday, ",
+            "but the tests weren't ready. ",
+            "Let's aim for Monday. ",
+            "Any concerns? ",
+            "Let me know.",
+          ])
+          ..reply([
+            "Hi team, ",
+            "we planned to ship on Friday, ",
+            "but testing wasn't finished. ",
+            "Monday is the new target. ",
+            "Tell me if that's a problem.",
+          ])
+          ..reply(["Hi team, ", "tests slipped, ", "so we ship Monday. ", "Any concerns?"]);
+      },
+      timeline: {
+        500: _press(LogicalKeyboardKey.bracketRight),
+        3000: _press(LogicalKeyboardKey.keyM),
+        3700: (app, stage) async =>
+            stage.type("sonnet", cps: 18, onType: (typed) => app.tester.enterText(find.byType(TextField), "@$typed")),
+        4500: _press(LogicalKeyboardKey.enter),
+        7000: _press(LogicalKeyboardKey.space),
+        7700: (app, stage) async =>
+            stage.type("shorter", cps: 18, onType: (typed) => app.tester.enterText(find.byType(TextField), typed)),
+        8600: _press(LogicalKeyboardKey.enter),
+      },
+      length: 11000,
+    );
+
     // A second model next to the first, and keeping one.
     film(
       "compare",

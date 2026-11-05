@@ -44,6 +44,13 @@ turns on a tone or switches the model. <kbd>Shift</kbd>+<kbd>Enter</kbd> keeps t
 
 <img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/request.webp" alt="In the review, Space opens the bar, the request shorter, and upbeat is typed, and Enter streams a new, shorter rewrite." width="100%">
 
+### Change it on the fly
+
+Every change reruns the rewrite right away. <kbd>[</kbd> and <kbd>]</kbd> change less or more of your text,
+<kbd>m</kbd> switches the model, and <kbd>Space</kbd> turns an instruction on or off.
+
+<img src="https://github.com/gabber235/GrammarGuard/raw/ui-media/readme/films/on_the_fly.webp" alt="In the review, the right bracket key raises the level from Polish to Enhance, m switches to Claude Sonnet, and Space turns on the Shorter instruction. The rewrite streams in again after each change." width="100%">
+
 ### Compare two models
 
 <kbd>c</kbd> runs a second model next to the first. <kbd>Left</kbd> or <kbd>Right</kbd> uses one.
