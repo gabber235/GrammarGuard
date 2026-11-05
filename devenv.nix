@@ -1,4 +1,4 @@
-# The development environment: `devenv shell` (or direnv) gives the pinned
+# The development environment: `devenv shell` gives the pinned
 # Flutter, every tool the scripts below use, and git hooks that keep commits
 # formatted, conventional and free of secrets. `devenv test` runs what CI runs.
 {
@@ -33,6 +33,8 @@ in
     pkgs.gh # pull requests, release checks
     pkgs.libwebp # cwebp and img2webp for `media`
     pkgs.openssl # `signing-cert`
+    pkgs.secretspec # `eval-model`'s key
+    pkgs._1password-cli # how secretspec reads 1Password; the desktop app unlocks it
   ]
   ++ lib.optionals pkgs.stdenv.isDarwin [
     pkgs.cocoapods # the macOS build's plugins
@@ -75,6 +77,10 @@ in
   # Tools started outside the flutter command (dart run build_runner, editors)
   # find the SDK through FLUTTER_ROOT. Xcode stays the system's.
   env.FLUTTER_ROOT = "${flutter.sdk}";
+
+  # Not devenv.yaml's `secretspec.enable`: that opens 1Password on every shell,
+  # and CI and contributors have none. Only eval-model asks for a secret.
+  env.SECRETSPEC_PROVIDER = lib.mkDefault "onepassword://GrammarGuard";
 
   enterShell = ''
     # The Xcode project sets its own minimum macOS; Nix's would override it.
@@ -191,8 +197,8 @@ in
       description = "Rewrite quality against a real model: eval-model anthropic/claude-haiku-4-5";
       exec = ''
         cd "$DEVENV_ROOT"
-        if [[ -z ''${1:-} ]]; then echo "Usage: eval-model <backend/model>; the key comes from EVAL_API_KEY." >&2; exit 1; fi
-        EVAL_MODEL="$1" flutter test eval --run-skipped
+        if [[ -z ''${1:-} ]]; then echo "Usage: eval-model <backend/model>; the key comes from SecretSpec." >&2; exit 1; fi
+        EVAL_MODEL="$1" secretspec run -- flutter test eval --run-skipped
       '';
     };
     prices = {
@@ -200,6 +206,14 @@ in
       exec = ''
         cd "$DEVENV_ROOT"
         dart run tool/update_models.dart
+      '';
+    };
+    provision = {
+      description = "Fetch the signing profile for your Apple team (Signing.xcconfig)";
+      exec = ''
+        cd "$DEVENV_ROOT"
+        xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner -configuration Debug \
+          -destination platform=macOS -allowProvisioningUpdates build
       '';
     };
     package = {

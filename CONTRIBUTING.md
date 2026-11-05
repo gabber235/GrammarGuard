@@ -31,7 +31,8 @@ pins (`environment: flutter:` in `pubspec.yaml`, the same one CI uses) and every
 | `media` | Render every screen and the films of the app in use as WebP into `build/media/web` |
 | `shots` | Screenshot the real macOS app on every screen |
 | `it [device]` | Run the real app with only the model faked |
-| `eval-model <backend/model>` | Measure rewrite quality against a real model |
+| `eval-model <backend/model>` | Measure rewrite quality against a real model; the key is `EVAL_API_KEY` from SecretSpec (`secretspec set EVAL_API_KEY`, or without 1Password export it and set `SECRETSPEC_PROVIDER=env`) |
+| `provision` | Fetch the macOS signing profile when `flutter run` asks for one and you sign with your own Apple team (`Signing.xcconfig`) |
 | `package` | Build this OS's release packages into `dist/`, as CI does |
 | `prices` | Refresh model names and prices from models.dev |
 

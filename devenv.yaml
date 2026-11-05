@@ -10,3 +10,7 @@ inputs:
   # ours: the gabber235 cache only holds builds against that one.
   flutter-overlay:
     url: github:gabber235/flutter-overlay
+# _1password-cli is the only unfree package; secretspec reads 1Password through it.
+nixpkgs:
+  permitted_unfree_packages:
+    - 1password-cli
