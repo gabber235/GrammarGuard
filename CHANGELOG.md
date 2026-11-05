@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.3.0](https://github.com/gabber235/GrammarGuard/compare/v1.2.2...v1.3.0) (2026-11-05)
+
+
+### Features
+
+* **bar:** color the provider apart from the price ([78848ff](https://github.com/gabber235/GrammarGuard/commit/78848ffeb0391a9d5d21295ee239bfbecad30faa))
+* **bar:** show and search the provider of each model ([4e09b0c](https://github.com/gabber235/GrammarGuard/commit/4e09b0c845a97e9af04fbad4d4ef165e3696030c))
+* **history:** choose how many rewrites to keep ([a1aa205](https://github.com/gabber235/GrammarGuard/commit/a1aa20528a0c670ac055418f3c7556888aae3ced))
+* **keys:** one command table, a Keys view and a choose first shortcut ([9f0270b](https://github.com/gabber235/GrammarGuard/commit/9f0270b7c41ab46f8a6780899c2e779fb6c4fe75))
+* **settings:** save an API key by itself and check it with the service ([3ea3bea](https://github.com/gabber235/GrammarGuard/commit/3ea3bea9933830498b346a229142a5f7406fe1d8))
+
+
+### Bug fixes
+
+* **bar:** say per million in the price instead of a tooltip ([4361874](https://github.com/gabber235/GrammarGuard/commit/4361874fb3e6090864a7958c7980663929e2cd4e))
+* **footer:** count a new rewrite's time from its start ([6dcc9ca](https://github.com/gabber235/GrammarGuard/commit/6dcc9caaa40f127aba911808415b6bbf9e068e80))
+* **keys:** keep shortcuts, saved keys and the preview through what the review found ([09e28d1](https://github.com/gabber235/GrammarGuard/commit/09e28d1f556aa436b0b3e3c8177eb4835c9e32b8))
+* **llm:** reload model lists when the window comes to the front ([#35](https://github.com/gabber235/GrammarGuard/issues/35)) ([3cc978e](https://github.com/gabber235/GrammarGuard/commit/3cc978eb05e5973049a2038dd35f277bbb9b73d3))
+* **settings:** edit instructions in the window instead of a dialog ([fe16d1b](https://github.com/gabber235/GrammarGuard/commit/fe16d1bff4a2b47d5da0956489e45f6ccc777a9d))
+* **settings:** keep double clicks and retyping away from the new views ([6dcc909](https://github.com/gabber235/GrammarGuard/commit/6dcc909ad3c89210d3d9992645ce024f94f90f73))
+* **settings:** make the history limit and Keys page match the settings around them ([ef974ae](https://github.com/gabber235/GrammarGuard/commit/ef974ae96370acf40a8fd1126898eafe25ffe275))
+* **settings:** pick a searchable list's row with a mouse click ([8f64a33](https://github.com/gabber235/GrammarGuard/commit/8f64a33d4a510b7069599d57592e584f983123df))
+
 ## [1.2.2](https://github.com/gabber235/GrammarGuard/compare/v1.2.1...v1.2.2) (2026-10-30)
 
 
