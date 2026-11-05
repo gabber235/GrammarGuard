@@ -361,6 +361,10 @@ class SessionActions {
       case WindowEvent.blurred:
         // The run keeps going while hidden; reopening shows its result.
         if (ref.read(isPopupProvider)) await window.hide();
+      case WindowEvent.focused:
+        // Someone who just started a server or pulled a model comes back
+        // here to use it, and no service tells us its list changed.
+        await ref.read(modelCatalogProvider.notifier).refresh();
       case WindowEvent.closeRequested:
         state = state.copyWith(hold: RunHold.cancelled);
         await window.close();

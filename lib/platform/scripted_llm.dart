@@ -82,12 +82,14 @@ class ScriptedLlm implements LlmGateway {
 
   @override
   Future<List<llm.AIModel>> models(Connection connection) async => switch (listing) {
+    final List<llm.AIModel> models => models,
     // ignore: only_throw_errors
     final Object error? => throw error,
     null => throw const llm.InvalidRequestError("Scripted: use the bundled list."),
   };
 
-  /// What asking a service for its models throws; null means it has no list.
+  /// What asking a service for its models returns (a list of models) or
+  /// throws (anything else); null means it has no list.
   Object? listing;
 }
 
