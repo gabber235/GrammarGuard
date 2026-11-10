@@ -103,4 +103,42 @@ void main() {
       }
     });
   });
+
+  group("wordDiffPrefix", () {
+    List<(int, String)> prefixParts(String before, String after) => [
+      for (final d in wordDiffPrefix(before, after)) (d.operation, d.text),
+    ];
+
+    test("leaves out the input the text has not reached", () {
+      expect(
+        prefixParts("i think we should of shipped this friday", "I think we "),
+        equals([(DIFF_DELETE, "i"), (DIFF_INSERT, "I"), (DIFF_EQUAL, " think we ")]),
+      );
+    });
+
+    test("lines up past a dropped sentence once more follows it", () {
+      expect(
+        prefixParts("One. Two is gone. Three stays here for good. Four.", "One. Three stays here for good."),
+        equals([(DIFF_EQUAL, "One. "), (DIFF_DELETE, "Two is gone. "), (DIFF_EQUAL, "Three stays here for good.")]),
+      );
+    });
+
+    test("a changed last word shows what it replaces once more follows", () {
+      expect(
+        prefixParts("we ship on friday at noon", "We ship on Friday,"),
+        equals([(DIFF_DELETE, "we"), (DIFF_INSERT, "We"), (DIFF_EQUAL, " ship on "), (DIFF_INSERT, "Friday,")]),
+      );
+      expect(
+        prefixParts("we ship on friday at noon", "We ship on Friday, at"),
+        equals([
+          (DIFF_DELETE, "we"),
+          (DIFF_INSERT, "We"),
+          (DIFF_EQUAL, " ship on "),
+          (DIFF_DELETE, "friday"),
+          (DIFF_INSERT, "Friday,"),
+          (DIFF_EQUAL, " at"),
+        ]),
+      );
+    });
+  });
 }
