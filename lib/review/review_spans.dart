@@ -1,4 +1,3 @@
-import "package:diff_match_patch/diff_match_patch.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
 import "package:grammar_guard/models/editor_document.dart";
 import "package:grammar_guard/models/pending_change.dart";
@@ -35,11 +34,7 @@ List<ReviewSpan> inlineSpans(EditorDocument document) => [
 List<ReviewSpan> liveSpans(String input, String written) {
   final complete = completeWords(written);
   if (complete.isEmpty) return const [];
-  final diffs = wordDiff(input, complete);
-  while (diffs.isNotEmpty && diffs.last.operation == DIFF_DELETE) {
-    diffs.removeLast();
-  }
-  return inlineSpans(EditorDocument.fromDiffs(diffs));
+  return inlineSpans(EditorDocument.fromDiffs(wordDiffPrefix(input, complete)));
 }
 
 /// [written] up to its last whitespace: the words the model has finished.

@@ -4,6 +4,7 @@ import "dart:async";
 import "package:animations/animations.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gpt_markdown/gpt_markdown.dart";
 import "package:grammar_guard/app/command_runner.dart";
 import "package:grammar_guard/app/setup_line.dart";
@@ -152,7 +153,7 @@ class ResultView extends ConsumerWidget {
 /// The review, from the first word written to the end. Always the same
 /// [ReviewPane], so its rail, highlighter and reveal carry over from
 /// writing to reviewing.
-class _ReviewText extends ConsumerWidget {
+class _ReviewText extends HookConsumerWidget {
   const _ReviewText({required this.scroll, this.writing});
 
   final ScrollController scroll;
@@ -162,15 +163,13 @@ class _ReviewText extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (writing case final written?) {
-      final input = ref.watch(sessionProvider.select((s) => s.input?.text)) ?? "";
-      return ReviewPane(
-        spans: liveSpans(input, written),
-        current: null,
-        output: completeWords(written),
-        writing: true,
-        scroll: scroll,
-      );
+    final input = ref.watch(sessionProvider.select((s) => s.input?.text)) ?? "";
+    // Most chunks only grow the word being written, which the review holds
+    // back, so the diff runs once per finished word, not per chunk.
+    final complete = completeWords(writing ?? "");
+    final live = useMemoized(() => liveSpans(input, complete), [input, complete]);
+    if (writing != null) {
+      return ReviewPane(spans: live, current: null, output: complete, writing: true, scroll: scroll);
     }
     final review = ref.watch(reviewProvider);
     final run = ref.watch(currentRunProvider)?.value;
