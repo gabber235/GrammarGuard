@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/gabber235/GrammarGuard/compare/v1.3.0...v1.4.0) (2026-11-10)
+
+
+### Features
+
+* **review:** follow the newest words while the model writes ([a31d495](https://github.com/gabber235/GrammarGuard/commit/a31d4955befcecabc0b9753818f881a43e2e82a9))
+
+
+### Bug fixes
+
+* **review:** keep the live review smooth and steady on long texts ([7a18433](https://github.com/gabber235/GrammarGuard/commit/7a1843375c72227749f032aad4d0d930d96d668f))
+
 ## [1.3.0](https://github.com/gabber235/GrammarGuard/compare/v1.2.2...v1.3.0) (2026-11-05)
 
 
