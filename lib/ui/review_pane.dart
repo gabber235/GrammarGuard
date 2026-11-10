@@ -4,6 +4,7 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
+import "package:grammar_guard/hooks/follow_scroll.dart";
 import "package:grammar_guard/review/review_spans.dart";
 import "package:grammar_guard/ui/motion.dart";
 import "package:grammar_guard/ui/theme.dart";
@@ -105,6 +106,7 @@ class ReviewPane extends HookWidget {
     final style = DefaultTextStyle.of(context).style
         .merge(TextStyle(fontSize: gg.textSize, height: 1.7, color: gg.ink, letterSpacing: 0.1));
     final (:reveal, :now) = useWordReveal(output, animate: !context.reduceMotion);
+    useFollowWhileWriting(scroll, writing: writing, content: output);
     final shown = _shown(spans);
     // Where each span sits in the model's text: removed text takes no room
     // there and fades in with the word after it.
@@ -144,6 +146,10 @@ class ReviewPane extends HookWidget {
 
         return SingleChildScrollView(
           controller: scroll,
+          // While writing, two empty lines under the text, so a new line
+          // shows up inside them and the view follows it instead of the line
+          // starting out of view.
+          padding: EdgeInsets.only(bottom: writing ? 2 * gg.textSize * 1.7 : 0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -8,6 +8,7 @@ import "package:flutter_hooks/flutter_hooks.dart";
 import "package:gpt_markdown/gpt_markdown.dart";
 import "package:grammar_guard/app/command_runner.dart";
 import "package:grammar_guard/app/setup_line.dart";
+import "package:grammar_guard/hooks/follow_scroll.dart";
 import "package:grammar_guard/models/pending_change.dart";
 import "package:grammar_guard/review/explain.dart";
 import "package:grammar_guard/review/review.dart";
@@ -101,19 +102,7 @@ class ResultView extends ConsumerWidget {
       // Writing, streaming and the finished review are one view: the
       // diff grows as the model writes, then gains its highlighter.
       (_, Waiting()) => _ReviewText(scroll: scroll, writing: ""),
-      (_, Streaming(:final text, :final thinking)) when text.isEmpty && thinking.isNotEmpty => RailColumn(
-        rail: const WritingPill(),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 6),
-              const SectionLabel("Thinking"),
-              StreamingText(text: thinking, thinking: true),
-            ],
-          ),
-        ),
-      ),
+      (_, Streaming(:final text, :final thinking)) when text.isEmpty && thinking.isNotEmpty => _Thinking(thinking),
       (_, Streaming(:final text)) => _ReviewText(scroll: scroll, writing: text),
       (_, Failed(:final message)) => _Status(message: message, failed: true, hints: [hint(AppCommand.retry)]),
       (_, Done()) when preview => RailColumn(
@@ -146,6 +135,36 @@ class ResultView extends ConsumerWidget {
         const SizedBox(height: 14),
         Expanded(child: switcher),
       ],
+    );
+  }
+}
+
+/// The model's thinking before its answer, kept scrolled to the newest
+/// words.
+class _Thinking extends HookWidget {
+  const _Thinking(this.thinking);
+
+  final String thinking;
+
+  @override
+  Widget build(BuildContext context) {
+    final scroll = useScrollController();
+    useFollowWhileWriting(scroll, writing: true, content: thinking);
+    return RailColumn(
+      rail: const WritingPill(),
+      child: SingleChildScrollView(
+        controller: scroll,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 6),
+            const SectionLabel("Thinking"),
+            StreamingText(text: thinking, thinking: true),
+            // Room for the next lines, as in the review while it is written.
+            SizedBox(height: 2 * context.gg.textSize * 0.8 * 1.6),
+          ],
+        ),
+      ),
     );
   }
 }
