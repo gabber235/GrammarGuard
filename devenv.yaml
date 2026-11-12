@@ -6,10 +6,12 @@ inputs:
     inputs:
       nixpkgs:
         follows: nixpkgs
-  # Flutter, by the exact version pubspec.yaml pins. Its own nixpkgs, not
-  # ours: the gabber235 cache only holds builds against that one.
+  # Flutter, by the exact version pubspec.yaml pins.
   flutter-overlay:
     url: github:gabber235/flutter-overlay
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
 # _1password-cli is the only unfree package; secretspec reads 1Password through it.
 nixpkgs:
   permitted_unfree_packages:

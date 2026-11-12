@@ -12,7 +12,8 @@ pins (`environment: flutter:` in `pubspec.yaml`, the same one CI uses) and every
 `flutter run`. Without devenv, install that Flutter version yourself and run `flutter pub get`.
 
 * **macOS:** Xcode, then `flutter run -d macos`
-* **Linux:** inside devenv, `flutter run -d linux`. Without it, install GTK 3, `libsecret-1-dev`,
+* **Linux:** inside devenv, `flutter run -d linux` (on NixOS, enable `programs.nix-ld` first: Flutter's own
+  binaries run as is). Without it, install GTK 3, `libsecret-1-dev`,
   `libkeybinder-3.0-dev`, `libxtst-dev`, `libx11-dev` and `libxi-dev` first.
 * **Windows:** Visual Studio with the Desktop development with C++ workload and the C++ ATL libraries, then
   `flutter run -d windows`

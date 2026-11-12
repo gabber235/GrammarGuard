@@ -38,14 +38,6 @@ in
   ]
   ++ lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
     pkgs.cocoapods # the macOS build's plugins
-    # flutter_tools copies the engine framework out of the read only store with
-    # the rsync on PATH. macOS's own (openrsync) ignores --chmod, so the copy
-    # stays read only and lipo cannot thin it (flutter/flutter#195257, fixed
-    # in Flutter 3.50).
-    # TODO: remove this rsync once pubspec.yaml pins Flutter 3.50 or later,
-    # then check that `flutter build macos --debug` still builds in the shell.
-    # https://github.com/flutter/flutter/issues/195257
-    pkgs.rsync
   ]
   ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
     # What `flutter build linux` links against, as in CI and the AUR package.
@@ -71,18 +63,15 @@ in
   apple.sdk = null;
   stdenv = if pkgs.stdenv.hostPlatform.isDarwin then pkgs.stdenvNoCC else pkgs.stdenv;
 
-  # Prebuilt Flutter releases from flutter-overlay's CI.
-  cachix.pull = [ "gabber235" ];
-
-  # Tools started outside the flutter command (dart run build_runner, editors)
-  # find the SDK through FLUTTER_ROOT. Xcode stays the system's.
-  env.FLUTTER_ROOT = "${flutter.sdk}";
-
   # Not devenv.yaml's `secretspec.enable`: that opens 1Password on every shell,
   # and CI and contributors have none. Only eval-model asks for a secret.
   env.SECRETSPEC_PROVIDER = lib.mkDefault "onepassword://GrammarGuard";
 
   enterShell = ''
+    # Unpacks the pinned SDK into ~/.cache/flutter-overlay on first use and
+    # exports FLUTTER_ROOT, which tools started outside the flutter command
+    # (dart run build_runner, editors) find it by.
+    ${flutter.shellHook}
     # The Xcode project sets its own minimum macOS; Nix's would override it.
     unset MACOSX_DEPLOYMENT_TARGET
     export PATH="$HOME/.pub-cache/bin:$PATH"
