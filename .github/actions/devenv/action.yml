@@ -7,8 +7,6 @@ runs:
     - uses: cachix/cachix-action@v17
       with:
         name: devenv
-        # Prebuilt Flutter from flutter-overlay.
-        extraPullNames: gabber235
 
     - name: Install devenv
       shell: bash
